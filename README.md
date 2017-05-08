@@ -34,16 +34,18 @@ Tested with firmware version V2.2.5-2/ubuntu 14.04
 
 # Live Maps
 
-[![iRobot Roomba 980 cleaning map using python980 lib] (https://github.com/NickWaterton/Roomba980-Python/map.png)]
+[![iRobot Roomba 980 cleaning map using python980 lib] (https://github.com/NickWaterton/Roomba980-Python/map.png) ]
 
 # Dependancies
 
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
-```<sudo> pip install paho-mqtt
+```bash
+<sudo> pip install paho-mqtt
 ```
 
 For map drawing, you need at least PIL installed (preferably the latest version of pillow)
-```<sudo> pip install pillow
+```bash
+<sudo> pip install pillow
 ```
 
 For fancy maps, you need openCV installed (V2). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
@@ -53,7 +55,8 @@ For fancy maps, you need openCV installed (V2). The installation of this can be 
 First you need python 2.7 installed (note: this library is not python 3!) and then:
 
 clone this repository:
-```git clone https://github.com/NickWaterton/Roomba980-Python.git
+```bash
+git clone https://github.com/NickWaterton/Roomba980-Python.git
 cd Roomba980-Python
 ```
 
@@ -62,7 +65,8 @@ run ./roomba.py -h to get the options.
 # quick start
 With the roomba 980 on the dock and charged, stand by the roomba and run
 
-```./roomba.py
+```bash
+./roomba.py
 ```
 
 Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file.
@@ -74,11 +78,13 @@ the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, room
 # How to get your username/blid and password
 
 You can get it automatically as described in quick start, or you can run:
-```./getpassword.py
+```bash
+./getpassword.py
 ```
 
 either with or without the IP address of your roomba.
-```./getpassword.py -R <roomba IP>
+```bash
+./getpassword.py -R <roomba IP>
 ```
 
 You can also specify a config file other than the default (-h for options). Results are displayed and saved to the config file.
@@ -295,7 +301,7 @@ Settings are:   carpetBoost true,
                 
 You publish this as a string to your mqtt broker topic /roomba/commnd or /roomba/setting (or whatever you have defined if you change these from default)
 Ubuntu example (assuming the broker is on your localhost) - should work for any linux system with mosquitto installed
-```
+```bash
 mosquitto_pub -t "/roomba/commnd" -m "start"
 mosquitto_pub -t "/roomba/setting" -m "carpetBoost true"
 ```
