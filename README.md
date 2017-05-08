@@ -299,10 +299,10 @@ Settings are:   carpetBoost true,
                 twoPass true,
                 binPause true,
                 
-You publish this as a string to your mqtt broker topic /roomba/commnd or /roomba/setting (or whatever you have defined if you change these from default)
+You publish this as a string to your mqtt broker topic /roomba/command or /roomba/setting (or whatever you have defined if you change these from default)
 Ubuntu example (assuming the broker is on your localhost) - should work for any linux system with mosquitto installed
 ```bash
-mosquitto_pub -t "/roomba/commnd" -m "start"
+mosquitto_pub -t "/roomba/command" -m "start"
 mosquitto_pub -t "/roomba/setting" -m "carpetBoost true"
 ```
 
