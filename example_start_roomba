@@ -1,0 +1,8 @@
+#! /bin/bash
+# example start line - insert your own values
+
+# <blid> looks like 3012830851937810
+# <roomba password> looks like :1:1493919143:gOiaYpQ4LbfoD1yJ
+# -b is the ip of the mqtt broker to publish to, leave it out if you are not forwarding roomba  data
+# -s is the size and shape of the map (if you are drawing maps) x,y, dock location x,y, map rotation, roomba rotation
+./roomba.py -R <roomba IP> -u <blid> -w <roomba password> -b localhost -s '(800,1650,-300,-50,2,0)'
