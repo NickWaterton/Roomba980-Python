@@ -1,4 +1,3 @@
-================
 Roomba980-Python
 ================
 
@@ -8,38 +7,37 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 
 This is version 1.0 so it may be buggy!
 
-Advice
-""""""
+## Advice
 
 If you enjoy python980 and it works nice for you, I recommend blocking the internet access to your robot to avoid the OTA firmware updates. New firmware changes can cause python980 to stop working. Blocking firmware updates can be performed using the parental control options on your router.
 
 When a new firmware is published, you can come here to verify if python980 is still compatible. Once python980 is compatible you can temporarily enable internet access for your robot to get the firmware upgrade.
 
-# Firmware 2.x.x documentation
+## Firmware 2.x.x documentation
 
-This document is only for firmware 2.x.x. [Check your robot version!](http://homesupport.irobot.com/app/answers/detail/a_id/529)
+**This document is only for firmware 2.x.x.** [Check your robot version!](http://homesupport.irobot.com/app/answers/detail/a_id/529)
 
 Tested with firmware version V2.2.5-2/ubuntu 14.04
 
-# Features
+## Features
 
-- Get your username/password easily
-- Auto discovery robot IP (optional)
-- Local API control (from your MQTT broker)
-- Simplified Cleaning Preferences settings.
-- NOT Firmware 1.6.x compatible.
-- Firmware 2.x.x compatible.
-- Multiple Roombas supported (but not tested)
-- Live Maps
-- Maps show locations of errors, bin full, cancelled runs
-- auto map translation and rotation (at cleaning completion/error etc.)
-- designed for openhab2 compatibility
+* Get your username/password easily
+* Auto discovery robot IP (optional)
+* Local API control (from your MQTT broker)
+* Simplified Cleaning Preferences settings.
+* **NOT Firmware 1.6.x compatible.**
+* Firmware 2.x.x compatible.
+* Multiple Roombas supported (but not tested)
+* Live Maps
+* Maps show locations of errors, bin full, cancelled runs
+* auto map translation and rotation (at cleaning completion/error etc.)
+* designed for openhab2 compatibility
 
-# Live Maps
+## Live Maps
 
-[![iRobot Roomba 980 cleaning map using python980 lib] (https://github.com/NickWaterton/Roomba980-Python/map.png) ]
+![iRobot Roomba 980 cleaning map using python980 lib] (/map.png)
 
-# Dependancies
+## Dependancies
 
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
 ```bash
@@ -53,7 +51,7 @@ For map drawing, you need at least PIL installed (preferably the latest version 
 
 For fancy maps, you need openCV installed (V2). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
 
-# Install
+## Install
 
 First you need python 2.7 installed (note: this library is not python 3!) and then:
 
@@ -63,11 +61,10 @@ git clone https://github.com/NickWaterton/Roomba980-Python.git
 cd Roomba980-Python
 ```
 
-run ./roomba.py -h to get the options.
+run `./roomba.py -h` to get the options.
 
-# quick start
+## quick start
 With the roomba 980 on the dock and charged, stand by the roomba and run
-
 ```bash
 ./roomba.py
 ```
@@ -78,7 +75,7 @@ Once successful, these values will be taken from the configuration file in futur
 I advice you to experiment with the map size (if you are using maps), as that is the one variable that isn't totally automatic. the size, position of the dock etc depend on your house layout.
 the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, roomba rotation). See the examples.
 
-# How to get your username/blid and password
+## How to get your username/blid and password
 
 You can get it automatically as described in quick start, or you can run:
 ```bash
@@ -92,7 +89,7 @@ either with or without the IP address of your roomba.
 
 You can also specify a config file other than the default (-h for options). Results are displayed and saved to the config file.
 
-# Using the library in your python script
+## Using the library in your python script
 
 ```python
     from roomba import Roomba
@@ -292,10 +289,10 @@ master_state should contain:
 
 ```
 
-# Commands/Settings
+## Commands/Settings
 
-Commands are:   "start", "stop", "pause", "resume", "dock"
-Settings are:   carpetBoost true, 
+Commands are: | "start", "stop", "pause", "resume", "dock"
+Settings are: | carpetBoost true, 
                 vacHigh true,
                 openOnly true,   (this is edge clean - set to false to enable edge cleaning)
                 noAutoPasses true,
@@ -309,7 +306,7 @@ mosquitto_pub -t "/roomba/command" -m "start"
 mosquitto_pub -t "/roomba/setting" -m "carpetBoost true"
 ```
 
-# ToDo's
+## ToDo's
 
 I'm just using some roomba icons I found on the web, if you have better roomba icos, please let me know, I know these are not Roomba 980 icons...
 Post my openhab2 items, sitemaps, transforms and rules for controlling the Roomba.
