@@ -1,4 +1,6 @@
-# Roomba980-Python
+================
+Roomba980-Python
+================
 
 Unofficial iRobot Roomba 980 python library (SDK).
 
@@ -6,7 +8,8 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 
 This is version 1.0 so it may be buggy!
 
-# Advice
+Advice
+""""""
 
 If you enjoy python980 and it works nice for you, I recommend blocking the internet access to your robot to avoid the OTA firmware updates. New firmware changes can cause python980 to stop working. Blocking firmware updates can be performed using the parental control options on your router.
 
