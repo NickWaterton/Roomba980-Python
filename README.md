@@ -61,17 +61,87 @@ git clone https://github.com/NickWaterton/Roomba980-Python.git
 cd Roomba980-Python
 ```
 
-run `./roomba.py -h` to get the options.
+run `./roomba.py -h` to get the options. This what you will get:
+
+```bash
+nick@proliant:~/Scripts/roomba/Roomba980-Python$ ./roomba.py -h
+usage: roomba.py [-h] [-f CONFIGFILE] [-n ROOMBANAME] [-t TOPIC]
+                 [-T BROKERFEEDBACK] [-C BROKERCOMMAND] [-S BROKERSETTING]
+                 [-b BROKER] [-p PORT] [-U USER] [-P PASSWORD] [-R ROOMBAIP]
+                 [-u BLID] [-w ROOMBAPASSWORD] [-i INDENT] [-l LOG] [-e] [-D]
+                 [-r] [-j] [-c] [-d DELAY] [-m] [-M MAPPATH] [-s MAPSIZE]
+                 [-I ICON] [-x EXCLUDE] [--version]
+
+Forward MQTT data from Roomba 980 to local MQTT broker
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f CONFIGFILE, --configfile CONFIGFILE
+                        config file name, default: ./config.ini)
+  -n ROOMBANAME, --roombaName ROOMBANAME
+                        optional Roomba name, default: "")
+  -t TOPIC, --topic TOPIC
+                        Roomba MQTT Topic to subscribe to (can use wildcards #
+                        and + default: #)
+  -T BROKERFEEDBACK, --brokerFeedback BROKERFEEDBACK
+                        Topic on broker to publish feedback to (default:
+                        /roomba/feedback)
+  -C BROKERCOMMAND, --brokerCommand BROKERCOMMAND
+                        Topic on broker to publish commands to (default:
+                        /roomba/command
+  -S BROKERSETTING, --brokerSetting BROKERSETTING
+                        Topic on broker to publish settings to (default:
+                        /roomba/setting
+  -b BROKER, --broker BROKER
+                        ipaddress of MQTT broker (default: None)
+  -p PORT, --port PORT  MQTT broker port number (default: 1883)
+  -U USER, --user USER  MQTT broker user name (default: None)
+  -P PASSWORD, --password PASSWORD
+                        MQTT broker password (default: None)
+  -R ROOMBAIP, --roombaIP ROOMBAIP
+                        ipaddress of Roomba 980 (default: None)
+  -u BLID, --blid BLID  Roomba 980 blid (default: None)
+  -w ROOMBAPASSWORD, --roombaPassword ROOMBAPASSWORD
+                        Roomba 980 password (default: None)
+  -i INDENT, --indent INDENT
+                        Default indentation=auto
+  -l LOG, --log LOG     path/name of log file (default: ./Roomba.log)
+  -e, --echo            Echo to Console (default: True)
+  -D, --debug           debug mode
+  -r, --raw             Output raw data to mqtt, no decoding of json data
+  -j, --pretty_print    pretty print json in logs
+  -c, --continuous      Continuous connection to Roomba (default: True)
+  -d DELAY, --delay DELAY
+                        Disconnect period for non-continuous connection
+                        (default: 1000ms)
+  -m, --drawmap         Draw Roomba cleaning map (default: True)
+  -M MAPPATH, --mapPath MAPPATH
+                        Location to store maps to (default: ./)
+  -s MAPSIZE, --mapSize MAPSIZE
+                        Map Size, Dock offset and skew for the map. (800,1500)
+                        is the size, (0,0) is the dock location, in the center
+                        of the map, 0 is the rotation of the map, 0 is the
+                        rotation of the roomba. use single quotes around the
+                        string. (default: '(800,1500,0,0,0,0)')
+  -I ICON, --icon ICON  location of dock icon. (default: "./home.png")
+  -x EXCLUDE, --exclude EXCLUDE
+                        Exclude topics that have this in them (default: "")
+  --version             show program's version number and exit
+```
 
 ## quick start
 With the roomba 980 on the dock and charged, stand by the roomba and run
 ```bash
 ./roomba.py
 ```
+or
+```bash
+python roomba.py
+```
 
-Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file.
+Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file. If this works, the program will then start displaying messages from your Roomba, and printing the maste_state every few seconds. the results are logged to a log file (Roomba.log by default).
 
-Once successful, these values will be taken from the configuration file in future, so you only have to do this once. You can manually specify these on the command line, some example start up bash scripts are supplied.
+On future runs (Once successful), these values will be taken from the configuration file, so you only have to do this once. You can manually specify these on the command line, some example start up bash scripts are supplied.
 I advice you to experiment with the map size (if you are using maps), as that is the one variable that isn't totally automatic. the size, position of the dock etc depend on your house layout.
 the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, roomba rotation). See the examples.
 
