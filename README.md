@@ -47,7 +47,7 @@ The library will issue a warning if it detects an earlier version of PIL.
 
 If you do not have PIL installed, the system will not draw maps (even if enabled), even if you have OpenCV. PIL is used for basic image manipulations. If you do not specifically enable maps, no maps will be drawn. `roomba.py` uses maps, but the class default is to disable maps, so in your own scripts, if you want maps, you have to enable them (after creating the object).
 
-## Dependancies
+## Dependencies
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
 ```bash
 <sudo> pip install paho-mqtt
@@ -213,14 +213,14 @@ either with or without the IP address of your roomba.
 
 You can also specify a config file other than the default (-h for options). Results are displayed and saved to the config file.
 
-# API
+## API
 The API calls are (see getpassword.py for an example of how to use the password class):
-## Classes
+### Classes
 ```python
 password(address='255.255.255.255', file=".\config.ini")
 Roomba(address=None, blid=None, password=None, topic="#", continuous=True, clean=False, cert_name="", roombaName="")
 ```
-## Roomba methods
+### Roomba methods
 ```python
 connect()
 disconnect()
@@ -237,7 +237,7 @@ enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./",
             roomba_size=(50,50), draw_edges = 15, auto_rotate=True)
 make_icon(input="./roomba.png", output="./roomba_mod.png")
 ```
-## Data Structures
+### Data Structures
 ```python
 #boolean
 roomba_connected
@@ -379,7 +379,7 @@ except (KeyboardInterrupt, SystemExit):
         mqttc.disconnect()
 
 ```
-# Data/Feedback
+## Data/Feedback
 master_state starts empty, and fills with time, it is published in full every 5 minutes by default (but updates to it are published live)
 
 master_state should contain:
