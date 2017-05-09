@@ -35,7 +35,7 @@ Tested with firmware version V2.2.5-2/ubuntu 14.04
 
 ## Live Maps
 
-![iRobot Roomba 980 cleaning map using python980 lib][map.png]
+![iRobot Roomba 980 cleaning map using python980 lib](/map.png)
 
 ## Dependancies
 
@@ -292,19 +292,19 @@ master_state should contain:
 ## Commands/Settings
 
 * Commands are:
-..* "start",
-..* "stop",
-..* "pause",
-..* "resume",
-..* "dock"
+  * "start",
+  * "stop",
+  * "pause",
+  * "resume",
+  * "dock"
 
 * Settings are:
-..* carpetBoost true, 
-..* vacHigh true,
-..* openOnly true,   (this is edge clean - set to false to enable edge cleaning)
-..* noAutoPasses true,
-..* twoPass true,
-..* binPause true,
+  * carpetBoost true, 
+  * vacHigh true,
+  * openOnly true,   (this is edge clean - set to false to enable edge cleaning)
+  * noAutoPasses true,
+  * twoPass true,
+  * binPause true,
                 
 You publish this as a string to your mqtt broker topic /roomba/command or /roomba/setting (or whatever you have defined if you change these from default)
 Ubuntu example (assuming the broker is on your localhost) - should work for any linux system with mosquitto installed
