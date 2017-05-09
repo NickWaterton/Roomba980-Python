@@ -643,6 +643,8 @@ class Roomba(object):
             self.current_state = self.states["dock"]
         elif self.current_state == self.states["dock"] and self.cleanMissionStatus_phase == "charge":
             self.current_state = self.states["recharge"]
+        elif self.current_state == self.states["run"] and self.cleanMissionStatus_phase == "charge":
+            self.current_state = self.states["recharge"]    
         elif self.current_state == self.states["recharge"] and self.cleanMissionStatus_phase == "charge":
             self.current_state = self.states["recharge"]
         elif (self.current_state == self.states["stop"] or self.current_state == self.states["pause"]) and self.cleanMissionStatus_phase == "hmUsrDock":
@@ -653,6 +655,8 @@ class Roomba(object):
             self.current_state = self.states["dockend"]
         elif self.current_state == self.states["dockend"] and self.cleanMissionStatus_phase == "charge":
             self.current_state = self.states["charge"]
+        elif self.current_state == self.states["charge"] and self.bin_full:
+            self.current_state = self.states["recharge"]
         
         else:
             self.current_state = self.states[self.cleanMissionStatus_phase]
@@ -997,8 +1001,8 @@ class Roomba(object):
         out = Image.alpha_composite(out, self.roomba_problem)
         if draw_final and self.auto_rotate:
             #translate image to center it if auto is on
-            self.log.info("MAP: translating final map to center it, x:%d, y:%d" % (self.cx-out.size[0]/2,self.cy-out.size[1]/2))
-            out = out.transform(out.size, Image.AFFINE, (1, 0, self.cx-out.size[0]/2, 0, 1, self.cy-out.size[1]/2))
+            self.log.info("MAP: translating final map to center it, x:%d, y:%d" % (self.cx-out.size[0]/2,out.size[1]/2-self.cy))
+            out = out.transform(out.size, Image.AFFINE, (1, 0, self.cx-out.size[0]/2, 0, 1, out.size[1]/2-self.cy))
         #draw text
         self.draw_text(out, self.display_text, self.fnt)
         #save composite image
@@ -1067,9 +1071,9 @@ class Roomba(object):
             self.base=merge
             if self.auto_rotate:
                 if angle > 90-self.angle or angle < self.angle-90: #try to avoid map flipping upside down...
-                    self.angle = -(180-angle)
+                    self.angle = (180-angle)
                 else:
-                    self.angle = -angle
+                    self.angle = angle
                 self.log.info("MAP: Auto rotating: angle: %s, final angle: %s" % (angle, self.angle))
             
         if self.debug:
@@ -1177,8 +1181,8 @@ if __name__ == '__main__':
     import argparse
     #-------- Command Line -----------------
     parser = argparse.ArgumentParser(description='Forward MQTT data from Roomba 980 to local MQTT broker')
-    parser.add_argument('-f','--configfile', action='store',type=str, default="./config.ini", help='config file name, default: ./config.ini)')
-    parser.add_argument('-n','--roombaName', action='store',type=str, default="", help='optional Roomba name, default: "")')
+    parser.add_argument('-f','--configfile', action='store',type=str, default="./config.ini", help='config file name (default: ./config.ini)')
+    parser.add_argument('-n','--roombaName', action='store',type=str, default="", help='optional Roomba name (default: "")')
     parser.add_argument('-t','--topic', action='store',type=str, default="#", help='Roomba MQTT Topic to subscribe to (can use wildcards # and + default: #)')
     parser.add_argument('-T','--brokerFeedback', action='store',type=str, default="/roomba/feedback", help='Topic on broker to publish feedback to (default: /roomba/feedback)')
     parser.add_argument('-C','--brokerCommand', action='store',type=str, default="/roomba/command", help='Topic on broker to publish commands to (default: /roomba/command')
