@@ -8,37 +8,38 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 This is version 1.0 so it may be buggy!
 
 ## Advice
-
-If you enjoy python980 and it works nice for you, I recommend blocking the internet access to your robot to avoid the OTA firmware updates. New firmware changes can cause python980 to stop working. Blocking firmware updates can be performed using the parental control options on your router.
+If you enjoy python980 and it works well for you, I recommend blocking the internet access to your robot to avoid the OTA firmware updates. New firmware changes can cause python980 to stop working. Blocking firmware updates can be performed using the parental control options on your router.
 
 When a new firmware is published, you can come here to verify if python980 is still compatible. Once python980 is compatible you can temporarily enable internet access for your robot to get the firmware upgrade.
 
-## Firmware 2.x.x documentation
-
+## Firmware 2.x.x notes
 **This library is only for firmware 2.x.x.** [Check your robot version!](http://homesupport.irobot.com/app/answers/detail/a_id/529) **and is for python 2.7**
 
-Tested with firmware version V2.2.5-2/ubuntu 14.04
+Only local connections are supported, cloud connections are a future project. The project was written to allow Openhab2 control, so if you integrate Roomba into Openhab2, you can control it from anywhere.
+
+As only **one connection at at time is** allowed to the Roomba local mqtt server, the app will connect via the cloud if you run in continuous mode. In periodic mode, the app can connect locally, but the library will be off line until the app disconnects, when it will automatically reconnect.
+
+Tested with firmware version V2.2.5-2/Ubuntu 14.04
 
 ## Features
-
 * Get your username/password easily
 * Auto discovery robot IP (optional)
-* Local API control (from your MQTT broker)
+* Local API control
+* Remote API control (via your MQTT broker)
 * Simplified Cleaning Preferences settings.
 * **NOT Firmware 1.6.x compatible.**
 * Firmware 2.x.x compatible.
 * Multiple Roombas supported (but not tested)
+* Continuous or periodic connection (to allow local app access)
 * Live Maps
 * Maps show locations of errors, bin full, cancelled runs
 * auto map translation and rotation (at cleaning completion/error etc.)
 * designed for openhab2 compatibility
 
 ## Live Maps
-
 ![iRobot Roomba 980 cleaning map using python980 lib](/map.png)
 
 ## Dependancies
-
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
 ```bash
 <sudo> pip install paho-mqtt
@@ -52,7 +53,6 @@ For map drawing, you need at least PIL installed (preferably the latest version 
 For fancy maps, you need openCV installed (V2). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
 
 ## Install
-
 First you need python 2.7 installed (note: this library is not python 3!) and then:
 
 clone this repository:
@@ -130,7 +130,7 @@ optional arguments:
 ```
 
 ## quick start
-With the roomba 980 on the dock and charged, stand by the roomba and run
+With the roomba 980 on the dock and charged (and connected to wifi), stand by the roomba and run
 ```bash
 ./roomba.py
 ```
@@ -146,7 +146,6 @@ I advice you to experiment with the map size (if you are using maps), as that is
 the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, roomba rotation). See the examples.
 
 ## How to get your username/blid and password
-
 You can get it automatically as described in quick start, or you can run:
 ```bash
 ./getpassword.py
@@ -160,12 +159,29 @@ either with or without the IP address of your roomba.
 You can also specify a config file other than the default (-h for options). Results are displayed and saved to the config file.
 
 ## Using the library in your python script
+### Simple Version
+```python
+from roomba import Roomba
 
+myroomba = Roomba(address, blid, roombaPassword)
+
+myroomba.set_preference("carpetBoost", "true)
+myroomba.set_preference("twoPass", "false")
+
+myroomba.send_command("start")
+#myroomba.send_command("stop")
+#myroomba.send_command("dock")
+
+import json
+print json.dumps(myrooma.master_state, indent=2)
+```
+### More Complicated Version
 ```python
 if __name__ == '__main__':
     from roomba import Roomba
     import paho.mqtt.client as mqtt
     import time
+    import json
     
     def broker_on_connect(client, userdata, flags, rc):
         print("Broker Connected with result code "+str(rc))
@@ -199,6 +215,9 @@ if __name__ == '__main__':
     
     broker = 'localhost'    #ip of mqtt broker
     #broker = None if not using local mqtt broker
+    address = 'roomba ip'
+    blid = 'blid'
+    rooombaPassword = 'password'
     
     mqttc = None
     if broker is not None:
@@ -215,14 +234,14 @@ if __name__ == '__main__':
         mqttc.on_subscribe = broker_on_subscribe
         
         try:
-            mqttc.username_pw_set("user", "password")   #put your own user and password here if you are using them, otherwise comment out
+            mqttc.username_pw_set("user", "password")   #put your own mqtt user and password here if you are using them, otherwise comment out
             mqttc.connect(broker, 1883, 60) # Ping MQTT broker every 60 seconds if no data is published from this script.
             
         except Exception as e:
             print("Unable to connect to MQTT Broker: %s" % e)
             mqttc = None
 
-    myroomba = Roomba(address, blid, roombPassword)  #minnimum required to connect on Linux Debian system, will read connection from config file
+    myroomba = Roomba(address, blid, roombaPassword)  #minnimum required to connect on Linux Debian system, will read connection from config file
     #myroomba = Roomba(address, blid, roombaPassword, topic="#", continuous=True, clean=False, cert_name = "./ca-certificates.crt")  #setting things manually
  
     #all these are optional, if you don't include them, the defaults will work just fine
@@ -246,6 +265,7 @@ if __name__ == '__main__':
         if mqttc is not None:
             mqttc.disconnect()
 ```
+# Data
 master_state starts empty, and fills with time, it is published in full every 5 minutes by default (but updates to it are published live)
 
 master_state should contain:
@@ -357,18 +377,17 @@ master_state should contain:
      nCBump: 0 },
   bbsys: { hr: 6522, min: 54 },
   signal: { rssi: -43, snr: 40 } }
-
 ```
 
 ## Commands/Settings
-
+### Commanda
 * Commands are:
   * "start",
   * "stop",
   * "pause",
   * "resume",
   * "dock"
-
+### Settings
 * Settings are:
   * carpetBoost true, 
   * vacHigh true,
@@ -384,8 +403,9 @@ mosquitto_pub -t "/roomba/command" -m "start"
 mosquitto_pub -t "/roomba/setting" -m "carpetBoost true"
 ```
 
-## ToDo's
+Or call directly from a python script (see simple example above).
 
+## ToDo's
 I'm just using some roomba icons I found on the web, if you have better roomba icos, please let me know, I know these are not Roomba 980 icons...
 Post my openhab2 items, sitemaps, transforms and rules for controlling the Roomba.
 Update the example map shown here, it's an older version, the new ones are a little nicer.

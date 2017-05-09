@@ -1116,7 +1116,7 @@ if __name__ == '__main__':
             else:
                 for myroomba in roomba_list:
                     if myroomba.roombaName in msg.topic:
-                        myroomba.set_preference(str(msg.payload))
+                        myroomba.set_preference(cmd[0], cmd[1])
         else:
             log.warn("Unknown topic: %s" % str(msg.topic))
         
