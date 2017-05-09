@@ -162,6 +162,7 @@ You can also specify a config file other than the default (-h for options). Resu
 ## Using the library in your python script
 
 ```python
+if __name__ == '__main__':
     from roomba import Roomba
     import paho.mqtt.client as mqtt
     import time
@@ -221,7 +222,7 @@ You can also specify a config file other than the default (-h for options). Resu
             print("Unable to connect to MQTT Broker: %s" % e)
             mqttc = None
 
-    myroomba = Roomba()  #minnimum required to connect on Linux Debian system, will read connection from config file
+    myroomba = Roomba(address, blid, roombPassword)  #minnimum required to connect on Linux Debian system, will read connection from config file
     #myroomba = Roomba(address, blid, roombaPassword, topic="#", continuous=True, clean=False, cert_name = "./ca-certificates.crt")  #setting things manually
  
     #all these are optional, if you don't include them, the defaults will work just fine
