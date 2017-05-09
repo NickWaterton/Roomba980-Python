@@ -380,21 +380,21 @@ master_state should contain:
 ```
 
 ## Commands/Settings
-### Commanda
+### Commands
 * Commands are:
-  * "start",
-  * "stop",
-  * "pause",
-  * "resume",
+  * "start"
+  * "stop"
+  * "pause"
+  * "resume"
   * "dock"
 ### Settings
 * Settings are:
-  * carpetBoost true, 
-  * vacHigh true,
-  * openOnly true,   (this is edge clean - set to false to enable edge cleaning)
-  * noAutoPasses true,
-  * twoPass true,
-  * binPause true,
+  * carpetBoost true
+  * vacHigh true
+  * openOnly true   *this is edge clean - set to false to enable edge cleaning*
+  * noAutoPasses true
+  * twoPass true
+  * binPause true
                 
 You publish this as a string to your mqtt broker topic /roomba/command or /roomba/setting (or whatever you have defined if you change these from default)
 Ubuntu example (assuming the broker is on your localhost) - should work for any linux system with mosquitto installed
@@ -406,6 +406,6 @@ mosquitto_pub -t "/roomba/setting" -m "carpetBoost true"
 Or call directly from a python script (see simple example above).
 
 ## ToDo's
-I'm just using some roomba icons I found on the web, if you have better roomba icos, please let me know, I know these are not Roomba 980 icons...
+I'm just using some roomba icons I found on the web, if you have better roomba icons, please let me know, I know these are not Roomba 980 icons...
 Post my openhab2 items, sitemaps, transforms and rules for controlling the Roomba.
 Update the example map shown here, it's an older version, the new ones are a little nicer.
