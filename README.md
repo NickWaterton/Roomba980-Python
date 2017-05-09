@@ -139,7 +139,7 @@ or
 python roomba.py
 ```
 
-Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file. If this works, the program will then start displaying messages from your Roomba, and printing the maste_state every few seconds. the results are logged to a log file (Roomba.log by default).
+Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file. If this works, the program will then start displaying messages from your Roomba, and printing the master_state every few seconds. the results are logged to a log file (Roomba.log by default).
 
 On future runs (Once successful), these values will be taken from the configuration file, so you only have to do this once. You can manually specify these on the command line, some example start up bash scripts are supplied.
 I advice you to experiment with the map size (if you are using maps), as that is the one variable that isn't totally automatic. the size, position of the dock etc depend on your house layout.
@@ -221,8 +221,8 @@ You can also specify a config file other than the default (-h for options). Resu
             print("Unable to connect to MQTT Broker: %s" % e)
             mqttc = None
 
-    #myroomba = Roomba(address, blid, roombaPassword)  #minnimum required to connect on Linux Debian system
-    myroomba = Roomba(address, blid, roombaPassword, topic="#", continuous=True, clean=False, cert_name = "./ca-certificates.crt")
+    myroomba = Roomba()  #minnimum required to connect on Linux Debian system, will read connection from config file
+    #myroomba = Roomba(address, blid, roombaPassword, topic="#", continuous=True, clean=False, cert_name = "./ca-certificates.crt")  #setting things manually
  
     #all these are optional, if you don't include them, the defaults will work just fine
     #if you are using maps
