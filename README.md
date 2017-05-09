@@ -223,6 +223,7 @@ if __name__ == '__main__':
     if broker is not None:
         brokerCommand = "/roomba/command"
         brokerSetting = "/roomba/setting"
+        brokerFeedback = "/roomba/feedback"
         
         #connect to broker
         mqttc = mqtt.Client()
