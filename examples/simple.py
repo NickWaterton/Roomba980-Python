@@ -7,6 +7,7 @@ blid = "3115850251687850"
 roombaPassword = ":1:1493319243:gOiaXpQ4lbSoD1xJ"
 
 myroomba = Roomba(address, blid, roombaPassword)
+#or myroomba = Roomba() #if you have a config file - will attempt discovery if you don't
 myroomba.connect()
 
 myroomba.set_preference("carpetBoost", "true")

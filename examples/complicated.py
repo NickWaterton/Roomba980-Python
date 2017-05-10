@@ -65,7 +65,7 @@ if broker is not None:
         print("Unable to connect to MQTT Broker: %s" % e)
         mqttc = None
 
-myroomba = Roomba(address, blid, roombaPassword)  #minnimum required to connect on Linux Debian system, will read connection from config file
+myroomba = Roomba()  #minnimum required to connect on Linux Debian system, will read connection from config file
 #myroomba = Roomba(address, blid, roombaPassword, topic="#", continuous=True, clean=False, cert_name = "./ca-certificates.crt")  #setting things manually
 
 #all these are optional, if you don't include them, the defaults will work just fine

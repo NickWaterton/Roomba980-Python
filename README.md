@@ -218,7 +218,7 @@ The API calls are (see getpassword.py for an example of how to use the password 
 ### Classes
 ```python
 password(address='255.255.255.255', file=".\config.ini")
-Roomba(address=None, blid=None, password=None, topic="#", continuous=True, clean=False, cert_name="", roombaName="")
+Roomba(address=None, blid=None, password=None, topic="#", continuous=True, clean=False, cert_name="", roombaName="", file="./config.ini")
 ```
 ### Roomba methods
 ```python
@@ -233,6 +233,7 @@ enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./",
             roomba_icon_file="./roomba.png", 
             roomba_error_file="./roombaerror.png", 
             roomba_cancelled_file="./roombacancelled.png",
+            roomba_battery_file="./roomba-charge.png",
             bin_full_file="./binfull.png", 
             roomba_size=(50,50), draw_edges = 15, auto_rotate=True)
 make_icon(input="./roomba.png", output="./roomba_mod.png")
@@ -266,6 +267,7 @@ blid = "3835850251647850"
 roombaPassword = ":1:1493319243:gOizXpQ4lcdSoD1xJ"
 
 myroomba = Roomba(address, blid, roombaPassword)
+#or myroomba = Roomba() #if you have a config file - will attempt discovery if you don't
 myroomba.connect()
 
 myroomba.set_preference("carpetBoost", "true")
@@ -350,7 +352,7 @@ if broker is not None:
         print("Unable to connect to MQTT Broker: %s" % e)
         mqttc = None
 
-myroomba = Roomba(address, blid, roombaPassword)  #minnimum required to connect on Linux Debian system, will read connection from config file
+myroomba = Roomba()  #minnimum required to connect on Linux Debian system, will read connection from config file
 #myroomba = Roomba(address, blid, roombaPassword, topic="#", continuous=True, clean=False, cert_name = "./ca-certificates.crt")  #setting things manually
 
 #all these are optional, if you don't include them, the defaults will work just fine
@@ -1392,15 +1394,8 @@ end
 ```
 ### Icons
 I also have various roomba icons in /etc/openhab2/icons/classic
-```
-/etc/openhab2/icons/classic/roomba-charge.png    /etc/openhab2/icons/classic/roomba-error.png   /etc/openhab2/icons/classic/roomba-run.png
-/etc/openhab2/icons/classic/roomba-dock.png      /etc/openhab2/icons/classic/roombaerror.png    /etc/openhab2/icons/classic/roomba-start.png
-/etc/openhab2/icons/classic/roomba-drop.png      /etc/openhab2/icons/classic/roomba-old.png     /etc/openhab2/icons/classic/roomba-stop.png
-/etc/openhab2/icons/classic/roomba-eco.png       /etc/openhab2/icons/classic/roomba-pause.png   /etc/openhab2/icons/classic/roomba-wifi.png
-/etc/openhab2/icons/classic/roombaerror-off.png  /etc/openhab2/icons/classic/roomba.png
-/etc/openhab2/icons/classic/roombaerror-on.png   /etc/openhab2/icons/classic/roomba-resume.png
-```
-These are in openhab/icons, copy them to /etc/openhab2/icons/classic.
+
+These are here in openhab/icons, copy them to /etc/openhab2/icons/classic.
 items and transforms are there also.
 ### General
 start_openhab_roomba is a bash script that starts roomba with the maps in the right location (on Ubuntu) for openhab2, you may have to change this location for other systems (windows, RPi, etc), depending on how you installed Openhab2. You need the mqtt binding installed as well.
