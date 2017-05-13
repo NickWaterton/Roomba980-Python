@@ -879,7 +879,8 @@ Group item=roomba_items {
             Switch item=roomba_control
             Group label="Map" icon="map" {
                 Frame label="Map" {
-                    Image icon="map" url="http://your_OH_ip_address:port/static/map.png" label="Map" refresh=1000
+                    //Image icon="map" url="http://your_OH_ip_address:port/static/map.png" label="Map" refresh=1000
+                    Webview icon="map" url="http://your_OH_ip_address:port/static/map.html" height=40 label="Map"
                 }
             }
             Group label="Settings" icon="select"{
@@ -1404,4 +1405,4 @@ In the above rules/sitemap replace `your_OH_ip:port` with your own Openhab2 ip a
 ## ToDo's
 I'm just using some roomba icons I found on the web, if you have better roomba icons, please let me know, I know these are not Roomba 980 icons...
 Update the example map shown here, it's an older version, the new ones are a little nicer.
-Write a nice web interface script.
+Write a nice web interface script. Done! (well a web map display anyway). See `map.html` - for openhab2 copy this to /etc/openhab2/html (same location as map.png will go in), now you can see the live maps via `http://your_OH_ip:port/static/map.html` in your browser.

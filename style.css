@@ -1,0 +1,11 @@
+body {
+      background-color: black;
+      color: white;
+      margin: 0;
+      padding: 0;
+      }
+img,video {
+    width: auto;
+    width: 100%;
+    height: auto;
+    }
