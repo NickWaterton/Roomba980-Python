@@ -703,13 +703,20 @@ class Roomba(object):
         #    self.current_state = self.states["recharge"]
         #    self.show_final_map = False
         
+        #deal with "bin full" timeout on mission
+        try:
+            if self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"] == "none" and self.cleanMissionStatus_phase == "charge" and (self.current_state == self.states["pause"] or self.current_state == self.states["recharge"]):
+                self.current_state = self.states["cancelled"]
+        except KeyError:
+            pass
+        
         if self.current_state == self.states["charge"] and self.cleanMissionStatus_phase == "run":
             self.current_state = self.states["new"]
         elif self.current_state == self.states["run"] and self.cleanMissionStatus_phase == "hmMidMsn":
             self.current_state = self.states["dock"]
-        elif self.current_state == self.states["dock"] and self.cleanMissionStatus_phase == "charge" and not self.bin_full:
+        elif self.current_state == self.states["dock"] and self.cleanMissionStatus_phase == "charge":
             self.current_state = self.states["recharge"]
-        elif self.current_state == self.states["dock"] and self.cleanMissionStatus_phase == "charge" and self.bin_full:
+        elif self.current_state == self.states["recharge"] and self.cleanMissionStatus_phase == "charge" and self.bin_full:
             self.current_state = self.states["pause"]
         elif self.current_state == self.states["run"] and self.cleanMissionStatus_phase == "charge":
             self.current_state = self.states["recharge"]
@@ -717,8 +724,6 @@ class Roomba(object):
             self.current_state = self.states["pause"]
         elif self.current_state == self.states["pause"] and self.cleanMissionStatus_phase == "charge":
             self.current_state = self.states["pause"]
-        elif self.current_state == self.states["recharge"] and self.cleanMissionStatus_phase == "charge":
-            self.current_state = self.states["recharge"]
             current_mission = None #so that we will draw map and can update recharge time
         elif self.current_state == self.states["charge"] and self.cleanMissionStatus_phase == "charge":
             current_mission = None #so that we will draw map and can update charge status
