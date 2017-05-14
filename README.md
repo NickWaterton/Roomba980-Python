@@ -852,6 +852,7 @@ Number roomba_nMssn    "Cleaning Mission Number [%d]" <number> (roomba_items)  {
 String roomba_phase    "Phase [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_phase:state:default]"}
 String roomba_initiator  "Initiator [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_initiator:state:default]"}
 Switch roomba_error "Error [%]" <roombaerror> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_error:state:MAP(switchFromMqtt.map)]"}
+String roomba_errortext  "Error Message [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/error_message:state:default]"}
 Number roomba_mssnM "Cleaning Elapsed Time [%d m]" <clock> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_mssnM:state:default]"}
 Number roomba_sqft "Square Ft Cleaned [%d]" <groundfloor> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_sqft:state:default]"}
 Number roomba_expireM "Mission Recharge Time [%d m]" <clock> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_expireM:state:default]"}
@@ -880,7 +881,7 @@ Group item=roomba_items {
             Group label="Map" icon="map" {
                 Frame label="Map" {
                     //Image icon="map" url="http://your_OH_ip_address:port/static/map.png" label="Map" refresh=1000
-                    Webview icon="map" url="http://your_OH_ip_address:port/static/map.html" height=40 label="Map"
+                    Webview icon="map" url="http://your_OH_ip_address:port/static/roomba_map.html" height=40 label="Map"
                 }
             }
             Group label="Settings" icon="select"{
@@ -908,6 +909,7 @@ Group item=roomba_items {
                 Text item=roomba_mission
                 Text item=roomba_percent_complete
                 Switch item=roomba_error mappings=[ON="ERROR!", OFF="Normal"]
+                Text item=roomba_errortext
                 Text item=roomba_mssnM
                 Text item=roomba_sqft
                 Text item=roomba_nMssn
@@ -1405,4 +1407,4 @@ In the above rules/sitemap replace `your_OH_ip:port` with your own Openhab2 ip a
 ## ToDo's
 I'm just using some roomba icons I found on the web, if you have better roomba icons, please let me know, I know these are not Roomba 980 icons...
 Update the example map shown here, it's an older version, the new ones are a little nicer.
-Write a nice web interface script. Done! (well a web map display anyway). See `map.html` - for openhab2 copy this to /etc/openhab2/html (same location as map.png will go in), now you can see the live maps via `http://your_OH_ip:port/static/map.html` in your browser.
+Write a nice web interface script. Done! (well a web map display anyway). See `roomba_map.html` - for openhab2 copy this to /etc/openhab2/html (same location as map.png will go in), now you can see the live maps via `http://your_OH_ip:port/static/map.html` in your browser.
