@@ -43,7 +43,7 @@ try:
 except ImportError:
     print("CV or numpy module not found, falling back to PIL")
 try:
-    from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
+    from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps, ImageChops
     HAVE_PIL=True
 except ImportError:
     print("PIL module not found, maps are disabled")  
@@ -190,11 +190,11 @@ class Roomba(object):
     '''
     This is a Class for Roomba 900 series WiFi connected Vacuum cleaners
     Requires firmware version 2.0 and above (not V1.0). Tested with Roomba 980
-    username (blid) and password are required, and can be found using the password() class above 
+    username (blid) and password are required, and can be found using the password() class above (or can be auto discovered) 
     Most of the underlying info was obtained from here:
     https://github.com/koalazak/dorita980 many thanks!
     The values received from the Roomba as stored in a dictionay called master_state, and can be accessed
-    at any time, the contets are live, and will build with time after connection.
+    at any time, the contents are live, and will build with time after connection.
     This is not needed if the forward to mqtt option is used, as the events will be decoded and published on the
     designated mqtt client topic.
     '''
@@ -510,20 +510,20 @@ class Roomba(object):
         else:
             self.log.info("Posting DECODED data")
             
-    def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./",
-                         home_icon_file="./home.png", 
-                         roomba_icon_file="./roomba.png", 
-                         roomba_error_file="./roombaerror.png", 
-                         roomba_cancelled_file="./roombacancelled.png",
-                         roomba_battery_file="./roomba-charge.png",
-                         bin_full_file="./binfull.png", 
-                         roomba_size=(50,50), draw_edges = 30, auto_rotate=True):
+    def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./", iconPath = "./",
+                        home_icon_file="home.png", 
+                        roomba_icon_file="roomba.png", 
+                        roomba_error_file="roombaerror.png", 
+                        roomba_cancelled_file="roombacancelled.png",
+                        roomba_battery_file="roomba-charge.png",
+                        bin_full_file="binfull.png", 
+                        roomba_size=(50,50), draw_edges = 30, auto_rotate=True):
         '''
         Enable live map drawing. mapSize is x,y size, x,y offset of docking station ((0,0) is the center of the image)
-        final value is map rotation (in case map is not streight up/down). These values depend on the size/shape of the
+        final value is map rotation (in case map is not straight up/down). These values depend on the size/shape of the
         area Roomba covers. Offset depends on where you place the docking station. This will need some experimentation
         to get right. You can supply 32x32 icons for dock and roomba etc. If the files don't exist, crude representations ar made. 
-        if you specify home_icon_file as None, then no dock is drawn. Draw edges attempts to draw streight lines around the final (not live) map, 
+        if you specify home_icon_file as None, then no dock is drawn. Draw edges attempts to draw straight lines around the final (not live) map, 
         and Auto_rotate (on/off) attempts to line the map up vertically. These only work if you have openCV installed. otherwise a PIL
         version is used, which is not as good (but less CPU intensive).
         Returns map enabled True/False
@@ -543,12 +543,15 @@ class Roomba(object):
             self.angle = self.mapSize[4]
             self.roomba_angle = self.mapSize[5]
             self.mapPath = mapPath
-            self.home_icon_file = home_icon_file
-            self.roomba_icon_file = roomba_icon_file
-            self.roomba_error_file = roomba_error_file
-            self.roomba_cancelled_file = roomba_cancelled_file
-            self.roomba_battery_file = roomba_battery_file
-            self.bin_full_file = bin_full_file
+            if home_icon_file is None:
+                self.home_icon_file = None
+            else:
+                self.home_icon_file = iconPath+home_icon_file
+            self.roomba_icon_file = iconPath+roomba_icon_file
+            self.roomba_error_file = iconPath+roomba_error_file
+            self.roomba_cancelled_file = iconPath+roomba_cancelled_file
+            self.roomba_battery_file = iconPath+roomba_battery_file
+            self.bin_full_file = iconPath+bin_full_file
             self.draw_edges = draw_edges/10000
             self.auto_rotate = auto_rotate
             
@@ -864,16 +867,6 @@ class Roomba(object):
             except IOError as e:
                 self.roomba_problem = Image.new('RGBA', self.base.size, self.transparent)
                 self.log.warn("MAP: problems image problem: %s: created new image" % e)
-            
-            try:
-                self.log.info("MAP: openening existing room outline image")
-                self.room_outline = Image.open(self.mapPath+'/'+self.roombaName+'room.png').convert('RGBA')
-                #self.room_outline = self.make_transparent(self.room_outline, (64,64,64,255)) # grey border
-                if self.room_outline.size != self.base.size:
-                    raise IOError("Image is wrong size")
-            except IOError as e:
-                self.room_outline = Image.new('RGBA', self.base.size, self.transparent)
-                self.log.warn("MAP: room outline image problem: %s: set to None" % e)
                 
             try:
                 self.log.info("MAP: openening existing map no text image")
@@ -1133,16 +1126,17 @@ class Roomba(object):
         self.base.save(self.mapPath+'/'+self.roombaName+'lines.png', "PNG")
         #save problem overlay
         self.roomba_problem.save(self.mapPath+'/'+self.roombaName+'problems.png', "PNG")
-        #merge lines with rooma overlay
-        out = Image.alpha_composite(self.base, roomba_sprite)
-        #merge problem location for roomba into out
-        out = Image.alpha_composite(out, self.roomba_problem)
         #draw room outline (saving results if this is a final map) update x,y and angle if auto_rotate
         self.draw_room_outline(draw_final)
-        out = Image.alpha_composite(out, self.room_outline)   #paste room outline onto background
+        #merge room outline into base
+        out = Image.alpha_composite(self.base, self.room_outline)
+        #merge roomba lines (trail) with base
+        out = Image.alpha_composite(out, roomba_sprite)
+        #merge problem location for roomba into out
+        out = Image.alpha_composite(out, self.roomba_problem)
         if draw_final and self.auto_rotate:
             #translate image to center it if auto_rotate is on
-            self.log.info("MAP: calculation of center: %s, translating final map to center it, x:%d, y:%d deg: %.2f" % ((self.cx,self.cy),self.cx-out.size[0]/2,self.cy-out.size[1]/2,self.angle))
+            self.log.info("MAP: calculation of center: (%d,%d), translating final map to center it, x:%d, y:%d deg: %.2f" % (self.cx,self.cy,self.cx-out.size[0]/2,self.cy-out.size[1]/2,self.angle))
             out = out.transform(out.size, Image.AFFINE, (1, 0, self.cx-out.size[0]/2, 0, 1, self.cy-out.size[1]/2))
         out_rotated = out.rotate(180+self.angle, expand=True).resize(self.base.size)    #map is upside down, so rotate 180 degrees, and size to fit
         #save composite image
@@ -1193,14 +1187,25 @@ class Roomba(object):
         '''
         self.log.info("MAP: checking room outline")
         if HAVE_CV2:
-            if self.room_outline_contour is None:
+            if self.room_outline_contour is None or overwrite:
                 try:
                     self.room_outline_contour = np.load(self.mapPath+'/'+self.roombaName+'room.npy')
                 except IOError as e:
                     self.log.warn("Unable to load room outline: %s, setting to 0" % e)
                     self.room_outline_contour = np.array([(0,0),(0,0),(0,0),(0,0)], dtype=np.int)
+                              
+                try:
+                    self.log.info("MAP: openening existing room outline image")
+                    self.room_outline = Image.open(self.mapPath+'/'+self.roombaName+'room.png').convert('RGBA')
+                    if self.room_outline.size != self.base.size:
+                        raise IOError("Image is wrong size")
+                except IOError as e:
+                    self.room_outline = Image.new('RGBA', self.base.size, self.transparent)
+                    self.log.warn("MAP: room outline image problem: %s: set to None" % e)
+                
             room_outline_area = cv2.contourArea(self.room_outline_contour)
-            edgedata = cv2.add(np.array(self.base.convert('L'), dtype=np.uint8), np.array(self.room_outline.convert('L'), dtype=np.uint8))
+            #edgedata = cv2.add(np.array(self.base.convert('L'), dtype=np.uint8), np.array(self.room_outline.convert('L'), dtype=np.uint8))
+            edgedata = np.array(self.base.convert('L'))
             _, contours, _ = self.findContours(edgedata,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) #find external contour
             if contours[0] is None: return
             if len(contours[0]) < 5: return
@@ -1222,7 +1227,6 @@ class Roomba(object):
             edges = ImageOps.invert(edges.filter(ImageFilter.FIND_EDGES))
             self.room_outline = self.make_transparent(edges, (0, 0, 0, 255))
         
-        #self.test_get_image_parameters(self.room_outline)   # debugging
         if overwrite or self.debug:
             self.room_outline.save(self.mapPath+'/'+self.roombaName+'room.png', "PNG") #save room outline
             if HAVE_CV2:
@@ -1231,73 +1235,62 @@ class Roomba(object):
                 self.get_image_parameters(image=self.room_outline, contour=self.room_outline_contour, final=overwrite)  #update map centre and angle
             self.log.info("MAP: Wrote new room outline files")
  
-    def test_get_image_parameters(self, image=None):
+    def PIL_get_image_parameters(self, image=None, start=90, end = 0, step=-1, recursion=0):
         '''
-        FOR TESTING ONLY!
-        updates angle of image, and centre using cv2 or PIL.
+        updates angle of image, and centre using PIL.
         NOTE: this assumes the floorplan is rectangular! if you live in a lighthouse, the angle will not be valid!
-        input is cv2 contour or PIL image
+        input is PIL image
         '''
         if image is not None and HAVE_PIL:
             imbw = image.convert('L')
             max_area = self.base.size[0] * self.base.size[1]
             x_y = (self.base.size[0]/2, self.base.size[1]/2)
-            final_angle = self.angle
-            for angle in range(90, 0, -1):
-                im = imbw.rotate(angle, expand=True).resize(self.base.size)    #rotate image and resize to fit
+            angle = self.angle
+            div_by_10 = False 
+            if step >=10 or step <=-10:
+                step /= 10
+                div_by_10 = True
+            for try_angle in range(start, end, step):
+                if div_by_10:
+                    try_angle /= 10.0
+                im = imbw.rotate(try_angle, expand=True)    #rotate image and resize to fit
                 box = im.getbbox()
                 if box is not None:
                     area = (box[2]-box[0]) * (box[3]-box[1])
                     if area < max_area:
-                        final_angle = angle 
+                        angle = try_angle 
                         x_y = ((box[2]-box[0])/2+box[0], (box[3]-box[1])/2+box[1])
-                        max_area = area
-                    
-            if final_angle < self.angle-45:
-                final_angle += 90
-            if final_angle > 45-self.angle:
-                final_angle -= 90
-            angle = final_angle
-        else:
-            return
-
-        self.log.info("MAP: PIL_TEST: image center: x:%d, y:%d, angle %.2f" % (x_y[0], x_y[1], angle))
+                        max_area = area         
+                        
+        if recursion >= 1:
+            return x_y, angle
+               
+        x_y, angle = self.PIL_get_image_parameters(image, (angle+1)*10, (angle-1)*10, -10, recursion + 1)
+        
+        #self.log.info("MAP: PIL: image center: x:%d, y:%d, angle %.2f" % (x_y[0], x_y[1], angle))
+        return x_y, angle
 
     def get_image_parameters(self, image=None, contour=None, final=False):
         '''
         updates angle of image, and centre using cv2 or PIL.
         NOTE: this assumes the floorplan is rectangular! if you live in a lighthouse, the angle will not be valid!
         input is cv2 contour or PIL image
+        routines find the minnimum area rectangle that fits the image outline
         '''
         if contour is not None and HAVE_CV2:
+            #find minnimum area rectangle that fits
             x_y,l_w,angle = cv2.minAreaRect(contour)  #returns (x,y), (width, height), theta - where (x,y) is the center
-            if angle < self.angle-45:
-                angle += 90
-            if angle > 45-self.angle:
-                angle -= 90
-                
+              
         elif image is not None and HAVE_PIL:
-            imbw = image.convert('L')
-            max_area = self.base.size[0] * self.base.size[1]
-            x_y = (self.base.size[0]/2, self.base.size[1]/2)
-            final_angle = self.angle
-            for angle in range(90, 0, -1):
-                im = imbw.rotate(angle, expand=True).resize(self.base.size)    #rotate image and resize to fit
-                box = im.getbbox()
-                if box is not None:
-                    area = (box[2]-box[0]) * (box[3]-box[1])
-                    if area < max_area:
-                        final_angle = angle 
-                        x_y = ((box[2]-box[0])/2+box[0], (box[3]-box[1])/2+box[1])
-                        max_area = area
+            x_y, angle = self.PIL_get_image_parameters(image)
                     
-            if final_angle < self.angle-45:
-                final_angle += 90
-            if final_angle > 45-self.angle:
-                final_angle -= 90
-            angle = final_angle
         else:
             return
+            
+        if angle < self.angle-45:
+            angle += 90
+        if angle > 45-self.angle:
+            angle -= 90
         
         if final:
             self.cx = x_y[0]
@@ -1333,6 +1326,9 @@ class Roomba(object):
             return im_cont, contours, hierarchy
             
     def draw_final_map(self, overwrite=False):
+        '''
+        draw map with outlines at end of mission. Called when mission has finished and Roomba has docked
+        '''
         merge = Image.new('RGBA',self.base.size,self.transparent)
         if HAVE_CV2:
             #NOTE: this is CPU intensive!
@@ -1357,11 +1353,12 @@ class Roomba(object):
             mask = np.full(edgedata.shape, 255, dtype=np.uint8) #white
             cv2.drawContours(mask,contours,-1,0,-1)   #create mask (of other contours) in black
             
-            approx = cv2.approxPolyDP(max_contour,self.draw_edges*max_perimeter,True) #self.draw_edges is the max deviation from a line (set to 0.25%) - you can fiddle with this
+            approx = cv2.approxPolyDP(max_contour,self.draw_edges*max_perimeter,True) #self.draw_edges is the max deviation from a line - you can fiddle with this in enable_map
 
             bgimage = np.array(merge)   #make blank RGBA image array
-            cv2.drawContours(bgimage,[approx] , -1, (124,252,0,255), -1) #fill with "lawngreen"
+            cv2.drawContours(bgimage,[approx] , -1, (124,252,0,255), -1) #draw contour and fill with "lawngreen"
             bgimage = cv2.bitwise_and(bgimage,bgimage,mask = mask)  #mask image with internal contours
+            #not dure if you really need this - uncomment if you want the area outlined.
             cv2.drawContours(edgedata,[approx] , -1, (255), 1)  #draw longest contour aproximated to lines (in black), width 1
             
             outline = Image.fromarray(edgedata) #outline
@@ -1369,6 +1366,7 @@ class Roomba(object):
         else:
             base = self.base.filter(ImageFilter.SMOOTH_MORE)
             outline = base.convert('L').filter(ImageFilter.FIND_EDGES)  #draw edges at end of mission
+            #outline = ImageChops.subtract(base.convert('L').filter(ImageFilter.EDGE_ENHANCE), base.convert('L'))
             
         edges = ImageOps.invert(outline)
         edges = self.make_transparent(edges, (0, 0, 0, 255))
@@ -1510,7 +1508,7 @@ if __name__ == '__main__':
     parser.add_argument('-m','--drawmap', action='store_false', help='Draw Roomba cleaning map (default: True)', default = True)
     parser.add_argument('-M','--mapPath', action='store',type=str, default="./", help='Location to store maps to (default: ./)')
     parser.add_argument('-s','--mapSize', action='store',type=str, default="(800,1500,0,0,0,0)", help='Map Size, Dock offset and skew for the map. (800,1500) is the size, (0,0) is the dock location, in the center of the map, 0 is the rotation of the map, 0 is the rotation of the roomba. use single quotes around the string. (default: \'(800,1500,0,0,0,0)\')')
-    parser.add_argument('-I','--icon', action='store',type=str, default="./home.png", help='location of dock icon. (default: "./home.png")')
+    parser.add_argument('-I','--iconPath', action='store',type=str, default="./", help='location of icons. (default: "./")')
     parser.add_argument('-x','--exclude', action='store',type=str, default="", help='Exclude topics that have this in them (default: "")')
     parser.add_argument('--version', action='version', version="%(prog)s ("+__version__+")")
     
@@ -1604,7 +1602,7 @@ if __name__ == '__main__':
         if not arg.continuous:
             myroomba.delay = arg.delay/1000
         if arg.mapSize != "" and arg.mapPath != "":
-            myroomba.enable_map(enable=True, mapSize=arg.mapSize, mapPath=arg.mapPath, home_icon_file=arg.icon)  #enable live maps, class default is no maps
+            myroomba.enable_map(enable=True, mapSize=arg.mapSize, mapPath=arg.mapPath, iconPath=arg.iconPath)  #enable live maps, class default is no maps
         if arg.broker is not None:
             myroomba.set_mqtt_client(mqttc, arg.brokerFeedback) #if you want to publish Roomba data to your own mqtt broker (default is not to) if you have more than one roomba, and assign a roombaName, it is addded to this topic (ie brokerFeedback/roombaName)
         #finally connect to Roomba - (required!)

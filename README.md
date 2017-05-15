@@ -58,10 +58,10 @@ For map drawing, you need at least PIL installed (preferably the latest version 
 <sudo> pip install pillow
 ```
 
-For fancy maps, you need openCV installed (V2). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
+For fancy maps, you need openCV installed (V2, or V3, but *not tested with V3*). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
 
 ## Install
-First you need python 2.7 installed (note: this library is not python 3!) and then:
+First you need python 2.7 installed (note: this library is not written for python 3!) and then:
 
 clone this repository:
 ```bash
@@ -78,7 +78,7 @@ usage: roomba.py [-h] [-f CONFIGFILE] [-n ROOMBANAME] [-t TOPIC]
                  [-b BROKER] [-p PORT] [-U USER] [-P PASSWORD] [-R ROOMBAIP]
                  [-u BLID] [-w ROOMBAPASSWORD] [-i INDENT] [-l LOG] [-e] [-D]
                  [-r] [-j] [-c] [-d DELAY] [-m] [-M MAPPATH] [-s MAPSIZE]
-                 [-I ICON] [-x EXCLUDE] [--version]
+                 [-I ICONPATH] [-x EXCLUDE] [--version]
 
 Forward MQTT data from Roomba 980 to local MQTT broker
 
@@ -131,7 +131,8 @@ optional arguments:
                         of the map, 0 is the rotation of the map, 0 is the
                         rotation of the roomba. use single quotes around the
                         string. (default: '(800,1500,0,0,0,0)')
-  -I ICON, --icon ICON  location of dock icon. (default: "./home.png")
+  -I ICONPATH, --iconPath ICONPATH
+                        location of icons. (default: "./")
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude topics that have this in them (default: "")
   --version             show program's version number and exit
@@ -228,13 +229,13 @@ send_command(command)
 set_preference(preference, setting)
 set_mqtt_client(mqttc=None, brokerFeedback="")
 set_options(raw=False, indent=0, pretty_print=False)
-enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./",
-            home_icon_file="./home.png", 
-            roomba_icon_file="./roomba.png", 
-            roomba_error_file="./roombaerror.png", 
-            roomba_cancelled_file="./roombacancelled.png",
-            roomba_battery_file="./roomba-charge.png",
-            bin_full_file="./binfull.png", 
+enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./", iconPath="./",
+            home_icon_file="home.png", 
+            roomba_icon_file="roomba.png", 
+            roomba_error_file="roombaerror.png", 
+            roomba_cancelled_file="roombacancelled.png",
+            roomba_battery_file="roomba-charge.png",
+            bin_full_file="binfull.png", 
             roomba_size=(50,50), draw_edges = 15, auto_rotate=True)
 make_icon(input="./roomba.png", output="./roomba_mod.png")
 ```
@@ -246,6 +247,7 @@ bin_full
 #string
 cleanMissionStatus_phase
 current_state
+error_message
 #dictionarys
 co_ords
 master_state
@@ -357,7 +359,7 @@ myroomba = Roomba()  #minnimum required to connect on Linux Debian system, will 
 
 #all these are optional, if you don't include them, the defaults will work just fine
 #if you are using maps
-myroomba.enable_map(enable=True, mapSize="(800,1650,-300,-50,2,0)", mapPath="./", home_icon_file="./home.png")  #enable live maps, class default is no maps
+myroomba.enable_map(enable=True, mapSize="(800,1650,-300,-50,2,0)", mapPath="./", iconPath="./")  #enable live maps, class default is no maps
 if broker is not None:
     myroomba.set_mqtt_client(mqttc, brokerFeedback) #if you want to publish Roomba data to your own mqtt broker (default is not to) if you have more than one roomba, and assign a roombaName, it is addded to this topic (ie brokerFeedback/roombaName)
 #finally connect to Roomba - (required!)
@@ -797,6 +799,8 @@ Output should look like this:
 /roomba/feedback/signal_snr 53
 /roomba/feedback/state Charging
 ```
+
+In addition `state` and `error_message` are published which are derived by the class.
 
 ## Commands/Settings
 ### Commands
@@ -1407,4 +1411,4 @@ In the above rules/sitemap replace `your_OH_ip:port` with your own Openhab2 ip a
 ## ToDo's
 I'm just using some roomba icons I found on the web, if you have better roomba icons, please let me know, I know these are not Roomba 980 icons...
 Update the example map shown here, it's an older version, the new ones are a little nicer.
-Write a nice web interface script. Done! (well a web map display anyway). See `roomba_map.html` - for openhab2 copy this to /etc/openhab2/html (same location as map.png will go in), now you can see the live maps via `http://your_OH_ip:port/static/map.html` in your browser.
+Write a nice web interface script. Done! (well a web map display anyway). See `roomba_map.html` - for openhab2 copy this to /etc/openhab2/html (same location as map.png will go in), now you can see the live maps via `http://your_OH_ip:port/static/map.html` in your browser. i use a subdirectory to avoid cluttering the root html directory, just be consisten in the pathnames, and make sure the directory exists (with write permission) before running roomba.py!

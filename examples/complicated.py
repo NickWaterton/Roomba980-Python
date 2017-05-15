@@ -70,7 +70,7 @@ myroomba = Roomba()  #minnimum required to connect on Linux Debian system, will 
 
 #all these are optional, if you don't include them, the defaults will work just fine
 #if you are using maps
-myroomba.enable_map(enable=True, mapSize="(800,1650,-300,-50,2,0)", mapPath="./", home_icon_file="./home.png")  #enable live maps, class default is no maps
+myroomba.enable_map(enable=True, mapSize="(800,1650,-300,-50,2,0)", mapPath="./", iconPath="./")  #enable live maps, class default is no maps
 if broker is not None:
     myroomba.set_mqtt_client(mqttc, brokerFeedback) #if you want to publish Roomba data to your own mqtt broker (default is not to) if you have more than one roomba, and assign a roombaName, it is addded to this topic (ie brokerFeedback/roombaName)
 #finally connect to Roomba - (required!)
