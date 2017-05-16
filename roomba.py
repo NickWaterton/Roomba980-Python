@@ -4,7 +4,7 @@
 from __future__ import print_function
 __version__ = "1.0"
 '''
-Python 2.7
+Python 2.7/Python 3.6 (thanks to pschmitt for adding Python 3 compatibility)
 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt server
 
 Nick Waterton 24th April 2017: V 1.0: Initial Release
@@ -536,6 +536,10 @@ class Roomba(object):
 
         if not HAVE_PIL: #can't draw a map without PIL!
             return False
+            
+        if Image.PILLOW_VERSION < "4.1.1":
+            print("WARNING: PIL version is %s, this is not the latest! you can get bad memory leaks with old versions of PIL" % Image.PILLOW_VERSION)
+            print("run: 'pip install --upgrade pillow' to fix this")
 
         self.drawmap = enable
         if self.drawmap:
@@ -563,10 +567,6 @@ class Roomba(object):
             self.initialise_map(roomba_size)
             return True
         return False
-
-        if Image.PILLOW_VERSION < "4.1.1":
-            print("WARNING: PIL version is %s, this is not the latest! you can get bad memory leaks with old versions of PIL" % Image.PILLOW_VERSION)
-            print("run: 'pip install --upgrade pillow' to fix this")
 
     def totimestamp(self, dt):
         td = dt - datetime.datetime(1970,1,1)
@@ -1625,4 +1625,3 @@ if __name__ == '__main__':
         log.info("System exit Received - Exiting program")
         mqttc.disconnect()
         sys.exit(0)
-
