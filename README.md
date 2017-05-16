@@ -13,7 +13,7 @@ If you enjoy python980 and it works well for you, I recommend blocking the inter
 When a new firmware is published, you can come here to verify if python980 is still compatible. Once python980 is compatible you can temporarily enable internet access for your robot to get the firmware upgrade.
 
 ## Firmware 2.x.x notes
-**This library is only for firmware 2.x.x.** [Check your robot version!](http://homesupport.irobot.com/app/answers/detail/a_id/529) **and is for python 2.7** *NEW* Now supports Python 3.6 Python 3.6 (thanks to pschmitt for adding Python 3 compatibility)
+**This library is only for firmware 2.x.x.** [Check your robot version!](http://homesupport.irobot.com/app/answers/detail/a_id/529) **and is for python 2.7** *NEW* **Now supports Python 3.6** (thanks to pschmitt for adding Python 3 compatibility)
 
 Only local connections are supported, cloud connections are a future project. The project was written to allow Openhab2 control, so if you integrate Roomba into Openhab2, you can control it from anywhere.
 
