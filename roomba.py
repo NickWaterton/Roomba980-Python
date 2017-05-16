@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 __version__ = "1.0"
 '''
 Python 2.7
@@ -29,7 +30,11 @@ import time
 from logging.handlers import RotatingFileHandler
 from ast import literal_eval
 import socket
-import ConfigParser
+import six
+try:
+    import configparser
+except:
+    from six.moves import configparser
 import math
 
 global HAVE_CV2
@@ -112,7 +117,7 @@ class password(object):
         else:
             print("found %d Roombas" % len(roombas))
 
-        for address,parsedMsg in roombas.iteritems():
+        for address,parsedMsg in six.iteritems(roombas):
             addr = address[0]
             if int(parsedMsg["ver"]) < 2:
                 print("Roombas at address: %s does not have the correct firmware version. Your version info is: %s" % (addr,json.dumps(parsedMsg, indent=2)))
@@ -148,7 +153,7 @@ class password(object):
                     if len(data) >= data_len+2: #NOTE data is 0xf0 (mqtt RESERVED) length (0x23 = 35), 0xefcc3b2900 (magic packet), 0xXXXX... (30 bytes of password). so 7 bytes, followed by 30 bytes of password (total of 37)
                         break
                     data_received = wrappedSocket.recv(1024)
-                except socket.error, e:
+                except socket.error as e:
                     print("Socket Error: %s" % e)
                     break
 
@@ -175,7 +180,7 @@ class password(object):
                 print('Password=> %s <= Yes, all this string.' % str(data[7:]))
                 print('Use these credentials in roomba.py')
 
-                Config = ConfigParser.ConfigParser()
+                Config = configparser.ConfigParser()
                 Config.add_section(addr)
                 Config.set(addr,'blid',blid)
                 Config.set(addr,'password',str(data[7:]))
@@ -306,7 +311,7 @@ class Roomba(object):
 
     def read_config_file(file="./config.ini"):
         #read config file
-        Config = ConfigParser.ConfigParser()
+        Config = configparser.ConfigParser()
         try:
             Config.read(file)
         except Exception as e:
@@ -576,7 +581,7 @@ class Roomba(object):
         :param merge_dct: dct merged into dct
         :return: None
         """
-        for k, v in merge_dct.iteritems():
+        for k, v in six.iteritems(merge_dct):
             if (k in dct and isinstance(dct[k], dict)
                     and isinstance(merge_dct[k], Mapping)):
                 self.dict_merge(dct[k], merge_dct[k])
@@ -591,7 +596,7 @@ class Roomba(object):
 
         try:
             #if it's json data, decode it (use OrderedDict to preserve keys order), else return as is...
-            json_data = json.loads(payload.replace(":nan", ":NaN").replace(":inf",":Infinity").replace(":-inf",":-Infinity"), object_pairs_hook=OrderedDict)
+            json_data = json.loads(payload.replace(b":nan", b":NaN").replace(b":inf", b":Infinity").replace(b":-inf", b":-Infinity"), object_pairs_hook=OrderedDict)
             if not isinstance(json_data, dict): #if it's not a dictionary, probably just a number
                 return json_data, dict(json_data)
             json_data_string = "\n".join((indent * " ") + i for i in (json.dumps(json_data, indent = 2)).splitlines())
@@ -612,7 +617,7 @@ class Roomba(object):
         the keys are concatinated with _ to make one unique topic name
         strings are expressely converted to strings to avoid unicode representations
         '''
-        for k, v in state.iteritems():
+        for k, v in six.iteritems(state):
             if isinstance(v, dict):
                 if prefix is None:
                     self.decode_topics(v, k)
@@ -623,10 +628,10 @@ class Roomba(object):
                     newlist = []
                     for i in v:
                         if isinstance(i, dict):
-                            for ki, vi in i.iteritems():
+                            for ki, vi in six.iteritems(i):
                                 newlist.append((str(ki), vi))
                         else:
-                            if isinstance(i, basestring):
+                            if isinstance(i, six.string_types):
                                 i = str(i)
                             newlist.append(i)
                     v = newlist
@@ -1443,7 +1448,7 @@ if __name__ == '__main__':
 
     def read_config_file(file="./config.ini"):
         #read config file
-        Config = ConfigParser.ConfigParser()
+        Config = configparser.ConfigParser()
         try:
             Config.read(file)
             log.info("reading info from config file %s" % file)
@@ -1585,7 +1590,7 @@ if __name__ == '__main__':
             mqttc = None
 
     roomba_list = []
-    for addr, info in roombas.iteritems():
+    for addr, info in six.iteritems(roombas):
         log.info("Creating Roomba object %s" % addr)
         #NOTE: cert_name is a default certificate. change this if your certificates are in a different place. any valid certificate will do, it's not used
         #      but needs to be there to enable mqtt TLS encryption

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from roomba import Roomba
 import paho.mqtt.client as mqtt
 import time
