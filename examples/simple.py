@@ -1,3 +1,4 @@
+from __future__ import print_function
 from roomba import Roomba
 
 #uncomment the option you want to run, and replace address, blid and roombaPassword with your own values
@@ -19,6 +20,6 @@ myroomba.set_preference("carpetBoost", "true")
 
 import json, time
 for i in range(5):
-    print json.dumps(myroomba.master_state, indent=2)
+    print(json.dumps(myroomba.master_state, indent=2))
     time.sleep(1)
 myroomba.disconnect()
