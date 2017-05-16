@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-f','--configfile', action='store',type=str, default="./config.ini", help='config file name, default: ./config.ini)')
     parser.add_argument('-R','--roombaIP', action='store',type=str, default=None, help='ipaddress of Roomba 980 (default: None)')
     arg = parser.parse_args()
-    
+
     if arg.roombaIP is None:
         password(file=arg.configfile)
     else:
