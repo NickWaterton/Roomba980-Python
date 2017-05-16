@@ -1186,6 +1186,53 @@ class Roomba(object):
         e = cosine/sy
         f = y-nx*d-ny*e
         return image.transform(image.size, Image.AFFINE, (a,b,c,d,e,f), resample=Image.BICUBIC)
+        
+    def match_outlines(self, orig_image, skewed_image):
+        orig_image = np.array(orig_image)
+        skewed_image = np.array(skewed_image)
+        try:
+            surf = cv2.xfeatures2d.SURF_create(400)
+        except Exception:
+            surf=cv2.SIFT(400)
+        kp1, des1 = surf.detectAndCompute(orig_image, None)
+        kp2, des2 = surf.detectAndCompute(skewed_image, None)
+
+        FLANN_INDEX_KDTREE = 0
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
+        matches = flann.knnMatch(des1, des2, k=2)
+
+        # store all the good matches as per Lowe's ratio test.
+        good = []
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
+                good.append(m)
+
+        MIN_MATCH_COUNT = 10
+        if len(good) > MIN_MATCH_COUNT:
+            src_pts = np.float32([kp1[m.queryIdx].pt for m in good
+                                  ]).reshape(-1, 1, 2)
+            dst_pts = np.float32([kp2[m.trainIdx].pt for m in good
+                                  ]).reshape(-1, 1, 2)
+
+            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+            # see https://ch.mathworks.com/help/images/examples/find-image-rotation-and-scale-using-automated-feature-matching.html for details
+            ss = M[0, 1]
+            sc = M[0, 0]
+            scaleRecovered = math.sqrt(ss * ss + sc * sc)
+            thetaRecovered = math.atan2(ss, sc) * 180 / math.pi
+            self.log.info("MAP: Calculated scale difference: %.2f, Calculated rotation difference: %.2f" % (scaleRecovered, thetaRecovered))
+
+            #deskew image
+            im_out = cv2.warpPerspective(skewed_image, np.linalg.inv(M), (orig_image.shape[1], orig_image.shape[0]))
+            return im_out
+
+        else:
+            self.log.warn("MAP: Not  enough  matches are found   -   %d/%d" % (len(good), MIN_MATCH_COUNT))
+            matchesMask = None
+            return skewed_image
 
     def draw_room_outline(self, overwrite=False, colour=(64,64,64,255), width=1):
         '''
@@ -1216,6 +1263,13 @@ class Roomba(object):
             if contours[0] is None: return
             if len(contours[0]) < 5: return
             max_area = cv2.contourArea(contours[0])
+            # experimental shape matching
+            match = cv2.matchShapes(self.room_outline_contour,contours[0],cv2.cv.CV_CONTOURS_MATCH_I1,0.0)
+            self.log.info("MAP: perimeter/outline match is: %.4f" % match)
+            #if match is less than 0.35 - shapes are similar (but if it's 0 - then they are the same shape..) try auto rotating map to fit.
+            if match < 0.35 and match > 0:
+                #self.match_outlines(self.room_outline, self.base)
+                pass
             if max_area > room_outline_area:
                 self.log.info("MAP: found new outline perimiter")
                 self.room_outline_contour = contours[0]
@@ -1238,7 +1292,9 @@ class Roomba(object):
             if HAVE_CV2:
                 np.save(self.mapPath+'/'+self.roombaName+'room.npy', self.room_outline_contour) #save room outline contour as numpy array
             if self.auto_rotate:
-                self.get_image_parameters(image=self.room_outline, contour=self.room_outline_contour, final=overwrite)  #update map centre and angle
+                self.get_image_parameters(image=self.room_outline, contour=self.room_outline_contour, final=overwrite)  #update outline centre
+                self.log.info("MAP: calculation of center: (%d,%d), translating room outline to center it, x:%d, y:%d deg: %.2f" % (self.cx,self.cy,self.cx-self.base.size[0]/2,self.cy-self.base.size[1]/2,self.angle))
+                self.room_outline = self.room_outline.transform(out.size, Image.AFFINE, (1, 0, self.cx-self.base.size[0]/2, 0, 1, self.cy-self.base.size[1]/2)) # center room outline, same as map.
             self.log.info("MAP: Wrote new room outline files")
 
     def PIL_get_image_parameters(self, image=None, start=90, end = 0, step=-1, recursion=0):
