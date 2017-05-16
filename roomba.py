@@ -1294,7 +1294,7 @@ class Roomba(object):
             if self.auto_rotate:
                 self.get_image_parameters(image=self.room_outline, contour=self.room_outline_contour, final=overwrite)  #update outline centre
                 self.log.info("MAP: calculation of center: (%d,%d), translating room outline to center it, x:%d, y:%d deg: %.2f" % (self.cx,self.cy,self.cx-self.base.size[0]/2,self.cy-self.base.size[1]/2,self.angle))
-                self.room_outline = self.room_outline.transform(out.size, Image.AFFINE, (1, 0, self.cx-self.base.size[0]/2, 0, 1, self.cy-self.base.size[1]/2)) # center room outline, same as map.
+                self.room_outline = self.room_outline.transform(self.base.size, Image.AFFINE, (1, 0, self.cx-self.base.size[0]/2, 0, 1, self.cy-self.base.size[1]/2)) # center room outline, same as map.
             self.log.info("MAP: Wrote new room outline files")
 
     def PIL_get_image_parameters(self, image=None, start=90, end = 0, step=-1, recursion=0):
