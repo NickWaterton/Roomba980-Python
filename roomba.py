@@ -1027,10 +1027,11 @@ class Roomba(object):
 
         elif self.current_state == self.states["pause"]:
             self.log.info("MAP: ignoring new co-ords in pause phase")
-            new_co_ords = old_co_ords# = self.zero_coords()
-            self.display_text = "Paused:" + " Time: " + time.strftime("%a %b %d %H:%M:%S")
+            new_co_ords = old_co_ords
+            self.display_text = "Paused: " + str(self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"]) + "m, Bat: "+ str(self.master_state["state"]["reported"]["batPct"]) + "%"
             if self.bin_full:
                 self.display_text = "Bin Full," + self.display_text
+                new_co_ords = old_co_ords = self.zero_coords()  #assume roomba is docked...
             self.save_text_and_map_on_whitebg(self.map_no_text)
 
         elif self.current_state == self.states["hmPostMsn"]:
