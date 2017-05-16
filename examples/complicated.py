@@ -18,7 +18,7 @@ def broker_on_connect(client, userdata, flags, rc):
     if rc == 0:
         mqttc.subscribe(brokerCommand)
         mqttc.subscribe(brokerSetting)
-                    
+
 def broker_on_message(mosq, obj, msg):
     #publish to roomba
     if "command" in msg.topic:
@@ -28,7 +28,7 @@ def broker_on_message(mosq, obj, msg):
         print("Received SETTING: %s" % str(msg.payload))
         cmd = str(msg.payload).split()
         myroomba.set_preference(cmd[0], cmd[1])
-    
+
 def broker_on_publish(mosq, obj, mid):
     pass
 
@@ -47,7 +47,7 @@ if broker is not None:
     brokerCommand = "/roomba/command"
     brokerSetting = "/roomba/setting"
     brokerFeedback = "/roomba/feedback"
-    
+
     #connect to broker
     mqttc = mqtt.Client()
     #Assign event callbacks
@@ -56,11 +56,11 @@ if broker is not None:
     mqttc.on_disconnect = broker_on_disconnect
     mqttc.on_publish = broker_on_publish
     mqttc.on_subscribe = broker_on_subscribe
-    
+
     try:
         mqttc.username_pw_set(user, password)  #put your own mqtt user and password here if you are using them, otherwise comment out
         mqttc.connect(broker, 1883, 60) #Ping MQTT broker every 60 seconds if no data is published from this script.
-        
+
     except Exception as e:
         print("Unable to connect to MQTT Broker: %s" % e)
         mqttc = None
@@ -86,7 +86,7 @@ try:
         while True:
             print("Roomba Data: %s" % json.dumps(myroomba.master_state, indent=2))
             time.sleep(5)
-        
+
 except (KeyboardInterrupt, SystemExit):
     print("System exit Received - Exiting program")
     myroomba.disconnect()
