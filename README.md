@@ -20,6 +20,7 @@ Only local connections are supported, cloud connections are a future project. Th
 As only **one connection at at time is** allowed to the Roomba local mqtt server, the app will connect via the cloud if you run in continuous mode. In periodic mode, the app can connect locally, but the library will be off line until the app disconnects, when it will automatically reconnect.
 
 Tested with firmware version V2.2.5-2/Ubuntu 14.04
+*also tested an working with F/W 2.2.9-1*
 
 ## Features
 * Get your username/password easily
