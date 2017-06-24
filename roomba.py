@@ -1594,8 +1594,9 @@ if __name__ == '__main__':
     log.info("*******************")
     log.info("* Program Started *")
     log.info("*******************")
-
-    log.info("Paho MQTT Version: %s" % mqtt.VERSION_NUMBER)
+    
+    import paho.mqtt #bit of a kludge, just to get the version number
+    log.info("Paho MQTT Version: %s" % paho.mqtt.__version__)
 
     log.debug("-- DEBUG Mode ON -")
     log.info("<CNTRL C> to Exit")
