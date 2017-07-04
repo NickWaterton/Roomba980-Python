@@ -336,7 +336,7 @@ class Roomba(object):
             if not HAVE_MQTT:
                 print("Please install paho-mqtt '<sudo> pip install paho-mqtt' to use this library")
                 return False
-            self.client = mqtt.Client(client_id=self.blid, clean_session=self.clean)
+            self.client = mqtt.Client(client_id=self.blid, clean_session=self.clean, protocol=mqtt.MQTTv311)
             # Assign event callbacks
             self.client.on_message = self.on_message
             self.client.on_connect = self.on_connect
