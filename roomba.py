@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-__version__ = "1.0"
+__version__ = "1.1"
 '''
 Python 2.7/Python 3.6 (thanks to pschmitt for adding Python 3 compatibility)
 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt server
 
 Nick Waterton 24th April 2017: V 1.0: Initial Release
+Nick Waterton 4th July   2017  V 1.1: Fixed MQTT protocol version, and map/icon paths
 '''
 
 #NOTE: MUST use Pillow Pillow 4.1.1 to avoid some horrible memory leaks in the text handling!
@@ -515,7 +516,7 @@ class Roomba(object):
         else:
             self.log.info("Posting DECODED data")
 
-    def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./", iconPath = "./",
+    def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)", mapPath=".", iconPath = ".",
                         home_icon_file="home.png",
                         roomba_icon_file="roomba.png",
                         roomba_error_file="roombaerror.png",
@@ -1568,9 +1569,9 @@ if __name__ == '__main__':
     parser.add_argument('-c','--continuous', action='store_false', help='Continuous connection to Roomba (default: True)', default = True)
     parser.add_argument('-d','--delay', action='store',type=int, default=1000, help='Disconnect period for non-continuous connection (default: 1000ms)')
     parser.add_argument('-m','--drawmap', action='store_false', help='Draw Roomba cleaning map (default: True)', default = True)
-    parser.add_argument('-M','--mapPath', action='store',type=str, default="./", help='Location to store maps to (default: ./)')
+    parser.add_argument('-M','--mapPath', action='store',type=str, default=".", help='Location to store maps to (default: .)')
     parser.add_argument('-s','--mapSize', action='store',type=str, default="(800,1500,0,0,0,0)", help='Map Size, Dock offset and skew for the map. (800,1500) is the size, (0,0) is the dock location, in the center of the map, 0 is the rotation of the map, 0 is the rotation of the roomba. use single quotes around the string. (default: \'(800,1500,0,0,0,0)\')')
-    parser.add_argument('-I','--iconPath', action='store',type=str, default="./", help='location of icons. (default: "./")')
+    parser.add_argument('-I','--iconPath', action='store',type=str, default=".", help='location of icons. (default: ".")')
     parser.add_argument('-x','--exclude', action='store',type=str, default="", help='Exclude topics that have this in them (default: "")')
     parser.add_argument('--version', action='version', version="%(prog)s ("+__version__+")")
 
