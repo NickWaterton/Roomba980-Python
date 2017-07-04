@@ -1607,8 +1607,12 @@ if __name__ == '__main__':
     log.info("* Program Started *")
     log.info("*******************")
     
+    log.info("Python Version: %s" % sys.version[:6])
+    
     import paho.mqtt #bit of a kludge, just to get the version number
     log.info("Paho MQTT Version: %s" % paho.mqtt.__version__)
+    log.info("NOTE: if your python version is less than 2.7.9, and Paho MQTT verion is not 1.2.3 or lower, this program will NOT WORK")
+    log.info("Please use <sudo> pip install paho-mqtt==1.2.3 to downgrade paho-mqtt, or use a later version of python")
 
     log.debug("-- DEBUG Mode ON -")
     log.info("<CNTRL C> to Exit")
