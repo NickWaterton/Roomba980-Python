@@ -6,6 +6,7 @@ Unofficial iRobot Roomba 980 python library (SDK).
 Thanks to https://github.com/koalazak/dorita980 where much of the inner workings were derived from.
 
 This is version 1.0 so it may be buggy!
+**NEW** Now version 1.1.1 - so it may be less buggy
 
 ## Advice
 If you enjoy python980 and it works well for you, I recommend blocking the internet access to your robot to avoid the OTA firmware updates. New firmware changes can cause python980 to stop working. Blocking firmware updates can be performed using the parental control options on your router.
@@ -21,6 +22,7 @@ As only **one connection at at time is** allowed to the Roomba local mqtt server
 
 Tested with firmware version V2.2.5-2/Ubuntu 14.04
 *also tested an working with F/W 2.2.9-1*
+*also tested on Ubuntu 16.04*
 
 ## Features
 * Get your username/password easily
@@ -53,6 +55,15 @@ This script/library is intended to forward roomba data/commands to/from a local 
 ```bash
 <sudo> pip install paho-mqtt
 ```
+
+**NOTE:** Our friends at paho-mqtt have just released v1.3 (replaces v1.2.3) *which has breaking changes in it* You need to take note of the following:
+If you are running python versions lower than 2.7.9 (eg Ubuntu 14.04), you **need to install/stay with the older version of paho-mqtt**. Check your python version using `python -V`.
+To install the old version of paho-mqtt, use:
+```bash
+<sudo> pip install paho-mqtt==1.2.3
+```
+
+later versions of python should work with either version of paho-mqtt now, due to changes made in V1.1.1 of roomba.py.
 
 For map drawing, you need at least PIL installed (preferably the latest version of pillow)
 ```bash
