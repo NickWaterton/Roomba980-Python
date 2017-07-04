@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-__version__ = "1.1"
+__version__ = "1.1.1"
 '''
 Python 2.7/Python 3.6 (thanks to pschmitt for adding Python 3 compatibility)
 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt server
 
 Nick Waterton 24th April 2017: V 1.0: Initial Release
-Nick Waterton 4th July   2017  V 1.1: Fixed MQTT protocol version, and map paths
+Nick Waterton 4th July   2017  V 1.1.1: Fixed MQTT protocol version, and map paths, fixed paho-mqtt tls changes
 '''
 
 #NOTE: MUST use Pillow Pillow 4.1.1 to avoid some horrible memory leaks in the text handling!
@@ -349,7 +349,18 @@ class Roomba(object):
             #client.on_log = self.on_log
 
             #set TLS, self.cert_name is required by paho-mqtt, even if the certificate is not used...
-            self.client.tls_set(self.cert_name, cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLSv1)
+            #but v1.3 changes all this, so have to do the following:
+         
+            self.log.info("Seting TLS")
+            try:
+                self.client.tls_set(self.cert_name, cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLSv1)
+            except ValueError:   #try V1.3 version
+                self.log.warn("TLS Setting failed - trying 1.3 version")
+                self.client._ssl_context = None
+                context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+                context.verify_mode = ssl.CERT_NONE
+                context.load_default_certs()
+                self.client.tls_set_context(context)
 
             # disables peer verification
             self.client.tls_insecure_set(True)
