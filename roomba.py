@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 '''
 Python 2.7/Python 3.6 (thanks to pschmitt for adding Python 3 compatibility)
 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt server
 
 Nick Waterton 24th April 2017: V 1.0: Initial Release
 Nick Waterton 4th July   2017  V 1.1.1: Fixed MQTT protocol version, and map paths, fixed paho-mqtt tls changes
+Nick Waterton 5th July   2017  V 1.1.2: Minor fixes, CV version 3 .2 support
 '''
 
 #NOTE: MUST use Pillow Pillow 4.1.1 to avoid some horrible memory leaks in the text handling!
@@ -1276,7 +1277,7 @@ class Roomba(object):
             if len(contours[0]) < 5: return
             max_area = cv2.contourArea(contours[0])
             # experimental shape matching
-            match = cv2.matchShapes(self.room_outline_contour,contours[0],cv2.cv.CV_CONTOURS_MATCH_I1,0.0)
+            match = cv2.matchShapes(self.room_outline_contour,contours[0],1,0.0) #note cv2.cv.CV_CONTOURS_MATCH_I1 does not exist in CV 3.0, so just use 1
             self.log.info("MAP: perimeter/outline match is: %.4f" % match)
             #if match is less than 0.35 - shapes are similar (but if it's 0 - then they are the same shape..) try auto rotating map to fit.
             if match < 0.35 and match > 0:
@@ -1607,12 +1608,25 @@ if __name__ == '__main__':
     log.info("* Program Started *")
     log.info("*******************")
     
-    log.info("Python Version: %s" % sys.version[:6])
+    log.info("Python Version: %s" % sys.version.replace('\n',''))
     
-    import paho.mqtt #bit of a kludge, just to get the version number
-    log.info("Paho MQTT Version: %s" % paho.mqtt.__version__)
-    log.info("NOTE: if your python version is less than 2.7.9, and Paho MQTT verion is not 1.2.3 or lower, this program will NOT WORK")
-    log.info("Please use <sudo> pip install paho-mqtt==1.2.3 to downgrade paho-mqtt, or use a later version of python")
+    if HAVE_MQTT:
+        import paho.mqtt #bit of a kludge, just to get the version number
+        log.info("Paho MQTT Version: %s" % paho.mqtt.__version__)
+        if sys.version_info.major == 2 and sys.version_info.minor == 7 and sys.version_info.micro < 9 and int(paho.mqtt.__version__.split(".")[0]) >= 1 and int(paho.mqtt.__version__.split(".")[1]) > 2:
+            log.error("NOTE: if your python version is less than 2.7.9, and Paho MQTT verion is not 1.2.3 or lower, this program will NOT WORK")
+            log.error("Please use <sudo> pip install paho-mqtt==1.2.3 to downgrade paho-mqtt, or use a later version of python")
+            sys.exit(1)
+            
+    if HAVE_CV2:
+        log.info("CV Version: %s" % cv2.__version__)
+        
+    if HAVE_PIL:
+        import PIL #bit of a kludge, just to get the version number
+        log.info("PIL Version: %s" % PIL.__version__)
+        if int(PIL.__version__.split(".")[0]) < 4:
+            log.warn("WARNING: PIL version is %s, this is not the latest! you can get bad memory leaks with old versions of PIL" % Image.PILLOW_VERSION)
+            log.warn("run: 'pip install --upgrade pillow' to fix this")
 
     log.debug("-- DEBUG Mode ON -")
     log.info("<CNTRL C> to Exit")
