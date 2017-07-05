@@ -402,7 +402,10 @@ class Roomba(object):
             return True
         except Exception as e:
             self.log.error("Error: %s " % e)
-            if e[0] == 111: #errno.ECONNREFUSED
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            #self.log.error("Exception: %s" % exc_type)
+            #if e[0] == 111: #errno.ECONNREFUSED  - dosen't work with python 3.0 so...
+            if exc_type == socket.error or exc_type == ConnectionRefusedError:
                 count +=1
                 if count <= max_retries:
                     self.log.error("Attempting new Connection# %d" % count)
@@ -574,7 +577,7 @@ class Roomba(object):
             self.roomba_cancelled_file = iconPath+roomba_cancelled_file
             self.roomba_battery_file = iconPath+roomba_battery_file
             self.bin_full_file = iconPath+bin_full_file
-            self.draw_edges = draw_edges/10000
+            self.draw_edges = draw_edges//10000
             self.auto_rotate = auto_rotate
 
             self.initialise_map(roomba_size)
@@ -609,7 +612,7 @@ class Roomba(object):
 
         try:
             #if it's json data, decode it (use OrderedDict to preserve keys order), else return as is...
-            json_data = json.loads(payload.replace(b":nan", b":NaN").replace(b":inf", b":Infinity").replace(b":-inf", b":-Infinity"), object_pairs_hook=OrderedDict)
+            json_data = json.loads(payload.decode("utf-8").replace(":nan", ":NaN").replace(":inf", ":Infinity").replace(":-inf", ":-Infinity"), object_pairs_hook=OrderedDict)
             if not isinstance(json_data, dict): #if it's not a dictionary, probably just a number
                 return json_data, dict(json_data)
             json_data_string = "\n".join((indent * " ") + i for i in (json.dumps(json_data, indent = 2)).splitlines())
@@ -835,7 +838,7 @@ class Roomba(object):
                 if base_icon is None:
                     draw_icon.ellipse([(5,5),(icon.size[0]-5,icon.size[1]-5)], fill="green", outline="black")
                     draw_icon.pieslice([(5,5),(icon.size[0]-5,icon.size[1]-5)], 175, 185, fill="red", outline="red")
-                draw_icon.polygon([(icon.size[0]/2,icon.size[1]), (0, 0), (0,icon.size[1])], fill = 'red')
+                draw_icon.polygon([(icon.size[0]//2,icon.size[1]), (0, 0), (0,icon.size[1])], fill = 'red')
                 if fnt is not None:
                     draw_icon.text((4,-4), "!", font=fnt, fill=(255,255,255,255))
             elif icon_name == "cancelled":
@@ -909,7 +912,7 @@ class Roomba(object):
 
         #set dock home position
         if self.home_pos is None:
-            self.home_pos = (self.mapSize[0]/2+self.mapSize[2], self.mapSize[1]/2+self.mapSize[3])
+            self.home_pos = (self.mapSize[0]//2+self.mapSize[2], self.mapSize[1]//2+self.mapSize[3])
             self.log.info("MAP: home_pos: (%d,%d)" % (self.home_pos[0], self.home_pos[1]))
 
         #get icons
@@ -927,7 +930,7 @@ class Roomba(object):
 
         if self.dock_icon is None and self.home_icon_file is not None:
             self.dock_icon = self.load_icon(filename=self.home_icon_file, icon_name="home", fnt=self.fnt)
-            self.dock_position =(self.home_pos[0]-self.dock_icon.size[0]/2, self.home_pos[1]-self.dock_icon.size[1]/2)
+            self.dock_position =(self.home_pos[0]-self.dock_icon.size[0]//2, self.home_pos[1]-self.dock_icon.size[1]//2)
 
         if self.bin_full_icon is None:
             self.bin_full_icon = self.load_icon(filename=self.bin_full_file, icon_name="bin full", fnt=self.fnt, size=roomba_size, base_icon=self.roomba_icon)
@@ -953,8 +956,8 @@ class Roomba(object):
         '''
         offset coordinates according to mapSize settings, with 0,0 as center
         '''
-        x_y = (new_co_ords["x"]+self.mapSize[0]/2+self.mapSize[2], new_co_ords["y"]+self.mapSize[1]/2+self.mapSize[3])
-        old_x_y = (old_co_ords["x"]+self.mapSize[0]/2+self.mapSize[2], old_co_ords["y"]+self.mapSize[1]/2+self.mapSize[3])
+        x_y = (new_co_ords["x"]+self.mapSize[0]//2+self.mapSize[2], new_co_ords["y"]+self.mapSize[1]//2+self.mapSize[3])
+        old_x_y = (old_co_ords["x"]+self.mapSize[0]//2+self.mapSize[2], old_co_ords["y"]+self.mapSize[1]//2+self.mapSize[3])
 
         theta = int(new_co_ords["theta"]-90+self.roomba_angle)
         while theta > 359: theta = 360-theta
@@ -966,7 +969,7 @@ class Roomba(object):
         '''
         calculate roomba position as list
         '''
-        return [x_y[0]-self.roomba_icon.size[0]/2, x_y[1]-self.roomba_icon.size[1]/2, x_y[0]+self.roomba_icon.size[0]/2, x_y[1]+self.roomba_icon.size[1]/2]
+        return [x_y[0]-self.roomba_icon.size[0]//2, x_y[1]-self.roomba_icon.size[1]//2, x_y[0]+self.roomba_icon.size[0]//2, x_y[1]+self.roomba_icon.size[1]//2]
 
     def draw_vacuum_lines(self, image, old_x_y, x_y, theta, colour="lawngreen"):
         '''
@@ -976,9 +979,9 @@ class Roomba(object):
         lines = ImageDraw.Draw(image)
         if x_y != old_x_y:
             self.log.info("MAP: drawing line: %s, %s" % (old_x_y, x_y))
-            lines.line([old_x_y, x_y], fill=colour, width=self.roomba_icon.size[0]/2)
+            lines.line([old_x_y, x_y], fill=colour, width=self.roomba_icon.size[0]//2)
         #draw circle over roomba vacuum area to give smooth edges.
-        arcbox =[x_y[0]-self.roomba_icon.size[0]/4, x_y[1]-self.roomba_icon.size[0]/4,x_y[0]+self.roomba_icon.size[0]/4,x_y[1]+self.roomba_icon.size[0]/4]
+        arcbox =[x_y[0]-self.roomba_icon.size[0]//4, x_y[1]-self.roomba_icon.size[0]//4,x_y[0]+self.roomba_icon.size[0]//4,x_y[1]+self.roomba_icon.size[0]//4]
         lines.ellipse(arcbox, fill=colour)
 
     def draw_text(self, image, display_text, fnt, pos=(0,0), colour=(0,0,255,255), rotate=False):
@@ -1155,8 +1158,8 @@ class Roomba(object):
         out = Image.alpha_composite(out, self.roomba_problem)
         if draw_final and self.auto_rotate:
             #translate image to center it if auto_rotate is on
-            self.log.info("MAP: calculation of center: (%d,%d), translating final map to center it, x:%d, y:%d deg: %.2f" % (self.cx,self.cy,self.cx-out.size[0]/2,self.cy-out.size[1]/2,self.angle))
-            out = out.transform(out.size, Image.AFFINE, (1, 0, self.cx-out.size[0]/2, 0, 1, self.cy-out.size[1]/2))
+            self.log.info("MAP: calculation of center: (%d,%d), translating final map to center it, x:%d, y:%d deg: %.2f" % (self.cx,self.cy,self.cx-out.size[0]//2,self.cy-out.size[1]//2,self.angle))
+            out = out.transform(out.size, Image.AFFINE, (1, 0, self.cx-out.size[0]//2, 0, 1, self.cy-out.size[1]//2))
         out_rotated = out.rotate(180+self.angle, expand=True).resize(self.base.size)    #map is upside down, so rotate 180 degrees, and size to fit
         #save composite image
         self.save_text_and_map_on_whitebg(out_rotated)
@@ -1306,8 +1309,8 @@ class Roomba(object):
                 np.save(self.mapPath+'/'+self.roombaName+'room.npy', self.room_outline_contour) #save room outline contour as numpy array
             if self.auto_rotate:
                 self.get_image_parameters(image=self.room_outline, contour=self.room_outline_contour, final=overwrite)  #update outline centre
-                self.log.info("MAP: calculation of center: (%d,%d), translating room outline to center it, x:%d, y:%d deg: %.2f" % (self.cx,self.cy,self.cx-self.base.size[0]/2,self.cy-self.base.size[1]/2,self.angle))
-                self.room_outline = self.room_outline.transform(self.base.size, Image.AFFINE, (1, 0, self.cx-self.base.size[0]/2, 0, 1, self.cy-self.base.size[1]/2)) # center room outline, same as map.
+                self.log.info("MAP: calculation of center: (%d,%d), translating room outline to center it, x:%d, y:%d deg: %.2f" % (self.cx,self.cy,self.cx-self.base.size[0]//2,self.cy-self.base.size[1]//2,self.angle))
+                self.room_outline = self.room_outline.transform(self.base.size, Image.AFFINE, (1, 0, self.cx-self.base.size[0]//2, 0, 1, self.cy-self.base.size[1]//2)) # center room outline, same as map.
             self.log.info("MAP: Wrote new room outline files")
 
     def PIL_get_image_parameters(self, image=None, start=90, end = 0, step=-1, recursion=0):
@@ -1319,7 +1322,7 @@ class Roomba(object):
         if image is not None and HAVE_PIL:
             imbw = image.convert('L')
             max_area = self.base.size[0] * self.base.size[1]
-            x_y = (self.base.size[0]/2, self.base.size[1]/2)
+            x_y = (self.base.size[0]//2, self.base.size[1]//2)
             angle = self.angle
             div_by_10 = False
             if step >=10 or step <=-10:
@@ -1334,7 +1337,7 @@ class Roomba(object):
                     area = (box[2]-box[0]) * (box[3]-box[1])
                     if area < max_area:
                         angle = try_angle
-                        x_y = ((box[2]-box[0])/2+box[0], (box[3]-box[1])/2+box[1])
+                        x_y = ((box[2]-box[0])//2+box[0], (box[3]-box[1])//2+box[1])
                         max_area = area
 
         if recursion >= 1:
@@ -1482,6 +1485,7 @@ if __name__ == '__main__':
 
     def broker_on_message(mosq, obj, msg):
         #publish to roomba, if there is more than one roomba, the roombaName is added to the topic to publish to
+        msg.payload = msg.payload.decode("utf-8")
         if "command" in msg.topic:
             log.info("Received COMMAND: %s" % str(msg.payload))
             if len(roombas) == 1:
@@ -1693,7 +1697,7 @@ if __name__ == '__main__':
             myroomba.exclude = arg.exclude
         myroomba.set_options(raw=arg.raw, indent=arg.indent, pretty_print=arg.pretty_print)
         if not arg.continuous:
-            myroomba.delay = arg.delay/1000
+            myroomba.delay = arg.delay//1000
         if arg.mapSize != "" and arg.mapPath != "":
             myroomba.enable_map(enable=True, mapSize=arg.mapSize, mapPath=arg.mapPath, iconPath=arg.iconPath)  #enable live maps, class default is no maps
         if arg.broker is not None:
