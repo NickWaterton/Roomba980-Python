@@ -21,11 +21,11 @@ Only local connections are supported, cloud connections are a future project. Th
 As only **one connection at at time is** allowed to the Roomba local mqtt server, the app will connect via the cloud if you run in continuous mode. In periodic mode, the app can connect locally, but the library will be off line until the app disconnects, when it will automatically reconnect.
 
 Tested with firmware version V2.2.5-2/Ubuntu 14.04
-Now tested and working with F/W 2.2.9-1
-Now tested on Ubuntu 16.04
-Now tested with Python 3.6
-Now Tested with OpenCV 3.2
-Now Tested with paho-mqtt 1.3 (on python V2.7.12 and above - does **NOT** work on python versions lower than 2.7.9 - see "Dependencies")
+* Now tested and working with F/W 2.2.9-1
+* Now tested on Ubuntu 16.04
+* Now tested with Python 3.6
+* Now Tested with OpenCV 3.2
+* Now Tested with paho-mqtt 1.3 (on python V2.7.12 and above - does **NOT** work on python versions lower than 2.7.9 - see "Dependencies")
 
 ## Features
 * Get your username/password easily
