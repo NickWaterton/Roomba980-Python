@@ -6,7 +6,7 @@ Unofficial iRobot Roomba 980 python library (SDK).
 Thanks to https://github.com/koalazak/dorita980 where much of the inner workings were derived from.
 
 This is version 1.0 so it may be buggy!
-**NEW** Now version 1.1.1 - so it may be less buggy
+**NEW** Now version 1.1.2 - so it may be less buggy (or not)
 
 ## Advice
 If you enjoy python980 and it works well for you, I recommend blocking the internet access to your robot to avoid the OTA firmware updates. New firmware changes can cause python980 to stop working. Blocking firmware updates can be performed using the parental control options on your router.
@@ -21,8 +21,11 @@ Only local connections are supported, cloud connections are a future project. Th
 As only **one connection at at time is** allowed to the Roomba local mqtt server, the app will connect via the cloud if you run in continuous mode. In periodic mode, the app can connect locally, but the library will be off line until the app disconnects, when it will automatically reconnect.
 
 Tested with firmware version V2.2.5-2/Ubuntu 14.04
-*Now tested and working with F/W 2.2.9-1*
-*Now tested on Ubuntu 16.04*
+Now tested and working with F/W 2.2.9-1
+Now tested on Ubuntu 16.04
+Now tested with Python 3.6
+Now Tested with OpenCV 3.2
+Now Tested with paho-mqtt 1.3 (on python V2.7.12 and above - does **NOT** work on python versions lower than 2.7.9 - see "Dependencies")
 
 ## Features
 * Get your username/password easily
@@ -51,6 +54,13 @@ The library will issue a warning if it detects an earlier version of PIL.
 If you do not have PIL installed, the system will not draw maps (even if enabled), even if you have OpenCV. PIL is used for basic image manipulations. If you do not specifically enable maps, no maps will be drawn. `roomba.py` uses maps, but the class default is to disable maps, so in your own scripts, if you want maps, you have to enable them (after creating the object).
 
 ## Dependencies
+The following libraries/modules are used. Some are optional:
+* six         required
+* paho-mqtt   optional
+* PIL/pillow  optional
+* openCV      optional
+* numpy       optional (used by openCV)
+
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
 ```bash
 <sudo> pip install paho-mqtt
@@ -63,17 +73,28 @@ To install the old version of paho-mqtt, use:
 <sudo> pip install paho-mqtt==1.2.3
 ```
 
-later versions of python should work with either version of paho-mqtt now, due to changes made in V1.1.1 of roomba.py.
+later versions of python should work with either version of paho-mqtt now, due to changes made in V1.1.1 and above of roomba.py.
 
 For map drawing, you need at least PIL installed (preferably the latest version of pillow)
 ```bash
 <sudo> pip install pillow
 ```
 
-For fancy maps, you need openCV installed (V2, or V3, but *not tested with V3*). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
+For fancy maps, you need openCV installed (V2, or V3). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
+
+For Python 3.x compatibility, the six library is used
+```bash
+<sudo> pip install six
+```
+
+or
+```bash
+<sudo> pip3 install six
+```
+depending on your default python environment (in Unbuntu 14.04 and 16.04, python 2.7 is the default, but python 3.x is available).
 
 ## Install
-First you need python 2.7 *or* python 3.6 installed (thanks to pschmitt for adding Python 3 compatibility) and then:
+First you need python 2.7 *or* python 3.5/3.6 installed (thanks to pschmitt for adding Python 3 compatibility) and then:
 
 clone this repository:
 ```bash

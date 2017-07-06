@@ -1612,6 +1612,8 @@ if __name__ == '__main__':
     log.info("* Program Started *")
     log.info("*******************")
     
+    log.info("Roomba.py Version: %s" % __version__)
+    
     log.info("Python Version: %s" % sys.version.replace('\n',''))
     
     if HAVE_MQTT:
