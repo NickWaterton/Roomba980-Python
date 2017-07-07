@@ -126,13 +126,13 @@ optional arguments:
                         and + default: #)
   -T BROKERFEEDBACK, --brokerFeedback BROKERFEEDBACK
                         Topic on broker to publish feedback to (default:
-                        /roomba</name>/feedback)
+                        /roomba/feedback</name>)
   -C BROKERCOMMAND, --brokerCommand BROKERCOMMAND
                         Topic on broker to publish commands to (default:
-                        /roomba</name>/command
+                        /roomba/command</name>)
   -S BROKERSETTING, --brokerSetting BROKERSETTING
                         Topic on broker to publish settings to (default:
-                        /roomba</name>/setting
+                        /roomba/setting</name>)
   -b BROKER, --broker BROKER
                         ipaddress of MQTT broker (default: None)
   -p PORT, --port PORT  MQTT broker port number (default: 1883)

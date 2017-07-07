@@ -1485,13 +1485,13 @@ if __name__ == '__main__':
                     mqttc.subscribe(brokerCommand)
                 else:
                     for myroomba in roomba_list:
-                        mqttc.subscribe(myroomba.roombaName+"/"+brokerCommand)
+                        mqttc.subscribe(brokerCommand+"/"+myroomba.roombaName)
             if brokerSetting != "":
                 if len(roombas) == 1:
                     mqttc.subscribe(brokerSetting)
                 else:
                     for myroomba in roomba_list:
-                        mqttc.subscribe(myroomba.roombaName+"/"+brokerSetting)
+                        mqttc.subscribe(brokerSetting+"/"+myroomba.roombaName)
 
     def broker_on_message(mosq, obj, msg):
         #publish to roomba, if there is more than one roomba, the roombaName is added to the topic to publish to
@@ -1670,9 +1670,9 @@ window.onload = function()
     parser.add_argument('-f','--configfile', action='store',type=str, default="./config.ini", help='config file name (default: ./config.ini)')
     parser.add_argument('-n','--roombaName', action='store',type=str, default="", help='optional Roomba name (default: "")')
     parser.add_argument('-t','--topic', action='store',type=str, default="#", help='Roomba MQTT Topic to subscribe to (can use wildcards # and + default: #)')
-    parser.add_argument('-T','--brokerFeedback', action='store',type=str, default="/roomba/feedback", help='Topic on broker to publish feedback to (default: /roomba</name>/feedback)')
-    parser.add_argument('-C','--brokerCommand', action='store',type=str, default="/roomba/command", help='Topic on broker to publish commands to (default: /roomba</name>/command')
-    parser.add_argument('-S','--brokerSetting', action='store',type=str, default="/roomba/setting", help='Topic on broker to publish settings to (default: /roomba</name>/setting')
+    parser.add_argument('-T','--brokerFeedback', action='store',type=str, default="/roomba/feedback", help='Topic on broker to publish feedback to (default: /roomba/feedback</name>)')
+    parser.add_argument('-C','--brokerCommand', action='store',type=str, default="/roomba/command", help='Topic on broker to publish commands to (default: /roomba/command</name>)')
+    parser.add_argument('-S','--brokerSetting', action='store',type=str, default="/roomba/setting", help='Topic on broker to publish settings to (default: /roomba/setting</name>)')
     parser.add_argument('-b','--broker', action='store',type=str, default=None, help='ipaddress of MQTT broker (default: None)')
     parser.add_argument('-p','--port', action='store',type=int, default=1883, help='MQTT broker port number (default: 1883)')
     parser.add_argument('-U','--user', action='store',type=str, default=None, help='MQTT broker user name (default: None)')
