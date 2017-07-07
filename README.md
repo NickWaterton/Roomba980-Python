@@ -23,7 +23,7 @@ As only **one connection at at time is** allowed to the Roomba local mqtt server
 Tested with firmware version V2.2.5-2/Ubuntu 14.04
 * Now tested and working with F/W 2.2.9-1
 * Now tested on Ubuntu 16.04
-* Now tested with Python 3.6
+* Now tested with Python 3.5
 * Now Tested with OpenCV 3.2
 * Now Tested with paho-mqtt 1.3 (on python V2.7.12 and above - does **NOT** work on python versions lower than 2.7.9 - see "Dependencies")
 
@@ -55,11 +55,11 @@ If you do not have PIL installed, the system will not draw maps (even if enabled
 
 ## Dependencies
 The following libraries/modules are used. Some are optional:
-* six         required
-* paho-mqtt   optional
-* PIL/pillow  optional
-* openCV      optional
-* numpy       optional (used by openCV)
+* six         **required**
+* paho-mqtt   *optional*
+* PIL/pillow  *optional*
+* openCV      *optional*
+* numpy       *optional (used by openCV)*
 
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
 ```bash
@@ -102,7 +102,7 @@ git clone https://github.com/NickWaterton/Roomba980-Python.git
 cd Roomba980-Python
 ```
 
-run `./roomba.py -h` to get the options. This what you will get:
+run `./roomba.py -h` to get the options. This is what you will get:
 
 ```bash
 nick@proliant:~/Scripts/roomba/Roomba980-Python$ ./roomba.py -h
@@ -111,7 +111,7 @@ usage: roomba.py [-h] [-f CONFIGFILE] [-n ROOMBANAME] [-t TOPIC]
                  [-b BROKER] [-p PORT] [-U USER] [-P PASSWORD] [-R ROOMBAIP]
                  [-u BLID] [-w ROOMBAPASSWORD] [-i INDENT] [-l LOG] [-e] [-D]
                  [-r] [-j] [-c] [-d DELAY] [-m] [-M MAPPATH] [-s MAPSIZE]
-                 [-I ICONPATH] [-x EXCLUDE] [--version]
+                 [-I ICONPATH] [-o] [-x EXCLUDE] [--version]
 
 Forward MQTT data from Roomba 980 to local MQTT broker
 
@@ -126,13 +126,13 @@ optional arguments:
                         and + default: #)
   -T BROKERFEEDBACK, --brokerFeedback BROKERFEEDBACK
                         Topic on broker to publish feedback to (default:
-                        /roomba/feedback)
+                        /roomba</name>/feedback)
   -C BROKERCOMMAND, --brokerCommand BROKERCOMMAND
                         Topic on broker to publish commands to (default:
-                        /roomba/command
+                        /roomba</name>/command
   -S BROKERSETTING, --brokerSetting BROKERSETTING
                         Topic on broker to publish settings to (default:
-                        /roomba/setting
+                        /roomba</name>/setting
   -b BROKER, --broker BROKER
                         ipaddress of MQTT broker (default: None)
   -p PORT, --port PORT  MQTT broker port number (default: 1883)
@@ -157,7 +157,7 @@ optional arguments:
                         (default: 1000ms)
   -m, --drawmap         Draw Roomba cleaning map (default: True)
   -M MAPPATH, --mapPath MAPPATH
-                        Location to store maps to (default: ./)
+                        Location to store maps to (default: .)
   -s MAPSIZE, --mapSize MAPSIZE
                         Map Size, Dock offset and skew for the map. (800,1500)
                         is the size, (0,0) is the dock location, in the center
@@ -166,9 +166,11 @@ optional arguments:
                         string. (default: '(800,1500,0,0,0,0)')
   -I ICONPATH, --iconPath ICONPATH
                         location of icons. (default: "./")
+  -o, --roomOutline     Draw room outline (default: True)
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude topics that have this in them (default: "")
   --version             show program's version number and exit
+
 ```
 
 ## quick start
@@ -918,7 +920,7 @@ Group item=roomba_items {
             Group label="Map" icon="map" {
                 Frame label="Map" {
                     //Image icon="map" url="http://your_OH_ip_address:port/static/map.png" label="Map" refresh=1000
-                    Webview icon="map" url="http://your_OH_ip_address:port/static/roomba_map.html" height=40 label="Map"
+                    Webview icon="map" url="http://your_OH_ip_address:port/static/roomba_map.html" height=21 label="Map"
                 }
             }
             Group label="Settings" icon="select"{

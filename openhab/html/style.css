@@ -1,11 +1,10 @@
 body {
-      background-color: black;
+      background-color: white;
       color: white;
       margin: 0;
       padding: 0;
       }
 img,video {
     width: auto;
-    width: 100%;
-    height: auto;
+    max-height:100%;
     }

@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 '''
-Python 2.7/Python 3.6 (thanks to pschmitt for adding Python 3 compatibility)
+Python 2.7/Python 3.5/3.6 (thanks to pschmitt for adding Python 3 compatibility)
 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt server
 
 Nick Waterton 24th April 2017: V 1.0: Initial Release
 Nick Waterton 4th July   2017  V 1.1.1: Fixed MQTT protocol version, and map paths, fixed paho-mqtt tls changes
 Nick Waterton 5th July   2017  V 1.1.2: Minor fixes, CV version 3 .2 support
+Nick Waterton 7th July   2017  V1.2.0: Added -o option "roomOutline" allows enabling/disabling of room outline drawing, added auto creation of css/html files
 '''
 
 #NOTE: MUST use Pillow Pillow 4.1.1 to avoid some horrible memory leaks in the text handling!
@@ -531,7 +532,7 @@ class Roomba(object):
         else:
             self.log.info("Posting DECODED data")
 
-    def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)", mapPath=".", iconPath = "./",
+    def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)", mapPath=".", iconPath = "./", roomOutline=True,
                         home_icon_file="home.png",
                         roomba_icon_file="roomba.png",
                         roomba_error_file="roombaerror.png",
@@ -543,10 +544,11 @@ class Roomba(object):
         Enable live map drawing. mapSize is x,y size, x,y offset of docking station ((0,0) is the center of the image)
         final value is map rotation (in case map is not straight up/down). These values depend on the size/shape of the
         area Roomba covers. Offset depends on where you place the docking station. This will need some experimentation
-        to get right. You can supply 32x32 icons for dock and roomba etc. If the files don't exist, crude representations ar made.
+        to get right. You can supply 32x32 icons for dock and roomba etc. If the files don't exist, crude representations are made.
         if you specify home_icon_file as None, then no dock is drawn. Draw edges attempts to draw straight lines around the final (not live) map,
         and Auto_rotate (on/off) attempts to line the map up vertically. These only work if you have openCV installed. otherwise a PIL
-        version is used, which is not as good (but less CPU intensive).
+        version is used, which is not as good (but less CPU intensive). roomOutline enables the previous largest saved outline to be overlayed on the 
+        map (so you can see where cleaning was missed). This is on by default, but the alignment doesn't work so well, so you can turn it off.
         Returns map enabled True/False
         '''
 
@@ -579,6 +581,9 @@ class Roomba(object):
             self.bin_full_file = iconPath+bin_full_file
             self.draw_edges = draw_edges//10000
             self.auto_rotate = auto_rotate
+            if not roomOutline:
+                self.log.info("MAP: Not drawing Room Outline")
+            self.roomOutline = roomOutline
 
             self.initialise_map(roomba_size)
             return True
@@ -1148,10 +1153,15 @@ class Roomba(object):
         self.base.save(self.mapPath+'/'+self.roombaName+'lines.png', "PNG")
         #save problem overlay
         self.roomba_problem.save(self.mapPath+'/'+self.roombaName+'problems.png', "PNG")
-        #draw room outline (saving results if this is a final map) update x,y and angle if auto_rotate
-        self.draw_room_outline(draw_final)
+        if self.roomOutline or self.auto_rotate:      
+            #draw room outline (saving results if this is a final map) update x,y and angle if auto_rotate
+            self.draw_room_outline(draw_final)
         #merge room outline into base
-        out = Image.alpha_composite(self.base, self.room_outline)
+        if self.roomOutline:
+            #if we want to draw the room outline
+            out = Image.alpha_composite(self.base, self.room_outline)
+        else:
+            out = self.base
         #merge roomba lines (trail) with base
         out = Image.alpha_composite(out, roomba_sprite)
         #merge problem location for roomba into out
@@ -1532,6 +1542,100 @@ if __name__ == '__main__':
         except Exception as e:
             log.warn("Error reading config file %s" %e)
         return roombas
+        
+    def create_html(myroomba,mapPath="."):
+        '''
+        Create html files for live display of roomba maps - but only if they don't already exist
+        '''
+        #default css and html
+        css='''body {
+    background-color: white;
+    color: white;
+    margin: 0;
+    padding: 0;
+    }
+img,video {
+    width: auto;
+    max-height:100%;
+    }
+'''
+        html='''<!DOCTYPE html>
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<script>
+
+function refresh(node)
+{
+   var times = 1000; // gap in Milli Seconds;
+
+   (function startRefresh()
+   {
+      var address;
+      if(node.src.indexOf('?')>-1)
+       address = node.src.split('?')[0];
+      else 
+       address = node.src;
+      node.src = address+"?time="+new Date().getTime();
+
+      setTimeout(startRefresh,times);
+   })();
+
+}
+
+window.onload = function()
+{
+  var node = document.getElementById('img');
+  refresh(node);
+  // you can refresh as many images you want just repeat above steps
+}
+</script>
+
+<body>
+'''
+        html +='<img id="img" src="%smap.png" alt="Roomba Map Live" style="position:absolute;top:0;left:0"/>' % myroomba.roombaName
+        html +='''
+</body>
+</html>
+'''
+        #python 3 workaround
+        try:
+            FileNotFoundError
+        except NameError:
+            #py2
+            FileNotFoundError = PermissionError = IOError
+            
+        #check is style.css exists, if not create it
+        css_path = mapPath+"/style.css"
+        try:
+            fn = open(css_path , "r")  #check if file exists (or is readable)
+            fn.close()
+        except (IOError,FileNotFoundError):
+            log.warn("CSS file not found, creating %s" % css_path )
+            try:
+                with open(css_path , "w") as fn: 
+                    fn.write(css)
+            except (IOError, PermissionError) as e:
+                log.error("unable to create file %s, error: %s" % css_path, e )
+        #check is html exists, if not create it
+        html_path = mapPath+"/"+ myroomba.roombaName + "roomba_map.html"
+        try:
+            fn = open(html_path, "r")  #check if file exists (or is readable)
+            fn.close()
+        except (IOError,FileNotFoundError):
+            log.warn("html file not found, creating %s" % html_path)
+            try:
+                with open(html_path, "w") as fn: 
+                    fn.write(html)
+                make_executable(html_path)
+            except (IOError, PermissionError) as e:
+                log.error("unable to create file %s, error: %s" % html_path, e )
+                
+    def make_executable(path):
+        mode = os.stat(path).st_mode
+        mode |= (mode & 0o444) >> 2    # copy R bits to X
+        os.chmod(path, mode)
 
     def setup_logger(logger_name, log_file, level=logging.DEBUG, console=False):
         try:
@@ -1566,9 +1670,9 @@ if __name__ == '__main__':
     parser.add_argument('-f','--configfile', action='store',type=str, default="./config.ini", help='config file name (default: ./config.ini)')
     parser.add_argument('-n','--roombaName', action='store',type=str, default="", help='optional Roomba name (default: "")')
     parser.add_argument('-t','--topic', action='store',type=str, default="#", help='Roomba MQTT Topic to subscribe to (can use wildcards # and + default: #)')
-    parser.add_argument('-T','--brokerFeedback', action='store',type=str, default="/roomba/feedback", help='Topic on broker to publish feedback to (default: /roomba/feedback)')
-    parser.add_argument('-C','--brokerCommand', action='store',type=str, default="/roomba/command", help='Topic on broker to publish commands to (default: /roomba/command')
-    parser.add_argument('-S','--brokerSetting', action='store',type=str, default="/roomba/setting", help='Topic on broker to publish settings to (default: /roomba/setting')
+    parser.add_argument('-T','--brokerFeedback', action='store',type=str, default="/roomba/feedback", help='Topic on broker to publish feedback to (default: /roomba</name>/feedback)')
+    parser.add_argument('-C','--brokerCommand', action='store',type=str, default="/roomba/command", help='Topic on broker to publish commands to (default: /roomba</name>/command')
+    parser.add_argument('-S','--brokerSetting', action='store',type=str, default="/roomba/setting", help='Topic on broker to publish settings to (default: /roomba</name>/setting')
     parser.add_argument('-b','--broker', action='store',type=str, default=None, help='ipaddress of MQTT broker (default: None)')
     parser.add_argument('-p','--port', action='store',type=int, default=1883, help='MQTT broker port number (default: 1883)')
     parser.add_argument('-U','--user', action='store',type=str, default=None, help='MQTT broker user name (default: None)')
@@ -1588,6 +1692,7 @@ if __name__ == '__main__':
     parser.add_argument('-M','--mapPath', action='store',type=str, default=".", help='Location to store maps to (default: .)')
     parser.add_argument('-s','--mapSize', action='store',type=str, default="(800,1500,0,0,0,0)", help='Map Size, Dock offset and skew for the map. (800,1500) is the size, (0,0) is the dock location, in the center of the map, 0 is the rotation of the map, 0 is the rotation of the roomba. use single quotes around the string. (default: \'(800,1500,0,0,0,0)\')')
     parser.add_argument('-I','--iconPath', action='store',type=str, default="./", help='location of icons. (default: "./")')
+    parser.add_argument('-o','--roomOutline', action='store_false', help='Draw room outline (default: True)', default = True)
     parser.add_argument('-x','--exclude', action='store',type=str, default="", help='Exclude topics that have this in them (default: "")')
     parser.add_argument('--version', action='version', version="%(prog)s ("+__version__+")")
 
@@ -1694,6 +1799,7 @@ if __name__ == '__main__':
 
     for myroomba in roomba_list:
         log.info("connecting Roomba %s" % myroomba.address)
+        create_html(myroomba,arg.mapPath)   #auto create html files (if they don't exist)
         #all these are optional, if you don't include them, the defaults will work just fine
         if arg.exclude != "":
             myroomba.exclude = arg.exclude
@@ -1701,7 +1807,7 @@ if __name__ == '__main__':
         if not arg.continuous:
             myroomba.delay = arg.delay//1000
         if arg.mapSize != "" and arg.mapPath != "":
-            myroomba.enable_map(enable=True, mapSize=arg.mapSize, mapPath=arg.mapPath, iconPath=arg.iconPath)  #enable live maps, class default is no maps
+            myroomba.enable_map(enable=True, mapSize=arg.mapSize, mapPath=arg.mapPath, iconPath=arg.iconPath, roomOutline=arg.roomOutline)  #enable live maps, class default is no maps
         if arg.broker is not None:
             myroomba.set_mqtt_client(mqttc, arg.brokerFeedback) #if you want to publish Roomba data to your own mqtt broker (default is not to) if you have more than one roomba, and assign a roombaName, it is addded to this topic (ie brokerFeedback/roombaName)
         #finally connect to Roomba - (required!)
