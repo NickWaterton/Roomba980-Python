@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 '''
 Python 2.7/Python 3.5/3.6 (thanks to pschmitt for adding Python 3 compatibility)
 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt server
@@ -11,6 +11,7 @@ Nick Waterton 24th April 2017: V 1.0: Initial Release
 Nick Waterton 4th July   2017  V 1.1.1: Fixed MQTT protocol version, and map paths, fixed paho-mqtt tls changes
 Nick Waterton 5th July   2017  V 1.1.2: Minor fixes, CV version 3 .2 support
 Nick Waterton 7th July   2017  V1.2.0: Added -o option "roomOutline" allows enabling/disabling of room outline drawing, added auto creation of css/html files
+Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines if you don't have OpenCV
 '''
 
 #NOTE: MUST use Pillow Pillow 4.1.1 to avoid some horrible memory leaks in the text handling!
@@ -67,7 +68,7 @@ class password(object):
     Results are written to a config file, default ".\config.ini"
     '''
 
-    VERSION = "1.0"
+    VERSION = "1.2.1"
 
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
@@ -301,6 +302,7 @@ class Roomba(object):
         self.roomba_error_icon = None #roomba error icon
         self.bin_full_icon = None #bin full icon
         self.room_outline_contour = None
+        self.room_outline = None
         self.transparent = (0, 0, 0, 0)  #transparent
         self.previous_display_text = self.display_text = None
         self.master_state = {}
@@ -1280,7 +1282,7 @@ class Roomba(object):
                         raise IOError("Image is wrong size")
                 except IOError as e:
                     self.room_outline = Image.new('RGBA', self.base.size, self.transparent)
-                    self.log.warn("MAP: room outline image problem: %s: set to None" % e)
+                    self.log.warn("MAP: room outline image problem: %s: set to New" % e)
 
             room_outline_area = cv2.contourArea(self.room_outline_contour)
             #edgedata = cv2.add(np.array(self.base.convert('L'), dtype=np.uint8), np.array(self.room_outline.convert('L'), dtype=np.uint8))
@@ -1307,6 +1309,15 @@ class Roomba(object):
                 self.room_outline = Image.fromarray(edgeimage)
 
         else:
+            if self.room_outline is None or overwrite:
+                try:
+                    self.log.info("MAP: openening existing room outline image")
+                    self.room_outline = Image.open(self.mapPath+'/'+self.roombaName+'room.png').convert('RGBA')
+                    if self.room_outline.size != self.base.size:
+                        raise IOError("Image is wrong size")
+                except IOError as e:
+                    self.room_outline = Image.new('RGBA', self.base.size, self.transparent)
+                    self.log.warn("MAP: room outline image problem: %s: set to New" % e)
             edges = ImageOps.invert(self.room_outline.convert('L'))
             edges.paste(self.base)
             edges = edges.convert('L').filter(ImageFilter.SMOOTH_MORE)
