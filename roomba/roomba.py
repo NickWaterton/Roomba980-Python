@@ -1484,7 +1484,7 @@ class Roomba(object):
 
 #----------- End of Classes ------------
 
-if __name__ == '__main__':
+def main():
     #----------- Local Routines ------------
 
     def broker_on_connect(client, userdata, flags, rc):
@@ -1836,3 +1836,7 @@ window.onload = function()
         log.info("System exit Received - Exiting program")
         mqttc.disconnect()
         sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()

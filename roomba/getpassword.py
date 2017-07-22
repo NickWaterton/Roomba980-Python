@@ -11,7 +11,7 @@ Nick Waterton 5th May 2017: V 1.0: Initial Release
 
 from roomba import password
 
-if __name__ == '__main__':
+def main():
     import argparse
     #-------- Command Line -----------------
     parser = argparse.ArgumentParser(description='Forward MQTT data from Roomba 980 to local MQTT broker')
@@ -23,3 +23,6 @@ if __name__ == '__main__':
         password(file=arg.configfile)
     else:
         password(arg.roombaIP,file=arg.configfile)
+
+if __name__ == '__main__':
+    main()
