@@ -254,7 +254,7 @@ class Roomba(object):
                 self.client.tls_set(
                     self.cert_name, cert_reqs=ssl.CERT_NONE,
                     tls_version=ssl.PROTOCOL_TLSv1)
-            except ValueError:   #try V1.3 version
+            except ValueError:   # try V1.3 version
                 self.log.warn("TLS Setting failed - trying 1.3 version")
                 self.client._ssl_context = None
                 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
@@ -307,7 +307,7 @@ class Roomba(object):
             # if e[0] == 111: #errno.ECONNREFUSED - does not work with
             # python 3.0 so...
             if exc_type == socket.error or exc_type == ConnectionRefusedError:
-                count +=1
+                count += 1
                 if count <= max_retries:
                     self.log.error("Attempting new Connection# %d" % count)
                     time.sleep(1)
@@ -341,7 +341,7 @@ class Roomba(object):
             self.roomba_connected = True
             self.client.subscribe(self.topic)
         else:
-            self.log.error("Roomba Connected with result code "+str(rc))
+            self.log.error("Roomba Connected with result code " + str(rc))
             self.log.error("Please make sure your blid and password are "
                            "correct %s" % self.roombaName)
             if self.mqttc is not None:
@@ -349,7 +349,7 @@ class Roomba(object):
             sys.exit(1)
 
     def on_message(self, mosq, obj, msg):
-        #print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
+        # print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
         if self.exclude != "":
             if self.exclude in msg.topic:
                 return
@@ -399,7 +399,7 @@ class Roomba(object):
         self.mqttc = mqttc
         if self.mqttc is not None:
             if self.roombaName != "":
-                self.brokerFeedback = brokerFeedback+"/"+self.roombaName
+                self.brokerFeedback = brokerFeedback + "/" + self.roombaName
             else:
                 self.brokerFeedback = brokerFeedback
 
@@ -492,13 +492,13 @@ class Roomba(object):
             if home_icon_file is None:
                 self.home_icon_file = None
             else:
-                self.home_icon_file = iconPath+home_icon_file
-            self.roomba_icon_file = iconPath+roomba_icon_file
-            self.roomba_error_file = iconPath+roomba_error_file
-            self.roomba_cancelled_file = iconPath+roomba_cancelled_file
-            self.roomba_battery_file = iconPath+roomba_battery_file
-            self.bin_full_file = iconPath+bin_full_file
-            self.draw_edges = draw_edges//10000
+                self.home_icon_file = iconPath + home_icon_file
+            self.roomba_icon_file = iconPath + roomba_icon_file
+            self.roomba_error_file = iconPath + roomba_error_file
+            self.roomba_cancelled_file = iconPath + roomba_cancelled_file
+            self.roomba_battery_file = iconPath + roomba_battery_file
+            self.bin_full_file = iconPath + bin_full_file
+            self.draw_edges = draw_edges // 10000
             self.auto_rotate = auto_rotate
             if not roomOutline:
                 self.log.info("MAP: Not drawing Room Outline")
@@ -509,7 +509,7 @@ class Roomba(object):
         return False
 
     def totimestamp(self, dt):
-        td = dt - datetime.datetime(1970,1,1)
+        td = dt - datetime.datetime(1970, 1, 1)
         return int(td.total_seconds())
 
     def dict_merge(self, dct, merge_dct):
@@ -600,7 +600,8 @@ class Roomba(object):
                     try:
                         self.error_message = self._ErrorMessages[v]
                     except KeyError as e:
-                        self.log.warn("Error looking up Roomba error message %s" % e)
+                        self.log.warn(
+                            "Error looking up Roomba error message %s" % e)
                         self.error_message = "Unknown Error number: %d" % v
                     self.publish("error_message", self.error_message)
                 if k == "cleanMissionStatus_phase":
@@ -665,9 +666,12 @@ class Roomba(object):
         #    self.current_state = self.states["recharge"]
         #    self.show_final_map = False
 
-        #deal with "bin full" timeout on mission
+        #  deal with "bin full" timeout on mission
         try:
-            if self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"] == "none" and self.cleanMissionStatus_phase == "charge" and (self.current_state == self.states["pause"] or self.current_state == self.states["recharge"]):
+            if (self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"] == "none" and
+                self.cleanMissionStatus_phase == "charge" and
+                (self.current_state == self.states["pause"] or
+                 self.current_state == self.states["recharge"])):
                 self.current_state = self.states["cancelled"]
         except KeyError:
             pass
@@ -931,8 +935,9 @@ class Roomba(object):
         if self.dock_icon is None and self.home_icon_file is not None:
             self.dock_icon = self.load_icon(
                 filename=self.home_icon_file, icon_name="home", fnt=self.fnt)
-            self.dock_position = (self.home_pos[0] - self.dock_icon.size[0] // 2,
-                                  self.home_pos[1] - self.dock_icon.size[1] // 2)
+            self.dock_position = (
+                self.home_pos[0] - self.dock_icon.size[0] // 2,
+                self.home_pos[1] - self.dock_icon.size[1] // 2)
 
         if self.bin_full_icon is None:
             self.bin_full_icon = self.load_icon(
@@ -1019,11 +1024,13 @@ class Roomba(object):
         Draw map of Roomba cleaning progress
         '''
         if ((self.co_ords != self.previous_co_ords or
-             self.cleanMissionStatus_phase != self.previous_cleanMissionStatus_phase)
+             self.cleanMissionStatus_phase !=
+             self.previous_cleanMissionStatus_phase)
              or force_redraw) and self.drawmap:
             self.render_map(self.co_ords, self.previous_co_ords)
             self.previous_co_ords = self.co_ords.copy()
-            self.previous_cleanMissionStatus_phase = self.cleanMissionStatus_phase
+            self.previous_cleanMissionStatus_phase = \
+                self.cleanMissionStatus_phase
 
     def render_map(self, new_co_ords, old_co_ords):
         '''
@@ -1361,7 +1368,9 @@ class Roomba(object):
                                   "set to New" % e)
 
             room_outline_area = cv2.contourArea(self.room_outline_contour)
-            #edgedata = cv2.add(np.array(self.base.convert('L'), dtype=np.uint8), np.array(self.room_outline.convert('L'), dtype=np.uint8))
+            # edgedata = cv2.add(
+            #     np.array(self.base.convert('L'), dtype=np.uint8),
+            #     np.array(self.room_outline.convert('L'), dtype=np.uint8))
             edgedata = np.array(self.base.convert('L'))
             # find external contour
             _, contours, _ = self.findContours(
