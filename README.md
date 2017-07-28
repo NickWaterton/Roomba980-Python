@@ -43,7 +43,7 @@ Tested with firmware version V2.2.5-2/Ubuntu 14.04
 * designed for openhab2 compatibility
 
 ## Live Maps
-![iRobot Roomba 980 cleaning map using python980 lib](/res/map.png)
+![iRobot Roomba 980 cleaning map using python980 lib](/roomba/res/map.png)
 ### OpenCV
 If you have OpenCV installed, the library will use it to render the final map (on completion/error), it uses PIL for Live Maps, so the final map looks nicer. **This uses a lot of processing power/memory**, I don't know what happens if you try this on a RPi or other limited platform!
 Also, if you enable debugging mode (-D), intermediate maps (edges.png, final_map.png and so on) are drawn every time a new co-ordinate is reported (every second or so when running). This consumes a lot of resources **You have been warned!**.
@@ -96,22 +96,26 @@ depending on your default python environment (in Unbuntu 14.04 and 16.04, python
 ## Install
 First you need python 2.7 *or* python 3.5/3.6 installed (thanks to pschmitt for adding Python 3 compatibility) and then:
 
-clone this repository:
+install via pip (this will take of dependencies as well):
+```bash
+pip install https://github.com/NickWaterton/Roomba980-Python.git
+```
+
+Alternatively you may get going by cloning this repository:
 ```bash
 git clone https://github.com/NickWaterton/Roomba980-Python.git
 cd Roomba980-Python
 ```
 
-run `./roomba.py -h` to get the options. This is what you will get:
+run `roomba -h` (or `python roomba/roomba.py` if you opted for the git checkout) to get the available options. This is what you will get:
 
 ```bash
-nick@proliant:~/Scripts/roomba/Roomba980-Python$ ./roomba.py -h
-usage: roomba.py [-h] [-f CONFIGFILE] [-n ROOMBANAME] [-t TOPIC]
-                 [-T BROKERFEEDBACK] [-C BROKERCOMMAND] [-S BROKERSETTING]
-                 [-b BROKER] [-p PORT] [-U USER] [-P PASSWORD] [-R ROOMBAIP]
-                 [-u BLID] [-w ROOMBAPASSWORD] [-i INDENT] [-l LOG] [-e] [-D]
-                 [-r] [-j] [-c] [-d DELAY] [-m] [-M MAPPATH] [-s MAPSIZE]
-                 [-I ICONPATH] [-o] [-x EXCLUDE] [--version]
+usage: roomba [-h] [-f CONFIGFILE] [-n ROOMBANAME] [-t TOPIC]
+              [-T BROKERFEEDBACK] [-C BROKERCOMMAND] [-S BROKERSETTING]
+              [-b BROKER] [-p PORT] [-U USER] [-P PASSWORD] [-R ROOMBAIP]
+              [-u BLID] [-w ROOMBAPASSWORD] [-i INDENT] [-l LOG] [-e] [-D]
+              [-r] [-j] [-c] [-d DELAY] [-m] [-M MAPPATH] [-s MAPSIZE]
+              [-I ICONPATH] [-o] [-x EXCLUDE] [--cert CERT] [--version]
 
 Forward MQTT data from Roomba 980 to local MQTT broker
 
@@ -169,14 +173,15 @@ optional arguments:
   -o, --roomOutline     Draw room outline (default: True)
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude topics that have this in them (default: "")
+  --cert CERT           Set the certificate to use for MQTT communication with
+                        the Roomba
   --version             show program's version number and exit
-
 ```
 
 ## quick start
 With the roomba 980 on the dock and charged (and connected to wifi), stand by the roomba and run
 ```bash
-./roomba.py
+roomba
 ```
 or
 ```bash
@@ -265,12 +270,12 @@ set_preference(preference, setting)
 set_mqtt_client(mqttc=None, brokerFeedback="")
 set_options(raw=False, indent=0, pretty_print=False)
 enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./", iconPath="./",
-            home_icon_file="home.png", 
-            roomba_icon_file="roomba.png", 
-            roomba_error_file="roombaerror.png", 
+            home_icon_file="home.png",
+            roomba_icon_file="roomba.png",
+            roomba_error_file="roombaerror.png",
             roomba_cancelled_file="roombacancelled.png",
             roomba_battery_file="roomba-charge.png",
-            bin_full_file="binfull.png", 
+            bin_full_file="binfull.png",
             roomba_size=(50,50), draw_edges = 15, auto_rotate=True)
 make_icon(input="./roomba.png", output="./roomba_mod.png")
 ```
@@ -342,7 +347,7 @@ def broker_on_connect(client, userdata, flags, rc):
     if rc == 0:
         mqttc.subscribe(brokerCommand)
         mqttc.subscribe(brokerSetting)
-                    
+
 def broker_on_message(mosq, obj, msg):
     #publish to roomba
     if "command" in msg.topic:
@@ -352,7 +357,7 @@ def broker_on_message(mosq, obj, msg):
         print("Received SETTING: %s" % str(msg.payload))
         cmd = str(msg.payload).split()
         myroomba.set_preference(cmd[0], cmd[1])
-    
+
 def broker_on_publish(mosq, obj, mid):
     pass
 
@@ -371,7 +376,7 @@ if broker is not None:
     brokerCommand = "/roomba/command"
     brokerSetting = "/roomba/setting"
     brokerFeedback = "/roomba/feedback"
-    
+
     #connect to broker
     mqttc = mqtt.Client()
     #Assign event callbacks
@@ -380,11 +385,11 @@ if broker is not None:
     mqttc.on_disconnect = broker_on_disconnect
     mqttc.on_publish = broker_on_publish
     mqttc.on_subscribe = broker_on_subscribe
-    
+
     try:
         mqttc.username_pw_set(user, password)  #put your own mqtt user and password here if you are using them, otherwise comment out
         mqttc.connect(broker, 1883, 60) #Ping MQTT broker every 60 seconds if no data is published from this script.
-        
+
     except Exception as e:
         print("Unable to connect to MQTT Broker: %s" % e)
         mqttc = None
@@ -410,7 +415,7 @@ try:
         while True:
             print("Roomba Data: %s" % json.dumps(myroomba.master_state, indent=2))
             time.sleep(5)
-        
+
 except (KeyboardInterrupt, SystemExit):
     print("System exit Received - Exiting program")
     myroomba.disconnect()
@@ -853,7 +858,7 @@ In addition `state` and `error_message` are published which are derived by the c
   * noAutoPasses true
   * twoPass true
   * binPause true
-                
+
 You publish this as a string to your mqtt broker topic /roomba/command or /roomba/setting (or whatever you have defined if you change these from default)
 Ubuntu example (assuming the broker is on your localhost) - should work for any linux system with mosquitto installed
 ```bash
@@ -1257,7 +1262,7 @@ These use one of my functions getTimestamp, here it is:
 val Functions$Function2<GenericItem, String, String> getTimestamp = [  //function (lambda) to get a timestamp. Returns formatted string and optionally updates an item
     item,
     date_format |
-    
+
     var date_time_format = date_format
     if(date_format == "" || date_format == null) date_time_format = "%1$ta %1$tT" //default format Day Hour:Minute:Seconds
     var String Timestamp = String::format( date_time_format, new Date() )
@@ -1266,7 +1271,7 @@ val Functions$Function2<GenericItem, String, String> getTimestamp = [  //functio
         var cal = new java.util.GregorianCalendar()
         cal.setTimeInMillis(time)  //timestamp in unix format
         var t = new DateTimeType(cal)
-        
+
         if(item instanceof DateTimeItem) {
             postUpdate(item, t)
             logInfo("Last Update", item.name + " DateTimeItem updated at: " + Timestamp )
@@ -1285,7 +1290,7 @@ Here are my roomba rules, some of them assume you have e-mail and pushNotificati
 ```
 /* Roomba Rules */
 rule "Roomba start and stop"
-when 
+when
     Item roomba_control received command
 then
     logInfo("Roomba", "Roomba ON/OFF received command: " + receivedCommand)
@@ -1299,7 +1304,7 @@ then
 end
 
 rule "Roomba Auto Boost Control"
-when 
+when
     Item roomba_carpetBoost changed
 then
     logInfo("Roomba", "Roomba Boost changed to: Auto " + roomba_carpetBoost.state + " Manual: " + roomba_vacHigh.state)
@@ -1308,7 +1313,7 @@ then
 end
 
 rule "Roomba Manual Boost Control"
-when 
+when
     Item roomba_vacHigh changed
 then
     logInfo("Roomba", "Roomba Boost changed to: Auto " + roomba_carpetBoost.state + " Manual: " + roomba_vacHigh.state)
@@ -1317,7 +1322,7 @@ then
 end
 
 rule "Roomba Auto Passes Control"
-when 
+when
     Item roomba_noAutoPasses changed or
     Item roomba_twoPass changed
 then
@@ -1327,14 +1332,14 @@ then
 end
 
 rule "Roomba Last Update Timestamp"
-when 
+when
     Item roomba_rssi received update
 then
     getTimestamp.apply(roomba_lastheardfrom, "%1$ta %1$tR")
 end
 
 rule "Roomba Bin Full"
-when 
+when
     Item roomba_full changed from OFF to ON
 then
     val Timestamp = getTimestamp.apply(roomba_lastheardfrom, "%1$ta %1$tR")
@@ -1342,7 +1347,7 @@ then
 end
 
 rule "Roomba Error"
-when 
+when
     Item roomba_error changed from OFF to ON
 then
     val Timestamp = getTimestamp.apply(roomba_lastheardfrom, "%1$ta %1$tR")
@@ -1351,18 +1356,18 @@ then
 end
 
 rule "Roomba percent completed"
-when 
+when
     Item roomba_sqft received update
 then
-    var sqft_completed = roomba_sqft.state as Number 
-    
+    var sqft_completed = roomba_sqft.state as Number
+
     var max_sqft = 470  //insert max square footage here
     var min_sqft = 0
 
     var Number completed_percent = 0
-    
-    if (sqft_completed < min_sqft) {completed_percent = 0)      
-    else if (sqft_completed > max_sqft) {completed_percent = 100} 
+
+    if (sqft_completed < min_sqft) {completed_percent = 0)
+    else if (sqft_completed > max_sqft) {completed_percent = 100}
     else {
         completed_percent = (((sqft_completed - min_sqft) * 100) / (max_sqft-min_sqft)).intValue
         }
@@ -1371,7 +1376,7 @@ then
 end
 
 rule "Roomba update command"
-when 
+when
     Item roomba_phase received update
 then
     logInfo("Roomba", "Roomba phase received update: " + roomba_phase.state}
@@ -1391,7 +1396,7 @@ then
 end
 
 rule "Roomba Notifications"
-when 
+when
     Item roomba_status changed
 then
     logInfo("Roomba", "Roomba status is: " + roomba_status.state}
@@ -1412,7 +1417,7 @@ then
 end
 
 rule "Roomba Schedule Display"
-when 
+when
     Item roomba_cycle changed or
     Item roomba_cleanSchedule_h changed or
     Item roomba_cleanSchedule_m changed
@@ -1426,7 +1431,7 @@ then
     val ArrayList<String> daysList = new ArrayList(days.replace("[","").replace("]","").replace("'","").split(","))
     val ArrayList<String> hoursList = new ArrayList(hours.replace("[","").replace("]","").split(","))
     val ArrayList<String> minutesList = new ArrayList(minutes.replace("[","").replace("]","").split(","))
-    daysList.forEach[ item, i | 
+    daysList.forEach[ item, i |
         if(item.trim() == "start") {
             schedule += daysOfWeek.get(i) + ": " + hoursList.get(i) + ":" + minutesList.get(i) + ", "
         }
