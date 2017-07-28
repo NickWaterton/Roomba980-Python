@@ -1717,6 +1717,7 @@ window.onload = function()
     parser.add_argument('-I','--iconPath', action='store',type=str, default="./", help='location of icons. (default: "./")')
     parser.add_argument('-o','--roomOutline', action='store_false', help='Draw room outline (default: True)', default = True)
     parser.add_argument('-x','--exclude', action='store',type=str, default="", help='Exclude topics that have this in them (default: "")')
+    parser.add_argument('--cert', action='store', type=str, default='/etc/ssl/certs/ca-certificates.crt', help='Set the certificate to use for MQTT communication with the Roomba')
     parser.add_argument('--version', action='version', version="%(prog)s ("+__version__+")")
 
     arg = parser.parse_args()
@@ -1818,7 +1819,7 @@ window.onload = function()
         #      but needs to be there to enable mqtt TLS encryption
         #instansiate Roomba object
         #myroomba = Roomba(address, blid, roombaPassword)  #minnimum required to connect on Linux Debian system
-        roomba_list.append(Roomba(addr, blid=info["blid"], password=info["password"], topic=arg.topic, continuous=arg.continuous, clean=False, cert_name = "./ca-certificates.crt", roombaName=info["roombaName"]))
+        roomba_list.append(Roomba(addr, blid=info["blid"], password=info["password"], topic=arg.topic, continuous=arg.continuous, clean=False, cert_name=args.cert, roombaName=info["roombaName"]))
 
     for myroomba in roomba_list:
         log.info("connecting Roomba %s" % myroomba.address)
