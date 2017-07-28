@@ -43,7 +43,7 @@ Tested with firmware version V2.2.5-2/Ubuntu 14.04
 * designed for openhab2 compatibility
 
 ## Live Maps
-![iRobot Roomba 980 cleaning map using python980 lib](/map.png)
+![iRobot Roomba 980 cleaning map using python980 lib](/res/map.png)
 ### OpenCV
 If you have OpenCV installed, the library will use it to render the final map (on completion/error), it uses PIL for Live Maps, so the final map looks nicer. **This uses a lot of processing power/memory**, I don't know what happens if you try this on a RPi or other limited platform!
 Also, if you enable debugging mode (-D), intermediate maps (edges.png, final_map.png and so on) are drawn every time a new co-ordinate is reported (every second or so when running). This consumes a lot of resources **You have been warned!**.

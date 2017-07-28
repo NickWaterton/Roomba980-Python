@@ -271,8 +271,8 @@ class Roomba(object):
         if self.log.getEffectiveLevel() == logging.DEBUG:
             self.debug = True
         self.address = address
-        if cert_name == "":
-            self.cert_name = "./ca-certificates.crt" #/etc/ssl/certs/ca-certificates.crt is default for Linux Debian based systems
+        if not cert_name:
+            self.cert_name = "/etc/ssl/certs/ca-certificates.crt"
         else:
             self.cert_name = cert_name
         self.continuous = continuous
