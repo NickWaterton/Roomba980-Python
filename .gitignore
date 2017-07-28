@@ -1,3 +1,5 @@
 config.ini
-roomba.pyc
+*.pyc
+__pycache__
 start_roomba
+.ropeproject
