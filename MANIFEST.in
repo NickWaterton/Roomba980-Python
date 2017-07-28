@@ -1,0 +1,2 @@
+include roomba/res/*.png
+recursive-exclude * *.py[co]
