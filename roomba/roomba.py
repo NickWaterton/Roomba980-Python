@@ -1688,6 +1688,7 @@ window.onload = function()
     #--------- End Local Routines ----------
 
     import argparse
+    default_icon_path = os.path.join(os.path.dirname(__file__), 'res')
     #-------- Command Line -----------------
     parser = argparse.ArgumentParser(description='Forward MQTT data from Roomba 980 to local MQTT broker')
     parser.add_argument('-f','--configfile', action='store',type=str, default="./config.ini", help='config file name (default: ./config.ini)')
@@ -1714,7 +1715,7 @@ window.onload = function()
     parser.add_argument('-m','--drawmap', action='store_false', help='Draw Roomba cleaning map (default: True)', default = True)
     parser.add_argument('-M','--mapPath', action='store',type=str, default=".", help='Location to store maps to (default: .)')
     parser.add_argument('-s','--mapSize', action='store',type=str, default="(800,1500,0,0,0,0)", help='Map Size, Dock offset and skew for the map. (800,1500) is the size, (0,0) is the dock location, in the center of the map, 0 is the rotation of the map, 0 is the rotation of the roomba. use single quotes around the string. (default: \'(800,1500,0,0,0,0)\')')
-    parser.add_argument('-I','--iconPath', action='store',type=str, default="./", help='location of icons. (default: "./")')
+    parser.add_argument('-I','--iconPath', action='store',type=str, default=default_icon_path, help='location of icons. (default: "./")')
     parser.add_argument('-o','--roomOutline', action='store_false', help='Draw room outline (default: True)', default = True)
     parser.add_argument('-x','--exclude', action='store',type=str, default="", help='Exclude topics that have this in them (default: "")')
     parser.add_argument('--cert', action='store', type=str, default='/etc/ssl/certs/ca-certificates.crt', help='Set the certificate to use for MQTT communication with the Roomba')

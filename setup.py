@@ -11,6 +11,7 @@ setup(
     url='https://github.com/NickWaterton/Roomba980-Python',
     packages=find_packages(),
     install_requires=['numpy', 'opencv-python', 'paho-mqtt', 'pillow', 'six'],
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'roomba=roomba.roomba:main',
