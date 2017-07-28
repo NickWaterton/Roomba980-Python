@@ -4,3 +4,5 @@ __pycache__
 start_roomba
 .ropeproject
 .autoenv.zsh
+dist/
+*.egg-info/
