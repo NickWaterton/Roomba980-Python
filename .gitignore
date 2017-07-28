@@ -3,3 +3,4 @@ config.ini
 __pycache__
 start_roomba
 .ropeproject
+.autoenv.zsh
