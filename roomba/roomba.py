@@ -22,6 +22,7 @@ __version__ = "1.2.1"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
+from roomba.password import Password
 import datetime
 import json
 import math
@@ -197,9 +198,9 @@ class Roomba(object):
         self.client = None
 
         if self.address is None or blid is None or password is None:
-            read_config_file(file)
+            self.read_config_file(file)
 
-    def read_config_file(file="./config.ini"):
+    def read_config_file(self, file="./config.ini"):
         #read config file
         Config = configparser.ConfigParser()
         try:
@@ -210,7 +211,8 @@ class Roomba(object):
                           "attempting discovery")
             if Password(self.address, file):
                 return self.read_config_file(file)
-            else: return False
+            else:
+                return False
         self.log.info("reading info from config file %s" % file)
         addresses = Config.sections()
         if self.address is None:
@@ -598,7 +600,7 @@ class Roomba(object):
                     try:
                         self.error_message = self._ErrorMessages[v]
                     except KeyError as e:
-                        log.warn("Error looking up Roomba error message %s" % e)
+                        self.log.warn("Error looking up Roomba error message %s" % e)
                         self.error_message = "Unknown Error number: %d" % v
                     self.publish("error_message", self.error_message)
                 if k == "cleanMissionStatus_phase":
@@ -1326,7 +1328,6 @@ class Roomba(object):
         else:
             self.log.warn("MAP: Not  enough  matches are found   -   %d/%d"
                           % (len(good), MIN_MATCH_COUNT))
-            matchesMask = None
             return skewed_image
 
     def draw_room_outline(self, overwrite=False, colour=(64,64,64,255),
