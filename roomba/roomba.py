@@ -33,6 +33,7 @@ import logging
 import time
 from logging.handlers import RotatingFileHandler
 from ast import literal_eval
+from pprint import pformat
 import socket
 import six
 try:
@@ -57,6 +58,11 @@ try:
 except ImportError:
     print("PIL module not found, maps are disabled")
 
+# On Python 3 raw_input was renamed to input
+try:
+    input = raw_input
+except NameError:
+    pass
 
 #----------- Start of Classes ------------
 
@@ -73,6 +79,7 @@ class password(object):
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
         self.file = file
+        self.log = logging.getLogger(__name__+'.Roomba_getpassword')
         self.get_password()
 
     def receive_udp(self):
@@ -85,7 +92,7 @@ class password(object):
         s.bind(("", port))  #bind all intefaces to port
         print("waiting on port: %d for data" % port)
         message = 'irobotmcs'
-        s.sendto(message, (self.address, port))
+        s.sendto(message.encode(), (self.address, port))
         roomba_dict = {}
         while True:
             try:
@@ -96,11 +103,12 @@ class password(object):
                         try:
                             if self.address != addr[0]:
                                 self.log.warn("supplied address %s does not match discovered address %s, using discovered address..." % (self.address, addr[0]))
-                            parsedMsg = json.loads(udp_data)
-                            roomba_dict[addr]=parsedMsg
+                            if udp_data.decode() != message:
+                                parsedMsg = json.loads(udp_data)
+                                roomba_dict[addr]=parsedMsg
                         except Exception as e:
                             print("json decode error: %s" % e)
-                            break
+                            print('RECEIVED: %s', pformat(udp_data))
                         #print('Robot Data: %s ' % json.dumps(parsedMsg, indent=2))
                 else:
                     break
@@ -119,7 +127,7 @@ class password(object):
             print("No Roombas found, try again...")
             return False
         else:
-            print("found %d Roombas" % len(roombas))
+            print("found %d Roomba(s)" % len(roombas))
 
         for address,parsedMsg in six.iteritems(roombas):
             addr = address[0]
@@ -128,7 +136,7 @@ class password(object):
                 continue
 
             print("Make sure your robot (%s) at IP %s is on the Home Base and powered on (green lights on). Then press and hold the HOME button on your robot until it plays a series of tones (about 2 seconds). Release the button and your robot will flash WIFI light." % (parsedMsg["robotname"],addr))
-            raw_input("Press Enter to continue...")
+            input("Press Enter to continue...")
 
             print("Received: %s"  % json.dumps(parsedMsg, indent=2))
             print("\r\rRoomba (%s) IP address is: %s" % (parsedMsg["robotname"],addr))
@@ -136,7 +144,10 @@ class password(object):
             if hostname[0] == 'Roomba':
                 blid = hostname[1]
 
-            packet = 'f005efcc3b2900'.decode("hex") #this is 0xf0 (mqtt reserved) 0x05(data length) 0xefcc3b2900 (data)
+            if hasattr(str, 'decode'):
+                packet = 'f005efcc3b2900'.decode("hex") #this is 0xf0 (mqtt reserved) 0x05(data length) 0xefcc3b2900 (data)
+            else:
+                packet = bytes.fromhex('f005efcc3b2900') #this is 0xf0 (mqtt reserved) 0x05(data length) 0xefcc3b2900 (data)
             #send socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(10)
@@ -150,7 +161,7 @@ class password(object):
                 print("Connection Error %s" % e)
 
             wrappedSocket.send(packet)
-            data = ''
+            data = b''
             data_len = 35
             while True:
                 try:
@@ -165,6 +176,7 @@ class password(object):
                     print("socket closed")
                     break
                 else:
+                    self.log.info('types: {}-{}'.format(type(data), type(data_received)))
                     data += data_received
                     if len(data) >= 2:
                         data_len = struct.unpack("B", data[1:2])[0]
@@ -188,7 +200,7 @@ class password(object):
                 Config.add_section(addr)
                 Config.set(addr,'blid',blid)
                 Config.set(addr,'password',str(data[7:]))
-                Config.set(addr,'data',parsedMsg)
+                Config.set(addr,'data', pformat(parsedMsg))
                 #write config file
                 with open(self.file, 'w') as cfgfile:
                     Config.write(cfgfile)
@@ -354,7 +366,7 @@ class Roomba(object):
 
             #set TLS, self.cert_name is required by paho-mqtt, even if the certificate is not used...
             #but v1.3 changes all this, so have to do the following:
-         
+
             self.log.info("Seting TLS")
             try:
                 self.client.tls_set(self.cert_name, cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLSv1)
@@ -549,14 +561,14 @@ class Roomba(object):
         to get right. You can supply 32x32 icons for dock and roomba etc. If the files don't exist, crude representations are made.
         if you specify home_icon_file as None, then no dock is drawn. Draw edges attempts to draw straight lines around the final (not live) map,
         and Auto_rotate (on/off) attempts to line the map up vertically. These only work if you have openCV installed. otherwise a PIL
-        version is used, which is not as good (but less CPU intensive). roomOutline enables the previous largest saved outline to be overlayed on the 
+        version is used, which is not as good (but less CPU intensive). roomOutline enables the previous largest saved outline to be overlayed on the
         map (so you can see where cleaning was missed). This is on by default, but the alignment doesn't work so well, so you can turn it off.
         Returns map enabled True/False
         '''
 
         if not HAVE_PIL: #can't draw a map without PIL!
             return False
-            
+
         if Image.PILLOW_VERSION < "4.1.1":
             print("WARNING: PIL version is %s, this is not the latest! you can get bad memory leaks with old versions of PIL" % Image.PILLOW_VERSION)
             print("run: 'pip install --upgrade pillow' to fix this")
@@ -1155,7 +1167,7 @@ class Roomba(object):
         self.base.save(self.mapPath+'/'+self.roombaName+'lines.png', "PNG")
         #save problem overlay
         self.roomba_problem.save(self.mapPath+'/'+self.roombaName+'problems.png', "PNG")
-        if self.roomOutline or self.auto_rotate:      
+        if self.roomOutline or self.auto_rotate:
             #draw room outline (saving results if this is a final map) update x,y and angle if auto_rotate
             self.draw_room_outline(draw_final)
         #merge room outline into base
@@ -1214,7 +1226,7 @@ class Roomba(object):
         e = cosine/sy
         f = y-nx*d-ny*e
         return image.transform(image.size, Image.AFFINE, (a,b,c,d,e,f), resample=Image.BICUBIC)
-        
+
     def match_outlines(self, orig_image, skewed_image):
         orig_image = np.array(orig_image)
         skewed_image = np.array(skewed_image)
@@ -1553,7 +1565,7 @@ def main():
         except Exception as e:
             log.warn("Error reading config file %s" %e)
         return roombas
-        
+
     def create_html(myroomba,mapPath="."):
         '''
         Create html files for live display of roomba maps - but only if they don't already exist
@@ -1586,7 +1598,7 @@ function refresh(node)
       var address;
       if(node.src.indexOf('?')>-1)
        address = node.src.split('?')[0];
-      else 
+      else
        address = node.src;
       node.src = address+"?time="+new Date().getTime();
 
@@ -1616,7 +1628,7 @@ window.onload = function()
         except NameError:
             #py2
             FileNotFoundError = PermissionError = IOError
-            
+
         #check is style.css exists, if not create it
         css_path = mapPath+"/style.css"
         try:
@@ -1625,7 +1637,7 @@ window.onload = function()
         except (IOError,FileNotFoundError):
             log.warn("CSS file not found, creating %s" % css_path )
             try:
-                with open(css_path , "w") as fn: 
+                with open(css_path , "w") as fn:
                     fn.write(css)
             except (IOError, PermissionError) as e:
                 log.error("unable to create file %s, error: %s" % css_path, e )
@@ -1637,12 +1649,12 @@ window.onload = function()
         except (IOError,FileNotFoundError):
             log.warn("html file not found, creating %s" % html_path)
             try:
-                with open(html_path, "w") as fn: 
+                with open(html_path, "w") as fn:
                     fn.write(html)
                 make_executable(html_path)
             except (IOError, PermissionError) as e:
                 log.error("unable to create file %s, error: %s" % html_path, e )
-                
+
     def make_executable(path):
         mode = os.stat(path).st_mode
         mode |= (mode & 0o444) >> 2    # copy R bits to X
@@ -1727,11 +1739,11 @@ window.onload = function()
     log.info("*******************")
     log.info("* Program Started *")
     log.info("*******************")
-    
+
     log.info("Roomba.py Version: %s" % __version__)
-    
+
     log.info("Python Version: %s" % sys.version.replace('\n',''))
-    
+
     if HAVE_MQTT:
         import paho.mqtt #bit of a kludge, just to get the version number
         log.info("Paho MQTT Version: %s" % paho.mqtt.__version__)
@@ -1739,10 +1751,10 @@ window.onload = function()
             log.error("NOTE: if your python version is less than 2.7.9, and Paho MQTT verion is not 1.2.3 or lower, this program will NOT WORK")
             log.error("Please use <sudo> pip install paho-mqtt==1.2.3 to downgrade paho-mqtt, or use a later version of python")
             sys.exit(1)
-            
+
     if HAVE_CV2:
         log.info("CV Version: %s" % cv2.__version__)
-        
+
     if HAVE_PIL:
         import PIL #bit of a kludge, just to get the version number
         log.info("PIL Version: %s" % PIL.__version__)
