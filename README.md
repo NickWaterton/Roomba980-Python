@@ -96,22 +96,26 @@ depending on your default python environment (in Unbuntu 14.04 and 16.04, python
 ## Install
 First you need python 2.7 *or* python 3.5/3.6 installed (thanks to pschmitt for adding Python 3 compatibility) and then:
 
-clone this repository:
+install via pip (this will take of dependencies as well):
+```bash
+pip install https://github.com/NickWaterton/Roomba980-Python.git
+```
+
+Alternatively you may get going by cloning this repository:
 ```bash
 git clone https://github.com/NickWaterton/Roomba980-Python.git
 cd Roomba980-Python
 ```
 
-run `./roomba.py -h` to get the options. This is what you will get:
+run `roomba -h` (or `python roomba/roomba.py` if you opted for the git checkout) to get the available options. This is what you will get:
 
 ```bash
-nick@proliant:~/Scripts/roomba/Roomba980-Python$ ./roomba.py -h
-usage: roomba.py [-h] [-f CONFIGFILE] [-n ROOMBANAME] [-t TOPIC]
-                 [-T BROKERFEEDBACK] [-C BROKERCOMMAND] [-S BROKERSETTING]
-                 [-b BROKER] [-p PORT] [-U USER] [-P PASSWORD] [-R ROOMBAIP]
-                 [-u BLID] [-w ROOMBAPASSWORD] [-i INDENT] [-l LOG] [-e] [-D]
-                 [-r] [-j] [-c] [-d DELAY] [-m] [-M MAPPATH] [-s MAPSIZE]
-                 [-I ICONPATH] [-o] [-x EXCLUDE] [--version]
+usage: roomba [-h] [-f CONFIGFILE] [-n ROOMBANAME] [-t TOPIC]
+              [-T BROKERFEEDBACK] [-C BROKERCOMMAND] [-S BROKERSETTING]
+              [-b BROKER] [-p PORT] [-U USER] [-P PASSWORD] [-R ROOMBAIP]
+              [-u BLID] [-w ROOMBAPASSWORD] [-i INDENT] [-l LOG] [-e] [-D]
+              [-r] [-j] [-c] [-d DELAY] [-m] [-M MAPPATH] [-s MAPSIZE]
+              [-I ICONPATH] [-o] [-x EXCLUDE] [--cert CERT] [--version]
 
 Forward MQTT data from Roomba 980 to local MQTT broker
 
@@ -169,14 +173,15 @@ optional arguments:
   -o, --roomOutline     Draw room outline (default: True)
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude topics that have this in them (default: "")
+  --cert CERT           Set the certificate to use for MQTT communication with
+                        the Roomba
   --version             show program's version number and exit
-
 ```
 
 ## quick start
 With the roomba 980 on the dock and charged (and connected to wifi), stand by the roomba and run
 ```bash
-./roomba.py
+roomba
 ```
 or
 ```bash
