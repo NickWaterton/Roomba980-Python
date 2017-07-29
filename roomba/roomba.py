@@ -27,10 +27,11 @@ import datetime
 import json
 import math
 import logging
+import os
 import six
 import socket
 import ssl
-import sys, os
+import sys
 import threading
 import time
 try:
@@ -492,12 +493,12 @@ class Roomba(object):
             if home_icon_file is None:
                 self.home_icon_file = None
             else:
-                self.home_icon_file = iconPath + home_icon_file
-            self.roomba_icon_file = iconPath + roomba_icon_file
-            self.roomba_error_file = iconPath + roomba_error_file
-            self.roomba_cancelled_file = iconPath + roomba_cancelled_file
-            self.roomba_battery_file = iconPath + roomba_battery_file
-            self.bin_full_file = iconPath + bin_full_file
+                self.home_icon_file = os.path.join(iconPath, home_icon_file)
+            self.roomba_icon_file = os.path.join(iconPath, roomba_icon_file)
+            self.roomba_error_file = os.path.join(iconPath, roomba_error_file)
+            self.roomba_cancelled_file = os.path.join(iconPath, roomba_cancelled_file)
+            self.roomba_battery_file = os.path.join(iconPath, roomba_battery_file)
+            self.bin_full_file = os.path.join(iconPath, bin_full_file)
             self.draw_edges = draw_edges // 10000
             self.auto_rotate = auto_rotate
             if not roomOutline:
