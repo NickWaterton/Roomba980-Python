@@ -6,3 +6,6 @@ start_roomba
 .autoenv.zsh
 dist/
 *.egg-info/
+*_map.html
+style.css
+Roomba.log
