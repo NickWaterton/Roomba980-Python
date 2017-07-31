@@ -156,16 +156,18 @@ class Password(object):
                       'instructions and try again.' % len(data))
                 return False
             else:
+                # Convert password to str
+                password = str(data[7:].decode())
                 print("blid is: %s" % blid)
-                print('Password=> %s <= Yes, all this string.' % str(data[7:]))
+                print('Password=> %s <= Yes, all this string.' % password)
                 print('Use these credentials in roomba.py')
 
                 Config = configparser.ConfigParser()
                 Config.add_section(addr)
-                Config.set(addr,'blid',blid)
-                Config.set(addr,'password',str(data[7:]))
+                Config.set(addr,'blid', blid)
+                Config.set(addr,'password', password)
                 Config.set(addr,'data', pformat(parsedMsg))
-                #write config file
+                # write config file
                 with open(self.file, 'w') as cfgfile:
                     Config.write(cfgfile)
         return True
