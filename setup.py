@@ -11,7 +11,7 @@ setup(
     url='https://github.com/pschmitt/roombapy',
     packages=find_packages(),
     install_requires=['paho-mqtt', 'six'],
-    extra_require={'mapping': ['numpy', 'opencv-python', 'pillow']},
+    extras_require={'mapping': ['numpy', 'opencv-python', 'pillow']},
     include_package_data=True,
     entry_points={
         'console_scripts': [
