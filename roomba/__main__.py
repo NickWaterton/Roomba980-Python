@@ -1,8 +1,10 @@
 from __future__ import print_function
 from ast import literal_eval
 from logging.handlers import RotatingFileHandler
-from roomba import roomba
-from roomba.password import Password
+import roomba
+from roomba import Password
+#from roomba import roomba   #removed (and added above) for python 2.7 fix NW 15/9/2017
+#from roomba.password import Password
 import argparse
 import json
 import logging
