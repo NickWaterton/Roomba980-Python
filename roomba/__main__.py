@@ -1,17 +1,19 @@
 from __future__ import print_function
 from ast import literal_eval
 from logging.handlers import RotatingFileHandler
-import roomba
-from roomba import Password
-#from roomba import roomba   #removed (and added above) for python 2.7 fix NW 15/9/2017
-#from roomba.password import Password
+import sys
+if sys.version_info[0] < 3:  #added for python 2.7 fix NW 15/9/2017
+    import roomba
+    from roomba import Password
+else:
+    from roomba import roomba
+    from roomba.password import Password
 import argparse
 import json
 import logging
 import os
 import six
 import socket
-import sys
 import time
 # Import trickery
 global HAVE_CV2
