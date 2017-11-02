@@ -1,4 +1,4 @@
-Roomba980-Python
+roombapy
 ================
 
 Unofficial iRobot Roomba 980 python library (SDK).
