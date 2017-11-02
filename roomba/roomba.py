@@ -141,7 +141,7 @@ class Roomba(object):
         '''
 
         self.debug = False
-        self.log = logging.getLogger(__name__+'.Roomba')
+        self.log = logging.getLogger(__name__)
         if self.log.getEffectiveLevel() == logging.DEBUG:
             self.debug = True
         self.address = address
@@ -151,9 +151,9 @@ class Roomba(object):
             self.cert_name = cert_name
         self.continuous = continuous
         if self.continuous:
-            self.log.info("CONTINUOUS connection")
+            self.log.debug("CONTINUOUS connection")
         else:
-            self.log.info("PERIODIC connection")
+            self.log.debug("PERIODIC connection")
         # set the following to True to enable pretty printing of json data
         self.pretty_print = False
         self.stop_connection = False
@@ -202,24 +202,24 @@ class Roomba(object):
             self.read_config_file(file)
 
     def read_config_file(self, file="./config.ini"):
-        #read config file
+        # read config file
         Config = configparser.ConfigParser()
         try:
             Config.read(file)
         except Exception as e:
-            self.log.warn("Error reading config file %s" %e)
-            self.log.info("No Roomba specified, and no config file found - "
-                          "attempting discovery")
+            self.log.warning("Error reading config file %s", e)
+            self.log.debug("No Roomba specified, and no config file found - "
+                           "attempting discovery")
             if Password(self.address, file):
                 return self.read_config_file(file)
             else:
                 return False
-        self.log.info("reading info from config file %s" % file)
+        self.log.debug("Reading info from config file %s" % file)
         addresses = Config.sections()
         if self.address is None:
             if len(addresses) > 1:
-                self.log.warn("config file has entries for %d Roombas, "
-                              "only configuring the first!")
+                self.log.warning("The config file has entries for %d Roombas, "
+                                 "only configuring the first!", len(addresses))
                 self.address = addresses[0]
         self.blid = Config.get(self.address, "blid"),
         self.password = Config.get(self.address, "password")
@@ -250,13 +250,13 @@ class Roomba(object):
             # certificate is not used...
             # but v1.3 changes all this, so have to do the following:
 
-            self.log.info("Seting TLS")
+            self.log.debug("Setting TLS certificate")
             try:
                 self.client.tls_set(
                     self.cert_name, cert_reqs=ssl.CERT_NONE,
                     tls_version=ssl.PROTOCOL_TLSv1)
             except ValueError:   # try V1.3 version
-                self.log.warn("TLS Setting failed - trying 1.3 version")
+                self.log.warning("TLS Setting failed - trying 1.3 version")
                 self.client._ssl_context = None
                 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                 context.verify_mode = ssl.CERT_NONE
@@ -292,11 +292,11 @@ class Roomba(object):
         max_retries = 3
         try:
             if self.client is None or new_connection:
-                self.log.info("Connecting %s" % self.roombaName)
+                self.log.info("Connecting to %s", self.roombaName)
                 self.setup_client()
                 self.client.connect(self.address, self.roomba_port, 60)
             else:
-                self.log.info("Attempting to Reconnect %s" % self.roombaName)
+                self.log.info("Attempting to reconnect to %s", self.roombaName)
                 self.client.loop_stop()
                 self.client.reconnect()
             self.client.loop_start()
@@ -310,11 +310,11 @@ class Roomba(object):
             if exc_type == socket.error or exc_type == ConnectionRefusedError:
                 count += 1
                 if count <= max_retries:
-                    self.log.error("Attempting new Connection# %d" % count)
+                    self.log.error("Attempting connection #%d" % count)
                     time.sleep(1)
                     self._connect(count, True)
         if count == max_retries:
-            self.log.error("Unable to connect %s" % self.roombaName)
+            self.log.error("Unable to connect %s", self.roombaName)
         return False
 
     def disconnect(self):
@@ -337,7 +337,7 @@ class Roomba(object):
         self.periodic_connection_running = False
 
     def on_connect(self, client, userdata, flags, rc):
-        self.log.info("Roomba Connected %s" % self.roombaName)
+        self.log.info("Connected to Roomba %s", self.roombaName)
         if rc == 0:
             self.roomba_connected = True
             self.client.subscribe(self.topic)
@@ -362,11 +362,11 @@ class Roomba(object):
         self.dict_merge(self.master_state, json_data)
 
         if self.pretty_print:
-            self.log.info("%-{:d}s : %s".format(self.master_indent)
-                          % (msg.topic,log_string))
+            self.log.debug("%-{:d}s : %s".format(self.master_indent),
+                           msg.topic,log_string)
         else:
-            self.log.info("Received Roomba Data %s: %s, %s"
-                          % (self.roombaName, str(msg.topic), str(msg.payload)))
+            self.log.debug("Received Roomba Data %s: %s, %s",
+                           self.roombaName, str(msg.topic), str(msg.payload))
 
         if self.raw:
             self.publish(msg.topic, msg.payload)
@@ -375,7 +375,7 @@ class Roomba(object):
 
         # default every 5 minutes
         if time.time() - self.time > self.update_seconds:
-            self.log.info("Publishing master_state %s" % self.roombaName)
+            self.log.debug("Publishing master_state %s", self.roombaName)
             self.decode_topics(self.master_state)    # publish all values
             self.time = time.time()
 
@@ -383,18 +383,18 @@ class Roomba(object):
         pass
 
     def on_subscribe(self, mosq, obj, mid, granted_qos):
-        self.log.debug("Subscribed: %s %s" % (str(mid), str(granted_qos)))
+        self.log.debug("Subscribed: %s %s", str(mid), str(granted_qos))
 
     def on_disconnect(self, mosq, obj, rc):
         self.roomba_connected = False
         if rc != 0:
-            self.log.warn("Unexpected Disconnect From Roomba %s! - reconnecting"
-                          % self.roombaName)
+            self.log.warning("Unexpectedly disconnected from Roomba %s! "
+                             "- reconnecting", self.roombaName)
         else:
-            self.log.info("Disconnected From Roomba %s" % self.roombaName)
+            self.log.info("Disconnected from Roomba %s", self.roombaName)
 
     def on_log(self, mosq, obj, level, string):
-        self.log.info(string)
+        self.log.debug(string)
 
     def set_mqtt_client(self, mqttc=None, brokerFeedback=""):
         self.mqttc = mqttc
@@ -405,24 +405,24 @@ class Roomba(object):
                 self.brokerFeedback = brokerFeedback
 
     def send_command(self, command):
-        self.log.info("Received COMMAND: %s" % command)
+        self.log.debug("Send command: %s", command)
         Command = OrderedDict()
         Command["command"] = command
         Command["time"] = self.totimestamp(datetime.datetime.now())
         Command["initiator"] = "localApp"
         myCommand = json.dumps(Command)
-        self.log.info("Publishing Roomba Command : %s" % myCommand)
+        self.log.debug("Publishing Roomba Command : %s", myCommand)
         self.client.publish("cmd", myCommand)
 
     def set_preference(self, preference, setting):
-        self.log.info("Received SETTING: %s, %s" % (preference, setting))
+        self.log.debug("Set preference: %s, %s", preference, setting)
         val = False
         if setting.lower() == "true":
             val = True
         tmp = {preference: val}
         Command = {"state": tmp}
         myCommand = json.dumps(Command)
-        self.log.info("Publishing Roomba Setting : %s" % myCommand)
+        self.log.debug("Publishing Roomba Setting : %s" % myCommand)
         self.client.publish("delta", myCommand)
 
     def publish(self, topic, message):
@@ -436,9 +436,9 @@ class Roomba(object):
         self.indent = indent
         self.pretty_print = pretty_print
         if self.raw:
-            self.log.info("Posting RAW data")
+            self.log.debug("Posting RAW data")
         else:
-            self.log.info("Posting DECODED data")
+            self.log.debug("Posting DECODED data")
 
     def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)",
                    mapPath=".", iconPath = "./", roomOutline=True,
@@ -601,8 +601,8 @@ class Roomba(object):
                     try:
                         self.error_message = self._ErrorMessages[v]
                     except KeyError as e:
-                        self.log.warn(
-                            "Error looking up Roomba error message %s" % e)
+                        self.log.warning("Error looking up Roomba error "
+                                         "message: %s", e)
                         self.error_message = "Unknown Error number: %d" % v
                     self.publish("error_message", self.error_message)
                 if k == "cleanMissionStatus_phase":
@@ -724,10 +724,10 @@ class Roomba(object):
 
         if new_state is not None:
             self.current_state = self.states[new_state]
-            self.log.info("set current state to: %s" % (self.current_state))
+            self.log.debug("Current state: %s", self.current_state)
 
         if self.current_state != current_mission:
-            self.log.info("updated state to: %s" % (self.current_state))
+            self.log.info("State updated to: %s", self.current_state)
 
         self.publish("state", self.current_state)
         self.draw_map(current_mission != self.current_state)
@@ -769,7 +769,7 @@ class Roomba(object):
             roomba.save(output, "PNG")
             return roomba
         except Exception as e:
-            self.log.error("ERROR: %s" % e)
+            self.log.error("ERROR: %s", e)
             return None
 
     def load_icon(self, filename="", icon_name=None, fnt=None, size=(32,32),
@@ -786,8 +786,8 @@ class Roomba(object):
                 size,Image.ANTIALIAS)
             icon = self.make_transparent(icon)
         except IOError as e:
-            self.log.warn("error loading %s: %s, using default icon instead"
-                          % (icon_name,e))
+            self.log.warning("Error loading %s: %s, using default icon "
+                             "instead", icon_name, e)
             if base_icon is None:
                 icon = Image.new('RGBA', size, self.transparent)
             else:
@@ -853,7 +853,7 @@ class Roomba(object):
         # get base image of Roomba path
         if self.base is None:
             try:
-                self.log.info("MAP: openening existing line image")
+                self.log.debug("MAP: openening existing line image")
                 self.base = Image.open(
                     self.mapPath + '/' + self.roombaName + 'lines.png')\
                     .convert('RGBA')
@@ -863,11 +863,11 @@ class Roomba(object):
                 self.base = Image.new(
                     'RGBA',
                     (self.mapSize[0], self.mapSize[1]), self.transparent)
-                self.log.warn("MAP: line image problem: %s: created new image"
-                              % e)
+                self.log.warning("MAP: line image problem: %s: created new "
+                                 "image", e)
 
             try:
-                self.log.info("MAP: openening existing problems image")
+                self.log.debug("MAP: openening existing problems image")
                 self.roomba_problem = Image.open(
                     self.mapPath + '/'+self.roombaName + 'problems.png')\
                     .convert('RGBA')
@@ -876,21 +876,21 @@ class Roomba(object):
             except IOError as e:
                 self.roomba_problem = Image.new(
                     'RGBA', self.base.size, self.transparent)
-                self.log.warn("MAP: problems image problem: %s: created new "
-                              "image" % e)
+                self.log.warning("MAP: problems image problem: %s: created "
+                                 "new image", e)
 
             try:
-                self.log.info("MAP: openening existing map no text image")
+                self.log.debug("MAP: openening existing map no text image")
                 self.previous_map_no_text = None
                 self.map_no_text = Image.open(
-                    self.mapPath + '/' + self.roombaName + 'map_notext.png')\
-                    .convert('RGBA')
+                    "{}/{}map_no_text.png".format(
+                        self.mapPath, self.roombaName)).convert('RGBA')
                 if self.map_no_text.size != self.base.size:
                     raise IOError("Image is wrong size")
             except IOError as e:
                 self.map_no_text = None
-                self.log.warn("MAP: map no text image problem: %s: set to None"
-                              % e)
+                self.log.warning("MAP: map no text image problem: %s: set ",
+                                 "to None", e)
         # save x and y center of image, for centering of final map image
         self.cx = self.base.size[0]
         self.cy = self.base.size[1]
@@ -900,8 +900,8 @@ class Roomba(object):
             try:
                 self.fnt = ImageFont.truetype('FreeMono.ttf', 40)
             except IOError as e:
-                self.log.warn("error loading font: %s, loading default font"
-                              % e)
+                self.log.warning("Error loading font: %s, loading default "
+                                 "font", e)
                 self.fnt = ImageFont.load_default()
 
         #set dock home position
@@ -909,8 +909,8 @@ class Roomba(object):
             self.home_pos = (
                 self.mapSize[0] // 2 + self.mapSize[2],
                 self.mapSize[1] // 2 + self.mapSize[3])
-            self.log.info("MAP: home_pos: (%d,%d)"
-                          % (self.home_pos[0], self.home_pos[1]))
+            self.log.debug("MAP: home_pos: (%d,%d)",
+                           self.home_pos[0], self.home_pos[1])
 
         #get icons
         if self.roomba_icon is None:
@@ -945,7 +945,7 @@ class Roomba(object):
                 filename=self.bin_full_file, icon_name="bin full",
                 fnt=self.fnt, size=roomba_size, base_icon=self.roomba_icon)
 
-        self.log.info("MAP: Initialisation complete")
+        self.log.debug("MAP: Initialisation complete")
 
     def transparent_paste(self, base_image, icon, position):
         '''
@@ -993,7 +993,7 @@ class Roomba(object):
         '''
         lines = ImageDraw.Draw(image)
         if x_y != old_x_y:
-            self.log.info("MAP: drawing line: %s, %s" % (old_x_y, x_y))
+            self.log.debug("MAP: drawing line: %s, %s", old_x_y, x_y)
             lines.line([old_x_y, x_y], fill=colour,
                        width=self.roomba_icon.size[0] // 2)
         #draw circle over roomba vacuum area to give smooth edges.
@@ -1007,8 +1007,8 @@ class Roomba(object):
                   colour=(0,0,255,255), rotate=False):
         #draw text - (WARNING old versions of PIL have huge memory leak here!)
         if display_text is None: return
-        self.log.info("MAP: writing text: pos: %s, text: %s"
-                      % (pos, display_text))
+        self.log.debug("MAP: writing text: pos: %s, text: %s",
+                       pos, display_text)
         if rotate:
             txt = Image.new('RGBA', (fnt.getsize(display_text)),
                             self.transparent)
@@ -1048,13 +1048,12 @@ class Roomba(object):
             return
 
         if self.show_final_map == False:
-            self.log.info("MAP: received: new_co_ords: %s old_co_ords: %s "
-                          "phase: %s, state: %s" % (
-                          new_co_ords, old_co_ords,
-                          self.cleanMissionStatus_phase, self.current_state))
+            self.log.debug("MAP: received: new_co_ords: %s old_co_ords: %s "
+                           "phase: %s, state: %s", new_co_ords, old_co_ords,
+                           self.cleanMissionStatus_phase, self.current_state)
 
         if  self.current_state == self.states["charge"]:
-            self.log.info("MAP: ignoring new co-ords in charge phase")
+            self.log.debug("MAP: Ignoring new co-ords in charge phase")
             new_co_ords = old_co_ords = self.zero_coords()
             self.display_text = "Charging: Battery: " + \
                 str(self.master_state["state"]["reported"]["batPct"]) + "%"
@@ -1067,7 +1066,7 @@ class Roomba(object):
             draw_final = True
 
         elif self.current_state == self.states["recharge"]:
-            self.log.info("MAP: ignoring new co-ords in recharge phase")
+            self.log.debug("MAP: ignoring new co-ords in recharge phase")
             new_co_ords = old_co_ords = self.zero_coords()
             self.display_text = "Recharging:" + " Time: " + \
                 str(self.master_state["state"]["reported"]["cleanMissionStatus"]["rechrgM"]) + "m"
@@ -1076,7 +1075,7 @@ class Roomba(object):
             self.save_text_and_map_on_whitebg(self.map_no_text)
 
         elif self.current_state == self.states["pause"]:
-            self.log.info("MAP: ignoring new co-ords in pause phase")
+            self.log.debug("MAP: ignoring new co-ords in pause phase")
             new_co_ords = old_co_ords
             self.display_text = "Paused: " + \
                 str(self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"]) + \
@@ -1091,11 +1090,11 @@ class Roomba(object):
         elif self.current_state == self.states["hmPostMsn"]:
             self.display_text = "Completed: " + \
                 time.strftime("%a %b %d %H:%M:%S")
-            self.log.info("MAP: end of mission")
+            self.log.debug("MAP: end of mission")
 
         elif self.current_state == self.states["dockend"]:
-            self.log.info("MAP: mission completed: ignoring new co-ords in "
-                          "docking phase")
+            self.log.debug("MAP: mission completed: ignoring new co-ords in "
+                           "docking phase")
             new_co_ords = old_co_ords = self.zero_coords()
             self.draw_final_map(True)
             draw_final = True
@@ -1120,7 +1119,7 @@ class Roomba(object):
                                             self.transparent)
             self.show_final_map = False
             self.display_text = None
-            self.log.info("MAP: created new image at start of new run")
+            self.log.debug("MAP: created new image at start of new run")
 
         elif self.current_state == self.states["stuck"]:
             self.display_text = "STUCK!: " + time.strftime("%a %b %d %H:%M:%S")
@@ -1145,17 +1144,17 @@ class Roomba(object):
                 battery_low = True
 
         else:
-            self.log.warn("MAP: no special handling for state: %s"
-                          % self.current_state)
+            self.log.warning("MAP: no special handling for state: %s",
+                             self.current_state)
 
         if self.base is None:
-            self.log.warn("MAP: no image, exiting...")
+            self.log.warning("MAP: no image, exiting...")
             return
 
         if self.display_text is None:
             self.display_text = self.current_state
 
-        if self.show_final_map: #just display final map - not live
+        if self.show_final_map:  # just display final map - not live
             self.log.debug("MAP: not updating map - Roomba not running")
             return
 
@@ -1167,8 +1166,8 @@ class Roomba(object):
         old_x_y, x_y, theta = self.offset_coordinates(old_co_ords, new_co_ords)
         roomba_pos = self.get_roomba_pos(x_y)
 
-        self.log.info("MAP: old x,y: %s new x,y: %s theta: %s roomba pos: %s" %
-                      (old_x_y, x_y, theta, roomba_pos))
+        self.log.debug("MAP: old x,y: %s new x,y: %s theta: %s roomba pos: %s",
+                       old_x_y, x_y, theta, roomba_pos)
 
         #draw lines
         self.draw_vacuum_lines(self.base, old_x_y, x_y, theta)
@@ -1178,19 +1177,19 @@ class Roomba(object):
         roomba_sprite = Image.new('RGBA', self.base.size, self.transparent)
 
         #draw roomba
-        self.log.info("MAP: drawing roomba: pos: %s, theta: %s"
-                      % (roomba_pos, theta))
+        self.log.debug("MAP: drawing roomba: pos: %s, theta: %s",
+                       roomba_pos, theta)
         if stuck:
-            self.log.info("MAP: Drawing stuck Roomba")
+            self.log.debug("MAP: Drawing stuck Roomba")
             self.roomba_problem.paste(self.roomba_error_icon,roomba_pos)
         if cancelled:
-            self.log.info("MAP: Drawing cancelled Roomba")
+            self.log.debug("MAP: Drawing cancelled Roomba")
             self.roomba_problem.paste(self.roomba_cancelled_icon,roomba_pos)
         if bin_full:
-            self.log.info("MAP: Drawing full bin")
+            self.log.debug("MAP: Drawing full bin")
             self.roomba_problem.paste(self.bin_full_icon,roomba_pos)
         if battery_low:
-            self.log.info("MAP: Drawing low battery Roomba")
+            self.log.debug("MAP: Drawing low battery Roomba")
             self.roomba_problem.paste(self.roomba_battery_icon,roomba_pos)
 
         roomba_sprite = self.transparent_paste(
@@ -1224,12 +1223,12 @@ class Roomba(object):
         out = Image.alpha_composite(out, self.roomba_problem)
         if draw_final and self.auto_rotate:
             #translate image to center it if auto_rotate is on
-            self.log.info("MAP: calculation of center: (%d,%d), "
-                          "translating final map to center it, x:%d, y:%d "
-                          "deg: %.2f" % (
-                            self.cx, self.cy, self.cx - out.size[0] // 2,
-                            self.cy - out.size[1] // 2,
-                            self.angle))
+            self.log.debug("MAP: calculation of center: (%d,%d), "
+                           "translating final map to center it, x:%d, y:%d "
+                           "deg: %.2f" % (
+                               self.cx, self.cy, self.cx - out.size[0] // 2,
+                               self.cy - out.size[1] // 2,
+                               self.angle))
             out = out.transform(
                 out.size, Image.AFFINE,
                 (1, 0, self.cx-out.size[0] // 2,
@@ -1324,9 +1323,9 @@ class Roomba(object):
             sc = M[0, 0]
             scaleRecovered = math.sqrt(ss * ss + sc * sc)
             thetaRecovered = math.atan2(ss, sc) * 180 / math.pi
-            self.log.info("MAP: Calculated scale difference: %.2f, "
-                          "Calculated rotation difference: %.2f" %
-                          (scaleRecovered, thetaRecovered))
+            self.log.debug("MAP: Calculated scale difference: %.2f, "
+                           "Calculated rotation difference: %.2f" %
+                           (scaleRecovered, thetaRecovered))
 
             #deskew image
             im_out = cv2.warpPerspective(skewed_image, np.linalg.inv(M),
@@ -1334,8 +1333,8 @@ class Roomba(object):
             return im_out
 
         else:
-            self.log.warn("MAP: Not  enough  matches are found   -   %d/%d"
-                          % (len(good), MIN_MATCH_COUNT))
+            self.log.warning("MAP: Not enough matches found - %d/%d",
+                             len(good), MIN_MATCH_COUNT)
             return skewed_image
 
     def draw_room_outline(self, overwrite=False, colour=(64,64,64,255),
@@ -1343,20 +1342,21 @@ class Roomba(object):
         '''
         draw room outline
         '''
-        self.log.info("MAP: checking room outline")
+        self.log.debug("MAP: checking room outline")
         if HAVE_CV2:
             if self.room_outline_contour is None or overwrite:
                 try:
                     self.room_outline_contour = np.load(
                         self.mapPath + '/' + self.roombaName + 'room.npy')
                 except IOError as e:
-                    self.log.warn("Unable to load room outline: %s, setting "
-                                  "to 0" % e)
+                    self.log.warning("Unable to load room outline: %s, "
+                                     "setting to 0", e)
                     self.room_outline_contour = np.array(
                         [(0,0),(0,0),(0,0),(0,0)], dtype=np.int)
 
                 try:
-                    self.log.info("MAP: openening existing room outline image")
+                    self.log.debug("MAP: openening existing room outline "
+                                   "image")
                     self.room_outline = Image.open(
                         self.mapPath + '/' + self.roombaName + 'room.png').\
                         convert('RGBA')
@@ -1365,7 +1365,7 @@ class Roomba(object):
                 except IOError as e:
                     self.room_outline = Image.new(
                         'RGBA', self.base.size, self.transparent)
-                    self.log.warn("MAP: room outline image problem: %s: "
+                    self.log.warning("MAP: room outline image problem: %s: "
                                   "set to New" % e)
 
             room_outline_area = cv2.contourArea(self.room_outline_contour)
@@ -1384,14 +1384,14 @@ class Roomba(object):
             # so just use 1
             match = cv2.matchShapes(
                 self.room_outline_contour,contours[0],1,0.0)
-            self.log.info("MAP: perimeter/outline match is: %.4f" % match)
+            self.log.debug("MAP: perimeter/outline match is: %.4f" % match)
             # if match is less than 0.35 - shapes are similar (but if it's 0 -
             # then they are the same shape..) try auto rotating map to fit.
             if match < 0.35 and match > 0:
                 #self.match_outlines(self.room_outline, self.base)
                 pass
             if max_area > room_outline_area:
-                self.log.info("MAP: found new outline perimiter")
+                self.log.debug("MAP: found new outline perimiter")
                 self.room_outline_contour = contours[0]
                 perimeter = cv2.arcLength(self.room_outline_contour,True)
                 outline = Image.new('RGBA',self.base.size,self.transparent)
@@ -1409,7 +1409,7 @@ class Roomba(object):
         else:
             if self.room_outline is None or overwrite:
                 try:
-                    self.log.info("MAP: openening existing room outline image")
+                    self.log.debug("MAP: openening existing room outline image")
                     self.room_outline = Image.open(
                         self.mapPath + '/' + self.roombaName + 'room.png').\
                         convert('RGBA')
@@ -1418,8 +1418,8 @@ class Roomba(object):
                 except IOError as e:
                     self.room_outline = Image.new(
                         'RGBA', self.base.size, self.transparent)
-                    self.log.warn("MAP: room outline image problem: %s: "
-                                  "set to New" % e)
+                    self.log.warning("MAP: room outline image problem: %s: "
+                                     "set to New", e)
             edges = ImageOps.invert(self.room_outline.convert('L'))
             edges.paste(self.base)
             edges = edges.convert('L').filter(ImageFilter.SMOOTH_MORE)
@@ -1439,19 +1439,19 @@ class Roomba(object):
                 self.get_image_parameters(
                     image=self.room_outline, contour=self.room_outline_contour,
                     final=overwrite)
-                self.log.info("MAP: calculation of center: (%d,%d), "
-                              "translating room outline to center it, "
-                              "x:%d, y:%d deg: %.2f" % (
-                              self.cx, self.cy,
-                              self.cx - self.base.size[0] // 2,
-                              self.cy - self.base.size[1] // 2,
-                              self.angle))
+                self.log.debug("MAP: calculation of center: (%d,%d), "
+                               "translating room outline to center it, "
+                               "x:%d, y:%d deg: %.2f",
+                               self.cx, self.cy,
+                               self.cx - self.base.size[0] // 2,
+                               self.cy - self.base.size[1] // 2,
+                               self.angle)
                 # center room outline, same as map.
                 self.room_outline = self.room_outline.transform(
                     self.base.size, Image.AFFINE,
                     (1, 0, self.cx - self.base.size[0] // 2,
                      0, 1, self.cy-self.base.size[1]//2))
-            self.log.info("MAP: Wrote new room outline files")
+            self.log.debug("MAP: Wrote new room outline files")
 
     def PIL_get_image_parameters(self, image=None, start=90, end = 0, step=-1,
                                  recursion=0):
@@ -1525,8 +1525,8 @@ class Roomba(object):
             self.cx = x_y[0]
             self.cy = x_y[1]
             self.angle = angle
-        self.log.info("MAP: image center: x:%d, y:%d, angle %.2f" %
-                      (x_y[0], x_y[1], angle))
+        self.log.debug("MAP: image center: x:%d, y:%d, angle %.2f",
+                       x_y[0], x_y[1], angle)
 
     def angle_between(self, p1, p2):
         '''
@@ -1581,8 +1581,7 @@ class Roomba(object):
             try:
                 contours.remove(max_contour)    # remove max contour from list
             except ValueError:
-                self.log.warn("MAP: unable to remove contour")
-                pass
+                self.log.warning("MAP: unable to remove contour")
 
             mask = np.full(edgedata.shape, 255, dtype=np.uint8) # white
             # create mask (of other contours) in black
@@ -1620,7 +1619,7 @@ class Roomba(object):
         merge = Image.alpha_composite(merge,base)
         merge = Image.alpha_composite(merge,edges)
         if overwrite:
-            self.log.info("MAP: Drawing final map")
+            self.log.debug("MAP: Drawing final map")
             self.last_completed_time = time.time()
             self.base=merge
 
