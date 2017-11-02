@@ -735,7 +735,7 @@ class Roomba(object):
             self.log.debug("Current state: %s", self.current_state)
 
         if self.current_state != current_mission:
-            self.log.info("State updated to: %s", self.current_state)
+            self.log.debug("State updated to: %s", self.current_state)
 
         self.publish("state", self.current_state)
         self.draw_map(current_mission != self.current_state)
