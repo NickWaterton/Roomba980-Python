@@ -73,6 +73,10 @@ except NameError:
     pass
 
 
+class RoombaConnectionError(Exception):
+    pass
+
+
 class Roomba(object):
     '''
     This is a Class for Roomba 900 series WiFi connected Vacuum cleaners
@@ -274,7 +278,8 @@ class Roomba(object):
             self.log.critical("Invalid address, blid, or password! All these "
                               "must be specified!")
             sys.exit(1)
-        if self.roomba_connected or self.periodic_connection_running: return
+        if self.roomba_connected or self.periodic_connection_running:
+            return
 
         if self.continuous:
             if not self._connect():
@@ -286,7 +291,7 @@ class Roomba(object):
             self._thread.daemon = True
             self._thread.start()
 
-        self.time = time.time()   #save connect time
+        self.time = time.time()   # save connection time
 
     def _connect(self, count=0, new_connection=False):
         max_retries = 3
@@ -310,11 +315,13 @@ class Roomba(object):
             if exc_type == socket.error or exc_type == ConnectionRefusedError:
                 count += 1
                 if count <= max_retries:
-                    self.log.error("Attempting connection #%d" % count)
+                    self.log.debug("Attempting connection #%d" % count)
                     time.sleep(1)
                     self._connect(count, True)
-        if count == max_retries:
-            self.log.error("Unable to connect %s", self.roombaName)
+        if count >= max_retries:
+            self.log.error("Unable to connect to %s", self.address)
+            raise RoombaConnectionError(
+                "Unable to connect to Roomba at {}".format(self.address))
         return False
 
     def disconnect(self):
@@ -325,7 +332,8 @@ class Roomba(object):
 
     def periodic_connection(self):
         # only one connection thread at a time!
-        if self.periodic_connection_running: return
+        if self.periodic_connection_running:
+            return
         self.periodic_connection_running = True
         while not self.stop_connection:
             if self._connect():
