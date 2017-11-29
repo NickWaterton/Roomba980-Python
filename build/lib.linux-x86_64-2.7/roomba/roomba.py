@@ -141,7 +141,7 @@ class Roomba(object):
         '''
 
         self.debug = False
-        self.log = logging.getLogger("roomba.__main__") #modified to work with new schemen NW 15/9/2017
+        self.log = logging.getLogger("roomba.__main__") #modified to work with new scheme NW 15/9/2017
         #self.log = logging.getLogger(__name__+'.Roomba')
         if self.log.getEffectiveLevel() == logging.DEBUG:
             self.debug = True

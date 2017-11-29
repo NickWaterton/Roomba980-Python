@@ -5,11 +5,16 @@ import logging
 import socket
 import six
 import ssl
+import sys
 try:
     import configparser
 except:
     from six.moves import configparser
+    
+if sys.version_info[0] < 3: #fix more python 3 incompatibilities
+    input = raw_input
 
+log = logging.getLogger(__name__)
 
 class Password(object):
     '''
@@ -18,12 +23,14 @@ class Password(object):
     Results are written to a config file, default ".\config.ini"
     '''
 
-    VERSION = "1.2.1"
+    VERSION = "1.2.2"
 
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
         self.file = file
-        self.log = logging.getLogger(__name__+'.Roomba_getpassword')
+        #self.log = logging.getLogger(__name__+'.Roomba_getpassword')
+        self.log = logging.getLogger("roomba.__main__")
+        self.log.info("Using Password version %s" % self.VERSION)
         self.get_password()
 
     def receive_udp(self):
