@@ -98,7 +98,7 @@ First you need python 2.7 *or* python 3.5/3.6 installed (thanks to pschmitt for 
 
 install via pip (this will take of dependencies as well):
 ```bash
-pip install https://github.com/NickWaterton/Roomba980-Python.git
+pip install git+https://github.com/NickWaterton/Roomba980-Python.git
 ```
 
 Alternatively you may get going by cloning this repository:
