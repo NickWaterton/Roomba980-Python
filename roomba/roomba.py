@@ -14,15 +14,19 @@ Nick Waterton 7th July   2017  V1.2.0: Added -o option "roomOutline" allows
 enabling/disabling of room outline drawing, added auto creation of css/html files
 Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines
 if you don't have OpenCV
+Nick Waterton 3rd Feb  2018  V1.2.2: Quick (untested) fix for running directly (ie not installed)
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
-from roomba.password import Password
+try:
+    from roomba.password import Password
+except ImportError:
+    from password import Password
 import datetime
 import json
 import math
