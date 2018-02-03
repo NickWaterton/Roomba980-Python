@@ -1,13 +1,22 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
 from ast import literal_eval
 from logging.handlers import RotatingFileHandler
 import sys
 if sys.version_info[0] < 3:  #added for python 2.7 fix NW 15/9/2017
     import roomba
-    from roomba import Password
+    try:
+        from roomba import Password
+    except ImportError:
+        from password  import Password
 else:
     from roomba import roomba
-    from roomba.password import Password
+    try:
+        from roomba.password import Password
+    except ImportError:
+        from password  import Password
 import argparse
 import json
 import logging
