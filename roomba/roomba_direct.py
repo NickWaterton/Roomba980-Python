@@ -231,7 +231,6 @@ def parse_args():
     return parser.parse_args()
 
 def main():
-    arg = parse_args()
 
     #----------- Local Routines ------------
 
@@ -432,8 +431,9 @@ window.onload = function()
                 print("Log Error: %s" % e)
             sys.exit(1)
 
-    args = parse_args()
-
+    #args = parse_args()    #don't know what this is for - removed NW 3/2/2018
+    arg = parse_args()
+    
     if arg.debug:
         log_level = logging.DEBUG
     else:
@@ -551,7 +551,7 @@ window.onload = function()
             password=info["password"],
             topic=arg.topic, continuous=arg.continuous,
             clean=False,
-            cert_name=args.cert,
+            cert_name=arg.cert,
             roombaName=info["roombaName"]))
 
     for myroomba in roomba_list:

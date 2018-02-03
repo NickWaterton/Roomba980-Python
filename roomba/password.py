@@ -29,7 +29,11 @@ class Password(object):
         self.address = address
         self.file = file
         #self.log = logging.getLogger(__name__+'.Roomba_getpassword')
-        self.log = logging.getLogger("roomba.__main__")
+        if __name__ == "password": 
+            self.log = logging.getLogger("__main__")    #another logging fix NW 3/2/2018
+        else:
+            self.log = logging.getLogger("roomba.__main__")
+        #self.log.info("__name__ is %s" % __name__)
         self.log.info("Using Password version %s" % self.VERSION)
         self.get_password()
 
