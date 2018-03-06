@@ -5,7 +5,7 @@ from __future__ import print_function
 from ast import literal_eval
 from logging.handlers import RotatingFileHandler
 import sys
-if sys.version_info[0] < 3:  #added for python 2.7 fix NW 15/9/2017
+if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 5):  #added for python 2.7 and < 3.4 fix NW 15/9/2017
     import roomba
     try:
         from roomba import Password
