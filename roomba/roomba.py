@@ -447,6 +447,10 @@ class Roomba(object):
 
     def enable_map(self, enable=False, mapSize="(800,1500,0,0,0,0)",
                    mapPath=".", iconPath = "./", roomOutline=True,
+                   enableMapWithText=True,
+                   fillColor="lawngreen", 
+                   outlineColor=(64,64,64,255),
+                   outlineWidth=1,
                    home_icon_file="home.png",
                    roomba_icon_file="roomba.png",
                    roomba_error_file="roombaerror.png",
@@ -509,6 +513,11 @@ class Roomba(object):
             if not roomOutline:
                 self.log.info("MAP: Not drawing Room Outline")
             self.roomOutline = roomOutline
+
+            self.enableMapWithText = enableMapWithText
+            self.fillColor = fillColor
+            self.outlineColor = outlineColor
+            self.outlineWidth = outlineWidth
 
             self.initialise_map(roomba_size)
             return True
@@ -857,7 +866,7 @@ class Roomba(object):
         '''
         # get base image of Roomba path
         if self.base is None:
-            try:
+            '''try:
                 self.log.info("MAP: openening existing line image")
                 self.base = Image.open(
                     self.mapPath + '/' + self.roombaName + 'lines.png')\
@@ -882,7 +891,14 @@ class Roomba(object):
                 self.roomba_problem = Image.new(
                     'RGBA', self.base.size, self.transparent)
                 self.log.warn("MAP: problems image problem: %s: created new "
-                              "image" % e)
+                              "image" % e)'''
+
+            self.base = Image.new(
+                'RGBA',
+                (self.mapSize[0], self.mapSize[1]), self.transparent)
+
+            self.roomba_problem = Image.new(
+                'RGBA', self.base.size, self.transparent)
 
             try:
                 self.log.info("MAP: openening existing map no text image")
@@ -991,7 +1007,7 @@ class Roomba(object):
                 x_y[0] + self.roomba_icon.size[0] // 2,
                 x_y[1] + self.roomba_icon.size[1] // 2]
 
-    def draw_vacuum_lines(self, image, old_x_y, x_y, theta, colour="lawngreen"):
+    def draw_vacuum_lines(self, image, old_x_y, x_y, theta):
         '''
         draw lines on image from old_x_y to x_y reepresenting vacuum coverage,
         taking into account angle theta (roomba angle).
@@ -999,14 +1015,14 @@ class Roomba(object):
         lines = ImageDraw.Draw(image)
         if x_y != old_x_y:
             self.log.info("MAP: drawing line: %s, %s" % (old_x_y, x_y))
-            lines.line([old_x_y, x_y], fill=colour,
+            lines.line([old_x_y, x_y], fill=self.fillColor,
                        width=self.roomba_icon.size[0] // 2)
         #draw circle over roomba vacuum area to give smooth edges.
         arcbox = [x_y[0]-self.roomba_icon.size[0] // 4,
                   x_y[1]-self.roomba_icon.size[0] // 4,
                   x_y[0]+self.roomba_icon.size[0] // 4,
                   x_y[1]+self.roomba_icon.size[0] // 4]
-        lines.ellipse(arcbox, fill=colour)
+        lines.ellipse(arcbox, fill=self.fillColor)
 
     def draw_text(self, image, display_text, fnt, pos=(0,0),
                   colour=(0,0,255,255), rotate=False):
@@ -1185,18 +1201,25 @@ class Roomba(object):
         #draw roomba
         self.log.info("MAP: drawing roomba: pos: %s, theta: %s"
                       % (roomba_pos, theta))
+
+        has_problems = False
+
         if stuck:
             self.log.info("MAP: Drawing stuck Roomba")
             self.roomba_problem.paste(self.roomba_error_icon,roomba_pos)
+            has_problems = True
         if cancelled:
             self.log.info("MAP: Drawing cancelled Roomba")
             self.roomba_problem.paste(self.roomba_cancelled_icon,roomba_pos)
+            has_problems = True
         if bin_full:
             self.log.info("MAP: Drawing full bin")
             self.roomba_problem.paste(self.bin_full_icon,roomba_pos)
+            has_problems = True
         if battery_low:
             self.log.info("MAP: Drawing low battery Roomba")
             self.roomba_problem.paste(self.roomba_battery_icon,roomba_pos)
+            has_problems = True
 
         roomba_sprite = self.transparent_paste(
             roomba_sprite,
@@ -1207,12 +1230,14 @@ class Roomba(object):
             roomba_sprite = self.transparent_paste(
                 roomba_sprite, self.dock_icon, self.dock_position)
 
-        # save base lines
+        '''# save base lines
         self.base.save(self.mapPath + '/' + self.roombaName + 'lines.png',
                        "PNG")
+
         # save problem overlay
         self.roomba_problem.save(self.mapPath + '/' + self.roombaName + \
-                                 'problems.png', "PNG")
+                                'problems.png', "PNG")'''
+
         if self.roomOutline or self.auto_rotate:
             # draw room outline (saving results if this is a final map) update
             # x,y and angle if auto_rotate
@@ -1225,8 +1250,11 @@ class Roomba(object):
             out = self.base
         #merge roomba lines (trail) with base
         out = Image.alpha_composite(out, roomba_sprite)
-        #merge problem location for roomba into out
-        out = Image.alpha_composite(out, self.roomba_problem)
+
+        if has_problems:
+            #merge problem location for roomba into out
+            out = Image.alpha_composite(out, self.roomba_problem)
+
         if draw_final and self.auto_rotate:
             #translate image to center it if auto_rotate is on
             self.log.info("MAP: calculation of center: (%d,%d), "
@@ -1257,16 +1285,17 @@ class Roomba(object):
         self.previous_display_text = self.display_text
         self.map_no_text.save(self.mapPath + '/' + self.roombaName +
                               'map_notext.png', "PNG")
-        final = Image.new('RGBA', self.base.size, (255,255,255,255))    # white
-        # paste onto a white background, so it's easy to see
-        final = Image.alpha_composite(final, map)
-        # draw text
-        self.draw_text(final, self.display_text, self.fnt)
-        final.save(self.mapPath + '/'+self.roombaName + '_map.png', "PNG")
-        # try to avoid other programs reading file while writing it,
-        # rename should be atomic.
-        os.rename(self.mapPath + '/' + self.roombaName + '_map.png',
-            self.mapPath + '/' + self.roombaName + 'map.png')
+        if( self.enableMapWithText ):
+            final = Image.new('RGBA', self.base.size, (255,255,255,255))    # white
+            # paste onto a white background, so it's easy to see
+            final = Image.alpha_composite(final, map)
+            # draw text
+            self.draw_text(final, self.display_text, self.fnt)
+            final.save(self.mapPath + '/'+self.roombaName + '_map.png', "PNG")
+            # try to avoid other programs reading file while writing it,
+            # rename should be atomic.
+            os.rename(self.mapPath + '/' + self.roombaName + '_map.png',
+                self.mapPath + '/' + self.roombaName + 'map.png')
 
     def ScaleRotateTranslate(self, image, angle, center=None, new_center=None,
                              scale=None, expand=False):
@@ -1343,8 +1372,7 @@ class Roomba(object):
                           % (len(good), MIN_MATCH_COUNT))
             return skewed_image
 
-    def draw_room_outline(self, overwrite=False, colour=(64,64,64,255),
-                          width=1):
+    def draw_room_outline(self, overwrite=False):
         '''
         draw room outline
         '''
@@ -1408,7 +1436,7 @@ class Roomba(object):
                     self.draw_edges * perimeter,
                     True)
                 # outline with grey, width 1
-                cv2.drawContours(edgeimage,[approx] , -1, colour, width)
+                cv2.drawContours(edgeimage,[approx] , -1, self.outlineColor, self.outlineWidth)
                 self.room_outline = Image.fromarray(edgeimage)
 
         else:
