@@ -1241,8 +1241,8 @@ class Roomba(object):
                 (1, 0, self.cx-out.size[0] // 2,
                  0, 1, self.cy-out.size[1] // 2))
         # map is upside down, so rotate 180 degrees, and size to fit (NW 12/4/2018 fixed bug causing distorted maps when rotation is not 0)
-        out_rotated = out.rotate(180 + self.angle, expand=False).\
-            resize(self.base.size)
+        #out_rotated = out.rotate(180 + self.angle, expand=True).resize(self.base.size) #old version
+        out_rotated = out.rotate(180 + self.angle, expand=False)
         # save composite image
         self.save_text_and_map_on_whitebg(out_rotated)
         if draw_final:
