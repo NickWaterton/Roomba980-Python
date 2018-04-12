@@ -15,11 +15,12 @@ enabling/disabling of room outline drawing, added auto creation of css/html file
 Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines
 if you don't have OpenCV
 Nick Waterton 3rd Feb  2018  V1.2.2: Quick (untested) fix for running directly (ie not installed)
+Nick Waterton 12th April 2018 V1.2.3: Fixed image rotation bug causing distorted maps if map rotation was not 0.
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
@@ -1239,8 +1240,8 @@ class Roomba(object):
                 out.size, Image.AFFINE,
                 (1, 0, self.cx-out.size[0] // 2,
                  0, 1, self.cy-out.size[1] // 2))
-        # map is upside down, so rotate 180 degrees, and size to fit
-        out_rotated = out.rotate(180 + self.angle, expand=True).\
+        # map is upside down, so rotate 180 degrees, and size to fit (NW 12/4/2018 fixed bug causing distorted maps when rotation is not 0)
+        out_rotated = out.rotate(180 + self.angle, expand=False).\
             resize(self.base.size)
         # save composite image
         self.save_text_and_map_on_whitebg(out_rotated)
