@@ -1242,7 +1242,7 @@ class Roomba(object):
                  0, 1, self.cy-out.size[1] // 2))
         # map is upside down, so rotate 180 degrees, and size to fit (NW 12/4/2018 fixed bug causing distorted maps when rotation is not 0)
         #out_rotated = out.rotate(180 + self.angle, expand=True).resize(self.base.size) #old version
-        out_rotated = out.rotate(180 + self.angle, expand=False)
+        out_rotated = out.rotate(180, expand=False)
         # save composite image
         self.save_text_and_map_on_whitebg(out_rotated)
         if draw_final:
@@ -1261,6 +1261,7 @@ class Roomba(object):
         final = Image.new('RGBA', self.base.size, (255,255,255,255))    # white
         # paste onto a white background, so it's easy to see
         final = Image.alpha_composite(final, map)
+        final = final.rotate(self.angle, expand=True) #(NW 12/4/2018 fixed bug causing distorted maps when rotation is not 0 - moved rotate to here)
         # draw text
         self.draw_text(final, self.display_text, self.fnt)
         final.save(self.mapPath + '/'+self.roombaName + '_map.png', "PNG")
