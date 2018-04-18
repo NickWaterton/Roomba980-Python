@@ -472,10 +472,10 @@ class Roomba(object):
         if not HAVE_PIL: #can't draw a map without PIL!
             return False
 
-        if Image.PILLOW_VERSION < "4.1.1":
+        if Image.__version__ < "4.1.1":
             print("WARNING: PIL version is %s, this is not the latest! you "
                   "can get bad memory leaks with old versions of PIL"
-                  % Image.PILLOW_VERSION)
+                  % Image.__version__)
             print("run: 'pip install --upgrade pillow' to fix this")
 
         self.drawmap = enable
