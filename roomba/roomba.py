@@ -39,6 +39,7 @@ import ssl
 import sys
 import threading
 import time
+import traceback
 try:
     import configparser
 except:
@@ -256,22 +257,25 @@ class Roomba(object):
             # certificate is not used...
             # but v1.3 changes all this, so have to do the following:
 
-            self.log.info("Seting TLS")
+            self.log.info("Setting TLS")
             try:
                 self.client.tls_set(
                     self.cert_name, cert_reqs=ssl.CERT_NONE,
                     tls_version=ssl.PROTOCOL_TLSv1)
-            except ValueError:   # try V1.3 version
+            except (ValueError, FileNotFoundError):   # try V1.3 version
                 self.log.warn("TLS Setting failed - trying 1.3 version")
                 self.client._ssl_context = None
                 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                 context.verify_mode = ssl.CERT_NONE
                 context.load_default_certs()
                 self.client.tls_set_context(context)
+            except:
+                self.log.error("Error setting TLS: %s" % traceback.format_exc())
 
             # disables peer verification
             self.client.tls_insecure_set(True)
             self.client.username_pw_set(self.blid, self.password)
+            self.log.info("Setting TLS - OK")
             return True
         return False
 
