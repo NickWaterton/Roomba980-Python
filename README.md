@@ -7,6 +7,7 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 
 This is version 1.0 so it may be buggy!
 **NEW** Now version 1.1.2 - so it may be less buggy (or not)
+**NEW 9/10/2018** Added support for Roomba i7 password discovery
 
 ## Advice
 If you enjoy python980 and it works well for you, I recommend blocking the internet access to your robot to avoid the OTA firmware updates. New firmware changes can cause python980 to stop working. Blocking firmware updates can be performed using the parental control options on your router.

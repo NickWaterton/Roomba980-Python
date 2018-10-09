@@ -21,9 +21,10 @@ class Password(object):
     Get Roomba blid and password - only V2 firmware supported
     if IP is not supplied, class will attempt to discover the Roomba IP first.
     Results are written to a config file, default ".\config.ini"
+    V 1.2.3 NW 9/10/2018 added support for Roomba i7
     '''
 
-    VERSION = "1.2.2"
+    VERSION = "1.2.3"
 
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
@@ -62,7 +63,7 @@ class Password(object):
                                     "discovered address %s, using discovered "
                                     "address..." % (self.address, addr[0]))
                             if udp_data.decode() != message:
-                                parsedMsg = json.loads(udp_data)
+                                parsedMsg = json.loads(udp_data.decode()) #1.2.3 added .decode() to avoid python 3 bytes error
                                 roomba_dict[addr]=parsedMsg
                         except Exception as e:
                             print("json decode error: %s" % e)
@@ -108,7 +109,7 @@ class Password(object):
             print("\r\rRoomba (%s) IP address is: %s"
                   % (parsedMsg["robotname"],addr))
             hostname = parsedMsg["hostname"].split('-')
-            if hostname[0] == 'Roomba':
+            if hostname[0] == 'Roomba' or hostname[0] == 'iRobot':  #for i7 robot name is now iRobot
                 blid = hostname[1]
 
             if hasattr(str, 'decode'):
@@ -168,7 +169,8 @@ class Password(object):
                 return False
             else:
                 # Convert password to str
-                password = str(data[7:].decode())
+                #password = str(data[7:].decode()) #old version
+                password = str(data[7:]).partition(b'\0')[0].decode() #for i7 - has null termination
                 print("blid is: %s" % blid)
                 print('Password=> %s <= Yes, all this string.' % password)
                 print('Use these credentials in roomba.py')
