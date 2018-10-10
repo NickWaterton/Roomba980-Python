@@ -24,7 +24,7 @@ class Password(object):
     V 1.2.3 NW 9/10/2018 added support for Roomba i7
     '''
 
-    VERSION = "1.2.3"
+    VERSION = __version__ = "1.2.4"
 
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
@@ -170,7 +170,7 @@ class Password(object):
             else:
                 # Convert password to str
                 #password = str(data[7:].decode()) #old version
-                password = str(data[7:]).partition(b'\0')[0].decode() #for i7 - has null termination
+                password = str(data[7:].decode().rstrip()) #for i7 - has null termination
                 print("blid is: %s" % blid)
                 print('Password=> %s <= Yes, all this string.' % password)
                 print('Use these credentials in roomba.py')
