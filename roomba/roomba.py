@@ -15,11 +15,12 @@ enabling/disabling of room outline drawing, added auto creation of css/html file
 Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines
 if you don't have OpenCV
 Nick Waterton 3rd Feb  2018  V1.2.2: Quick (untested) fix for running directly (ie not installed)
+Nick Waterton 12th April 2018 V1.2.3: Fixed image rotation bug causing distorted maps if map rotation was not 0.
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
@@ -38,6 +39,7 @@ import ssl
 import sys
 import threading
 import time
+import traceback
 try:
     import configparser
 except:
@@ -255,22 +257,25 @@ class Roomba(object):
             # certificate is not used...
             # but v1.3 changes all this, so have to do the following:
 
-            self.log.info("Seting TLS")
+            self.log.info("Setting TLS")
             try:
                 self.client.tls_set(
                     self.cert_name, cert_reqs=ssl.CERT_NONE,
                     tls_version=ssl.PROTOCOL_TLSv1)
-            except ValueError:   # try V1.3 version
+            except (ValueError, FileNotFoundError):   # try V1.3 version
                 self.log.warn("TLS Setting failed - trying 1.3 version")
                 self.client._ssl_context = None
                 context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                 context.verify_mode = ssl.CERT_NONE
                 context.load_default_certs()
                 self.client.tls_set_context(context)
+            except:
+                self.log.error("Error setting TLS: %s" % traceback.format_exc())
 
             # disables peer verification
             self.client.tls_insecure_set(True)
             self.client.username_pw_set(self.blid, self.password)
+            self.log.info("Setting TLS - OK")
             return True
         return False
 
@@ -1267,9 +1272,9 @@ class Roomba(object):
                 out.size, Image.AFFINE,
                 (1, 0, self.cx-out.size[0] // 2,
                  0, 1, self.cy-out.size[1] // 2))
-        # map is upside down, so rotate 180 degrees, and size to fit
-        out_rotated = out.rotate(180 + self.angle, expand=True).\
-            resize(self.base.size)
+        # map is upside down, so rotate 180 degrees, and size to fit (NW 12/4/2018 fixed bug causing distorted maps when rotation is not 0)
+        #out_rotated = out.rotate(180 + self.angle, expand=True).resize(self.base.size) #old version
+        out_rotated = out.rotate(180, expand=False)
         # save composite image
         self.save_text_and_map_on_whitebg(out_rotated)
         if draw_final:
@@ -1285,10 +1290,12 @@ class Roomba(object):
         self.previous_display_text = self.display_text
         self.map_no_text.save(self.mapPath + '/' + self.roombaName +
                               'map_notext.png', "PNG")
+        
         if( self.enableMapWithText ):
             final = Image.new('RGBA', self.base.size, (255,255,255,255))    # white
             # paste onto a white background, so it's easy to see
             final = Image.alpha_composite(final, map)
+            final = final.rotate(self.angle, expand=True) #(NW 12/4/2018 fixed bug causing distorted maps when rotation is not 0 - moved rotate to here)
             # draw text
             self.draw_text(final, self.display_text, self.fnt)
             final.save(self.mapPath + '/'+self.roombaName + '_map.png', "PNG")
