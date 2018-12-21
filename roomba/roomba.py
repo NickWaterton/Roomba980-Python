@@ -16,11 +16,12 @@ Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines
 if you don't have OpenCV
 Nick Waterton 3rd Feb  2018  V1.2.2: Quick (untested) fix for running directly (ie not installed)
 Nick Waterton 12th April 2018 V1.2.3: Fixed image rotation bug causing distorted maps if map rotation was not 0.
+Nick Waterton 21st Dec 2018 V1.2.4: Fixed problem with findContours with OpenCV V4. Note V4.0.0-alpha still returns 3 values, and so won't work.
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
@@ -1583,12 +1584,12 @@ class Roomba(object):
 
     def findContours(self,image,mode,method):
         '''
-        Version independent find contours routine. Works with OpenCV 2 or 3.
+        Version independent find contours routine. Works with OpenCV 2 or 3 or 4.
         Returns modified image (with contours applied), contours list, hierarchy
         '''
         ver = int(cv2.__version__.split(".")[0])
         im = image.copy()
-        if ver == 2:
+        if ver == 2 or ver == 4: #NW fix for OpenCV V4 21st Dec 2018
             contours, hierarchy = cv2.findContours(im,mode,method)
             return im, contours, hierarchy
         else:
