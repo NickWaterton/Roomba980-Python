@@ -123,7 +123,8 @@ class Roomba(object):
         16: "Roomba has started while moving or at an angle, or was bumped "\
             "while running.",
         17: "The cleaning job is incomplete.",
-        18: "Roomba cannot return to the Home Base or starting position."
+        18: "Roomba cannot return to the Home Base or starting position.", 
+        19: "A cliff sensor is activated near the docking area."
     }
 
     def __init__(self, address=None, blid=None, password=None, topic="#",
