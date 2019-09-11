@@ -131,7 +131,7 @@ class Roomba(object):
     }
 
     def __init__(self, address=None, blid=None, password=None, topic="#",
-                 continuous=True, clean=False, cert_name="", roombaName="",
+                 continuous=True, delay=1, clean=False, cert_name="", roombaName="",
                  file="./config.ini"):
         '''
         address is the IP address of the Roomba, the continuous flag enables a
@@ -170,7 +170,7 @@ class Roomba(object):
         self.topic = topic
         self.mqttc = None
         self.exclude = ""
-        self.delay = 1
+        self.delay = delay
         self.roomba_connected = False
         self.indent = 0
         self.master_indent = 0
