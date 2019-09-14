@@ -277,7 +277,8 @@ class Roomba(object):
         if self.address is None or self.blid is None or self.password is None:
             self.log.critical("Invalid address, blid, or password! All these "
                               "must be specified!")
-            sys.exit(1)
+            raise Exception("Invalid address, blid, or password! All these "
+                              "must be specified!")
         if self.roomba_connected or self.periodic_connection_running:
             return
 
@@ -285,7 +286,7 @@ class Roomba(object):
             if not self._connect():
                 if self.mqttc is not None:
                     self.mqttc.disconnect()
-                sys.exit(1)
+                raise Exception("failed to connect!")
         else:
             self._thread = threading.Thread(target=self.periodic_connection)
             self._thread.daemon = True
@@ -355,7 +356,7 @@ class Roomba(object):
                            "correct %s" % self.roombaName)
             if self.mqttc is not None:
                self.mqttc.disconnect()
-            sys.exit(1)
+            raise Exception("Failure in on_connect")
 
     def on_message(self, mosq, obj, msg):
         # print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
