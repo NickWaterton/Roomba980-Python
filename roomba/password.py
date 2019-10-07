@@ -22,9 +22,10 @@ class Password(object):
     if IP is not supplied, class will attempt to discover the Roomba IP first.
     Results are written to a config file, default ".\config.ini"
     V 1.2.3 NW 9/10/2018 added support for Roomba i7
+    V 1.2.5 NW 7/10/2019 changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix i7 software connection problem
     '''
 
-    VERSION = __version__ = "1.2.4"
+    VERSION = __version__ = "1.2.5"
 
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
@@ -126,7 +127,7 @@ class Password(object):
 
             #ssl wrap
             wrappedSocket = ssl.wrap_socket(
-                sock, ssl_version=ssl.PROTOCOL_TLSv1)
+                sock, ssl_version=ssl.PROTOCOL_TLS)
             #connect and send packet
             try:
                 wrappedSocket.connect((addr, 8883))
