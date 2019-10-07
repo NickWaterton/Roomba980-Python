@@ -224,13 +224,17 @@ class Roomba(object):
                 return False
         self.log.info("reading info from config file %s" % file)
         addresses = Config.sections()
-        if self.address is None:
+        if self.address is None and len(addresses):
             if len(addresses) > 1:
                 self.log.warn("config file has entries for %d Roombas, "
                               "only configuring the first!")
-                self.address = addresses[0]
-        self.blid = Config.get(self.address, "blid"),
-        self.password = Config.get(self.address, "password")
+            self.address = addresses[0]
+        if self.address:
+            self.blid = Config.get(self.address, "blid")
+            self.password = Config.get(self.address, "password")
+        else:
+            self.log.warn("Error reading config file %s" % file)
+            return False
         # self.roombaName = literal_eval(
         #     Config.get(self.address, "data"))["robotname"]
         return True
