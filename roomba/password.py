@@ -23,9 +23,10 @@ class Password(object):
     Results are written to a config file, default ".\config.ini"
     V 1.2.3 NW 9/10/2018 added support for Roomba i7
     V 1.2.5 NW 7/10/2019 changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix i7 software connection problem
+    V 1.2.6 NW 12/11/2019 add cipher to ssl to avoid dh_key_too_small issue
     '''
 
-    VERSION = __version__ = "1.2.5"
+    VERSION = __version__ = "1.2.6"
 
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
@@ -127,7 +128,7 @@ class Password(object):
 
             #ssl wrap
             wrappedSocket = ssl.wrap_socket(
-                sock, ssl_version=ssl.PROTOCOL_TLS)
+                sock, ssl_version=ssl.PROTOCOL_TLS, ciphers='DEFAULT@SECLEVEL=1')   #ciphers='HIGH:!DH:!aNULL' may work as well
             #connect and send packet
             try:
                 wrappedSocket.connect((addr, 8883))

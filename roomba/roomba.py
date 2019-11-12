@@ -18,11 +18,12 @@ Nick Waterton 3rd Feb  2018  V1.2.2: Quick (untested) fix for running directly (
 Nick Waterton 12th April 2018 V1.2.3: Fixed image rotation bug causing distorted maps if map rotation was not 0.
 Nick Waterton 21st Dec 2018 V1.2.4: Fixed problem with findContours with OpenCV V4. Note V4.0.0-alpha still returns 3 values, and so won't work.
 Nick Wateton 7th Oct 2019 V1.2.5: changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix i7 connection problem after F/W upgrade.
+Nick Waterton 12th Nov 2019 V1.2.6: added set_ciphers('DEFAULT@SECLEVEL=1') to ssl context to work arounf dh_key_too_small error.
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.5"
+__version__ = "1.2.6"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
@@ -267,13 +268,14 @@ class Roomba(object):
             try:
                 self.client.tls_set(
                     self.cert_name, cert_reqs=ssl.CERT_NONE,
-                    tls_version=ssl.PROTOCOL_TLS)
+                    tls_version=ssl.PROTOCOL_TLS, ciphers='DEFAULT@SECLEVEL=1')
             except (ValueError, FileNotFoundError):   # try V1.3 version
                 self.log.warn("TLS Setting failed - trying 1.3 version")
                 self.client._ssl_context = None
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS)
                 context.verify_mode = ssl.CERT_NONE
                 context.load_default_certs()
+                context.set_ciphes('DEFAULT@SECLEVEL=1')    #NW added 12/11/2019
                 self.client.tls_set_context(context)
             except:
                 self.log.error("Error setting TLS: %s" % traceback.format_exc())
