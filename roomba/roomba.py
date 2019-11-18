@@ -275,7 +275,7 @@ class Roomba(object):
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS)
                 context.verify_mode = ssl.CERT_NONE
                 context.load_default_certs()
-                context.set_ciphes('DEFAULT@SECLEVEL=1')    #NW added 12/11/2019
+                context.set_ciphers('DEFAULT@SECLEVEL=1')  # NW added 12/11/2019
                 self.client.tls_set_context(context)
             except:
                 self.log.error("Error setting TLS: %s" % traceback.format_exc())
