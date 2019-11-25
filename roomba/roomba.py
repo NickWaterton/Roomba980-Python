@@ -258,11 +258,11 @@ class Roomba(object):
             try:
                 self.client.tls_set(
                     self.cert_name, cert_reqs=ssl.CERT_NONE,
-                    tls_version=ssl.PROTOCOL_TLSv1)
+                    tls_version=ssl.PROTOCOL_TLS)
             except ValueError:   # try V1.3 version
                 self.log.warning("TLS Setting failed - trying 1.3 version")
                 self.client._ssl_context = None
-                context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS)
                 context.verify_mode = ssl.CERT_NONE
                 context.load_default_certs()
                 self.client.tls_set_context(context)
