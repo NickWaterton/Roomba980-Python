@@ -171,6 +171,7 @@ class Roomba(object):
         self.mqttc = None
         self.exclude = ""
         self.delay = delay
+        self.periodic_connection_duration = 10
         self.roomba_connected = False
         self.indent = 0
         self.master_indent = 0
@@ -338,7 +339,7 @@ class Roomba(object):
         self.periodic_connection_running = True
         while not self.stop_connection:
             if self._connect():
-                time.sleep(self.delay)
+                time.sleep(self.periodic_connection_duration)
                 self.client.disconnect()
             time.sleep(self.delay)
 

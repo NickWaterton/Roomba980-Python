@@ -9,3 +9,5 @@ dist/
 *_map.html
 style.css
 Roomba.log
+.idea
+.DS_Store
