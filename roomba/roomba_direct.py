@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# hacky fixes NW 30th Nov 2019
+
 from __future__ import print_function
 from ast import literal_eval
 from logging.handlers import RotatingFileHandler
@@ -384,7 +386,7 @@ window.onload = function()
                 with open(css_path , "w") as fn:
                     fn.write(css)
             except (IOError, PermissionError) as e:
-                log.error("unable to create file %s, error: %s" % css_path, e)
+                log.error("unable to create file %s, error: %s" % (css_path, e))
         #check is html exists, if not create it
         html_path = mapPath+"/"+ myroomba.roombaName + "roomba_map.html"
         try:
@@ -397,7 +399,7 @@ window.onload = function()
                     fn.write(html)
                 make_executable(html_path)
             except (IOError, PermissionError) as e:
-                log.error("unable to create file %s, error: %s" % html_path, e)
+                log.error("unable to create file %s, error: %s" % (html_path, e))
 
     def make_executable(path):
         mode = os.stat(path).st_mode
@@ -431,7 +433,6 @@ window.onload = function()
                 print("Log Error: %s" % e)
             sys.exit(1)
 
-    #args = parse_args()    #don't know what this is for - removed NW 3/2/2018
     arg = parse_args()
     
     if arg.debug:
@@ -441,12 +442,17 @@ window.onload = function()
 
     #setup logging
     setup_logger(__name__, arg.log,level=log_level,console=arg.echo)
+    
+    log = logging.basicConfig(level=logging.DEBUG, 
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     log = logging.getLogger(__name__)
 
     log.info("*******************")
     log.info("* Program Started *")
     log.info("*******************")
+    
+    log.debug('Debug Mode')
 
     log.info("Roomba.py Version: %s" % roomba.__version__)
 
