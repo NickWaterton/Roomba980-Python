@@ -172,7 +172,7 @@ class Password(object):
             else:
                 # Convert password to str
                 #password = str(data[7:].decode()) #old version
-                password = str(data[7:].decode().rstrip()) #for i7 - has null termination
+                password = str(data[7:].decode().rstrip('\x00')) #for i7 - has null termination
                 print("blid is: %s" % blid)
                 print('Password=> %s <= Yes, all this string.' % password)
                 print('Use these credentials in roomba.py')
