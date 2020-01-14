@@ -691,7 +691,7 @@ class Roomba(object):
                     except KeyError as e:
                         self.log.warn(
                             "Error looking up Roomba error message %s" % e)
-                        self.error_message = "Unknown Error number: %d" % v
+                        self.error_message = "Unknown Error number: %s" % v
                     self.publish("error_message", self.error_message)
                 if k == "cleanMissionStatus_phase":
                     self.previous_cleanMissionStatus_phase = \
