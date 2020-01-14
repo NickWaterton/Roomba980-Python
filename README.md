@@ -191,6 +191,8 @@ python roomba.py
 
 Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file. If this works, the program will then start displaying messages from your Roomba, and printing the master_state every few seconds. the results are logged to a log file (Roomba.log by default).
 
+**NOTE:** You may have to press and hold the HOME button on your robot until it plays a series of tones (about 2 seconds). Release the button and your robot will flash WIFI light to discover your Roomba.
+
 On future runs (Once successful), these values will be taken from the configuration file, so you only have to do this once. You can manually specify these on the command line, some example start up bash scripts are supplied.
 I advice you to experiment with the map size (if you are using maps), as that is the one variable that isn't totally automatic. the size, position of the dock etc depend on your house layout.
 the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, roomba rotation). See the examples.
