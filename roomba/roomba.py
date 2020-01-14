@@ -19,11 +19,12 @@ Nick Waterton 12th April 2018 V1.2.3: Fixed image rotation bug causing distorted
 Nick Waterton 21st Dec 2018 V1.2.4: Fixed problem with findContours with OpenCV V4. Note V4.0.0-alpha still returns 3 values, and so won't work.
 Nick Wateton 7th Oct 2019 V1.2.5: changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix i7 connection problem after F/W upgrade.
 Nick Waterton 12th Nov 2019 V1.2.6: added set_ciphers('DEFAULT@SECLEVEL=1') to ssl context to work arounf dh_key_too_small error.
+Nick Waterton 14th Jan 2020 V1.2.7: updated error code list.
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.6"
+__version__ = "1.2.7"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
@@ -67,7 +68,7 @@ try:
 except ImportError:
     print("CV or numpy module not found, falling back to PIL")
 
-# NOTE: MUST use Pillow Pillow 4.1.1 to avoid some horrible memory leaks in the
+# NOTE: MUST use Pillow Pillow 4.1.1 or above to avoid some horrible memory leaks in the
 # text handling!
 try:
     from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
@@ -97,7 +98,7 @@ class Roomba(object):
     be decoded and published on the designated mqtt client topic.
     '''
 
-    VERSION = "1.0"
+    VERSION = "1.1"
 
     states = {"charge": "Charging",
               "new": "New Mission",
@@ -116,7 +117,7 @@ class Roomba(object):
               "":  None}
 
     # From http://homesupport.irobot.com/app/answers/detail/a_id/9024/~/roomba-900-error-messages
-    _ErrorMessages = {
+    _ErrorMessages_old = {
         0: "None",
         1: "Roomba is stuck with its left or right wheel hanging down.",
         2: "The debris extractors can't turn.",
@@ -133,6 +134,66 @@ class Roomba(object):
             "while running.",
         17: "The cleaning job is incomplete.",
         18: "Roomba cannot return to the Home Base or starting position."
+    }
+    
+    # from decoding app
+    _ErrorMessages = {
+        0: "None",
+        1: "Left wheel off floor",
+        2: "Main Brushes stuck",
+        3: "Right wheel off floor",
+        4: "Left wheel stuck",
+        5: "Right wheel stuck",
+        6: "Stuck near a cliff",
+        7: "Left wheel error",
+        8: "Bin error",
+        9: "Bumper stuck",
+        10: "Right wheel error",
+        11: "Bin error",
+        12: "Cliff sensor issue",
+        13: "Both wheels off floor",
+        14: "Bin missing",
+        15: "Reboot required",
+        16: "Bumped unexpectedly",
+        17: "Path blocked",
+        18: "Docking issue"
+        19: "Undocking issue",
+        20: "Docking issue",
+        21: "Navigation problem",
+        22: "Navigation problem", 
+        23: "Battery issue",
+        24: "Navigation problem",
+        25: "Reboot required",
+        26: "Vacuum problem",
+        27: "Vacuum problem",
+        29: "Software update needed",
+        30: "Vacuum problem",
+        31: "Reboot required",
+        32: "Smart map problem",
+        33: "Path blocked",
+        34: "Reboot required",
+        35: "Unrecognised cleaning pad",
+        36: "Bin full",
+        37: "Tank needed refilling",
+        38: "Vacuum problem",
+        39: "Reboot required",
+        40: "Navigation problem",
+        41: "Timed out",
+        42: "Localization problem",
+        43: "Navigation problem",
+        44: "Pump issue",
+        45: "Lid open",
+        46: "Low battery",
+        47: "Reboot required",
+        48: "Path blocked",
+        52: "Pad required attention",
+        65: "Hardware problem detected",
+        66: "Low memory",
+        68: "Hardware problem detected",
+        73: "Pad type changed",
+        74: "Max area reached",
+        75: "Navigation problem",
+        76: "Hardware problem detected"
     }
 
     def __init__(self, address=None, blid=None, password=None, topic="#",
