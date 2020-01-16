@@ -22,39 +22,23 @@ from __future__ import absolute_import
 __version__ = "1.2.1"
 
 from ast import literal_eval
-from collections import OrderedDict, Mapping
-from roomba.password import Password
+from collections.abc import Mapping
+from collections import OrderedDict
+from roomba.mqttclient import RoombaMQTTClient
 import datetime
 import json
 import math
 import logging
 import os
 import six
-import socket
-import ssl
-import sys
 import threading
 import time
 
-try:
-    import configparser
-except:
-    from six.moves import configparser
-
-# Import trickery
 global HAVE_CV2
-global HAVE_MQTT
 global HAVE_PIL
 HAVE_CV2 = False
-HAVE_MQTT = False
 HAVE_PIL = False
 
-try:
-    import paho.mqtt.client as mqtt
-
-    HAVE_MQTT = True
-except ImportError:
-    print("paho mqtt client not found")
 try:
     import cv2
     import numpy as np
@@ -72,18 +56,14 @@ try:
 except ImportError:
     print("PIL module not found, maps are disabled")
 
-# On Python 3 raw_input was renamed to input
-try:
-    input = raw_input
-except NameError:
-    pass
+MAX_CONNECTION_RETRIES = 3
 
 
 class RoombaConnectionError(Exception):
     pass
 
 
-class Roomba(object):
+class Roomba:
     """
     This is a Class for Roomba 900 series WiFi connected Vacuum cleaners
     Requires firmware version 2.0 and above (not V1.0). Tested with Roomba 980
@@ -97,8 +77,6 @@ class Roomba(object):
     This is not needed if the forward to mqtt option is used, as the events will
     be decoded and published on the designated mqtt client topic.
     """
-
-    VERSION = "1.0"
 
     states = {
         "charge": "Charging",
@@ -144,10 +122,8 @@ class Roomba(object):
         topic="#",
         continuous=True,
         delay=1,
-        clean=False,
-        cert_name="",
-        roombaName="",
-        file="./config.ini",
+        cert_name=None,
+        roombaName=""
     ):
         """
         address is the IP address of the Roomba, the continuous flag enables a
@@ -165,10 +141,6 @@ class Roomba(object):
         if self.log.getEffectiveLevel() == logging.DEBUG:
             self.debug = True
         self.address = address
-        if not cert_name:
-            self.cert_name = "/etc/ssl/certs/ca-certificates.crt"
-        else:
-            self.cert_name = cert_name
         self.continuous = continuous
         if self.continuous:
             self.log.debug("CONTINUOUS connection")
@@ -178,10 +150,6 @@ class Roomba(object):
         self.pretty_print = False
         self.stop_connection = False
         self.periodic_connection_running = False
-        self.clean = clean
-        self.roomba_port = 8883
-        self.blid = blid
-        self.password = password
         self.roombaName = roombaName
         self.topic = topic
         self.mqttc = None
@@ -213,98 +181,27 @@ class Roomba(object):
         self.room_outline = None
         self.transparent = (0, 0, 0, 0)  # transparent
         self.previous_display_text = self.display_text = None
-        self.master_state = {}
+        self.master_state = {}  # all info from roomba stored here
         self.time = time.time()
         self.update_seconds = 300  # update with all values every 5 minutes
         self.show_final_map = True
-        self.client = None
+        self.client = self._get_client(address, blid, password, cert_name)
+        self._thread = threading.Thread(target=self.periodic_connection)
 
-        if self.address is None or blid is None or password is None:
-            self.read_config_file(file)
-
-    def read_config_file(self, file="./config.ini"):
-        # read config file
-        config = configparser.ConfigParser()
-        try:
-            config.read(file)
-        except Exception as e:
-            self.log.warning("Error reading config file %s", e)
-            self.log.debug(
-                "No Roomba specified, and no config file found - attempting discovery"
-            )
-            if Password(self.address, file):
-                return self.read_config_file(file)
-            else:
-                return False
-        self.log.debug("Reading info from config file %s" % file)
-        addresses = config.sections()
-        if self.address is None:
-            if len(addresses) > 1:
-                self.log.warning(
-                    "The config file has entries for %d Roombas, "
-                    "only configuring the first!",
-                    len(addresses),
-                )
-                self.address = addresses[0]
-        self.blid = (config.get(self.address, "blid"),)
-        self.password = config.get(self.address, "password")
-        # self.roombaName = literal_eval(
-        #     Config.get(self.address, "data"))["robotname"]
-        return True
-
-    def setup_client(self):
-        if self.client is None:
-            if not HAVE_MQTT:
-                print(
-                    "Please install paho-mqtt 'pip install paho-mqtt' to use this library"
-                )
-                return False
-            self.client = mqtt.Client(
-                client_id=self.blid, clean_session=self.clean, protocol=mqtt.MQTTv311
-            )
-            # Assign event callbacks
-            self.client.on_message = self.on_message
-            self.client.on_connect = self.on_connect
-            self.client.on_publish = self.on_publish
-            self.client.on_subscribe = self.on_subscribe
-            self.client.on_disconnect = self.on_disconnect
-
-            # Uncomment to enable debug messages
-            # client.on_log = self.on_log
-
-            # set TLS, self.cert_name is required by paho-mqtt, even if the
-            # certificate is not used...
-            # but v1.3 changes all this, so have to do the following:
-
-            self.log.debug("Setting TLS certificate")
-            try:
-                self.client.tls_set(
-                    self.cert_name,
-                    cert_reqs=ssl.CERT_NONE,
-                    tls_version=ssl.PROTOCOL_TLS,
-                )
-            except ValueError:  # try V1.3 version
-                self.log.warning("TLS Setting failed - trying 1.3 version")
-                self.client._ssl_context = None
-                context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-                context.verify_mode = ssl.CERT_NONE
-                context.load_default_certs()
-                self.client.tls_set_context(context)
-
-            # disables peer verification
-            self.client.tls_insecure_set(True)
-            self.client.username_pw_set(self.blid, self.password)
-            return True
-        return False
+    def _get_client(self, address, blid, password, cert_path):
+        client = RoombaMQTTClient(
+            address=address,
+            blid=blid,
+            password=password,
+            cert_path=cert_path)
+        client.set_on_message(self.on_message)
+        client.set_on_connect(self.on_connect)
+        client.set_on_publish(self.on_publish)
+        client.set_on_subscribe(self.on_subscribe)
+        client.set_on_disconnect(self.on_disconnect)
+        return client
 
     def connect(self):
-        if self.address is None or self.blid is None or self.password is None:
-            self.log.critical(
-                "Invalid address, blid, or password! All these must be specified!"
-            )
-            raise Exception(
-                "Invalid address, blid, or password! All these must be specified!"
-            )
         if self.roomba_connected or self.periodic_connection_running:
             return
 
@@ -314,43 +211,25 @@ class Roomba(object):
                     self.mqttc.disconnect()
                 raise Exception("failed to connect!")
         else:
-            self._thread = threading.Thread(target=self.periodic_connection)
             self._thread.daemon = True
             self._thread.start()
 
         self.time = time.time()  # save connection time
 
-    def _connect(self, count=0, new_connection=False):
-        max_retries = 3
-        try:
-            if self.client is None or new_connection:
-                self.log.info("Connecting to %s", self.roombaName)
-                self.setup_client()
-                self.client.connect(self.address, self.roomba_port, 60)
-            else:
-                self.log.info("Attempting to reconnect to %s", self.roombaName)
-                self.client.loop_stop()
-                self.client.reconnect()
-            self.client.loop_start()
-            return True
-        except Exception as e:
-            self.log.error("Error: %s " % e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            # self.log.error("Exception: %s" % exc_type)
-            # if e[0] == 111: #errno.ECONNREFUSED - does not work with
-            # python 3.0 so...
-            if exc_type == socket.error or exc_type == ConnectionRefusedError:
-                count += 1
-                if count <= max_retries:
-                    self.log.debug("Attempting connection #%d" % count)
-                    time.sleep(1)
-                    self._connect(count, True)
-        if count >= max_retries:
-            self.log.error("Unable to connect to %s", self.address)
-            raise RoombaConnectionError(
-                "Unable to connect to Roomba at {}".format(self.address)
-            )
-        return False
+    def _connect(self):
+        attempt = 1
+        while attempt <= MAX_CONNECTION_RETRIES:
+            try:
+                self.log.debug("Connecting to %s, attempt %s", self.address, attempt)
+                self.client.connect()
+                return True
+            except Exception as e:
+                self.log.error("Error: %s ", e)
+                self.log.debug("Can't connect to %s, retrying", self.address)
+            attempt += 1
+
+        self.log.error("Unable to connect to %s", self.address)
+        raise RoombaConnectionError("Unable to connect to Roomba at {}".format(self.address))
 
     def disconnect(self):
         if self.continuous:
@@ -378,17 +257,14 @@ class Roomba(object):
             self.roomba_connected = True
             self.client.subscribe(self.topic)
         else:
-            self.log.error("Roomba Connected with result code " + str(rc))
-            self.log.error(
-                "Please make sure your blid and password are correct %s"
-                % self.roombaName
-            )
+            self.log.error("Roomba Connected with result code %s", str(rc))
+            self.log.error("Please make sure your blid and password are correct %s", self.roombaName)
             if self.mqttc is not None:
                 self.mqttc.disconnect()
             raise Exception("Failure in on_connect")
 
     def on_message(self, mosq, obj, msg):
-        # print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+        # print("on_message", msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
         if self.exclude != "":
             if self.exclude in msg.topic:
                 return
@@ -400,9 +276,7 @@ class Roomba(object):
         self.dict_merge(self.master_state, json_data)
 
         if self.pretty_print:
-            self.log.debug(
-                "%-{:d}s : %s".format(self.master_indent), msg.topic, log_string
-            )
+            self.log.debug("%-{:d}s : %s".format(self.master_indent), msg.topic, log_string)
         else:
             self.log.debug(
                 "Received Roomba Data %s: %s, %s",
@@ -472,9 +346,7 @@ class Roomba(object):
 
     def publish(self, topic, message):
         if self.mqttc is not None and message is not None:
-            self.log.debug(
-                "Publishing item: %s: %s" % (self.brokerFeedback + "/" + topic, message)
-            )
+            self.log.debug("Publishing item: %s: %s" % (self.brokerFeedback + "/" + topic, message))
             self.mqttc.publish(self.brokerFeedback + "/" + topic, message)
 
     def set_options(self, raw=False, indent=0, pretty_print=False):
