@@ -156,7 +156,7 @@ class Roomba(object):
         15: "Reboot required",
         16: "Bumped unexpectedly",
         17: "Path blocked",
-        18: "Docking issue"
+        18: "Docking issue",
         19: "Undocking issue",
         20: "Docking issue",
         21: "Navigation problem",
