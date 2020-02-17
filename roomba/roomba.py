@@ -503,7 +503,15 @@ class Roomba(object):
         myCommand = json.dumps(Command)
         self.log.info("Publishing Roomba Setting : %s" % myCommand)
         self.client.publish("delta", myCommand)
-
+    
+    def set_cleanSchedule(self, setting):
+        self.log.info("Received cleanSchedule:")
+        tmp = {"cleanSchedule": setting}
+        Command = {"state": tmp}
+        myCommand = json.dumps(Command)
+        self.log.info("Publishing Roomba cleanSchedule : %s" % myCommand)
+        self.client.publish("delta", myCommand)
+    
     def publish(self, topic, message):
         if self.mqttc is not None and message is not None:
             self.log.debug("Publishing item: %s: %s"
