@@ -20,11 +20,12 @@ Nick Waterton 21st Dec 2018 V1.2.4: Fixed problem with findContours with OpenCV 
 Nick Wateton 7th Oct 2019 V1.2.5: changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix i7 connection problem after F/W upgrade.
 Nick Waterton 12th Nov 2019 V1.2.6: added set_ciphers('DEFAULT@SECLEVEL=1') to ssl context to work arounf dh_key_too_small error.
 Nick Waterton 14th Jan 2020 V1.2.7: updated error code list.
+Nick Waterton 16th march 2020 V 1.2.8 fixed __version__ for Pillow v7 (replaced with __version__)
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.7"
+__version__ = "1.2.8"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
@@ -554,10 +555,10 @@ class Roomba(object):
         if not HAVE_PIL: #can't draw a map without PIL!
             return False
 
-        if Image.PILLOW_VERSION < "4.1.1":
+        if Image.__version__ < "4.1.1":
             print("WARNING: PIL version is %s, this is not the latest! you "
                   "can get bad memory leaks with old versions of PIL"
-                  % Image.PILLOW_VERSION)
+                  % Image.__version__)
             print("run: 'pip install --upgrade pillow' to fix this")
 
         self.drawmap = enable

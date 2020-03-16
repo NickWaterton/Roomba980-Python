@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # hacky fixes NW 30th Nov 2019
+# Pillow fix for V 7 __version__ replaced with __version__
 
 from __future__ import print_function
 from ast import literal_eval
@@ -481,7 +482,7 @@ window.onload = function()
         if int(PIL.__version__.split(".")[0]) < 4:
             log.warn("WARNING: PIL version is %s, this is not the latest! "
                      "You can get bad memory leaks with old versions of PIL"
-                     % Image.PILLOW_VERSION)
+                     % Image.__version__)
             log.warn("run: 'pip install --upgrade pillow' to fix this")
 
     log.debug("-- DEBUG Mode ON -")

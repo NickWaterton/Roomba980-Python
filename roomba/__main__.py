@@ -466,7 +466,7 @@ window.onload = function()
         if int(PIL.__version__.split(".")[0]) < 4:
             log.warn("WARNING: PIL version is %s, this is not the latest! "
                      "You can get bad memory leaks with old versions of PIL"
-                     % Image.PILLOW_VERSION)
+                     % Image.__version__)
             log.warn("run: 'pip install --upgrade pillow' to fix this")
 
     log.debug("-- DEBUG Mode ON -")
