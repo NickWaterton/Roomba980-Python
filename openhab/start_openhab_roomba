@@ -1,2 +1,0 @@
-#! /bin/bash
-./roomba.py -b localhost -l ./Roomba.log -M /etc/openhab2/html -s '(800,1650,-300,-50,2,0)'

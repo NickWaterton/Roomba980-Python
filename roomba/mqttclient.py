@@ -72,6 +72,9 @@ class RoombaMQTTClient:
         if not self.cert_path:
             return mqtt_client
 
+        if not os.path.isfile(self.cert_path):
+            raise Exception("can't find certificate on path = " + self.cert_path)
+
         self.log.debug("Setting TLS certificate")
         try:
             mqtt_client.tls_set(
