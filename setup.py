@@ -10,7 +10,7 @@ setup(
     author_email="nick.waterton@med.ge.com",
     url="https://github.com/pschmitt/roombapy",
     packages=find_packages(),
-    install_requires=["paho-mqtt", "six"],
+    install_requires=["paho-mqtt"],
     include_package_data=True,
     entry_points={
         "console_scripts": [

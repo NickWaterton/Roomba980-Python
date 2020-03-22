@@ -22,7 +22,6 @@ from roomba.mqttclient import RoombaMQTTClient
 import datetime
 import json
 import logging
-import six
 import threading
 import time
 
@@ -332,7 +331,7 @@ class Roomba:
         :param merge_dct: dct merged into dct
         :return: None
         """
-        for k, v in six.iteritems(merge_dct):
+        for k, v in merge_dct.items():
             if (
                 k in dct
                 and isinstance(dct[k], dict)
@@ -385,7 +384,7 @@ class Roomba:
         topic name strings are expressely converted to strings to avoid unicode
         representations
         """
-        for k, v in six.iteritems(state):
+        for k, v in state.items():
             if isinstance(v, dict):
                 if prefix is None:
                     self.decode_topics(v, k)
@@ -396,10 +395,10 @@ class Roomba:
                     newlist = []
                     for i in v:
                         if isinstance(i, dict):
-                            for ki, vi in six.iteritems(i):
+                            for ki, vi in i.items():
                                 newlist.append((str(ki), vi))
                         else:
-                            if isinstance(i, six.string_types):
+                            if isinstance(i, str):
                                 i = str(i)
                             newlist.append(i)
                     v = newlist
