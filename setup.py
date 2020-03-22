@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="roombapy",
-    version="1.4.3",
+    version="1.5.0",
     license="MIT",
     description="Python program and library to control Wi-Fi enabled iRobot "
     "Roomba vacuum cleaners",
