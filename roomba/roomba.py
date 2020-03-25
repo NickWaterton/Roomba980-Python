@@ -291,12 +291,18 @@ class Roomba:
         else:
             self.log.info("Disconnected from Roomba %s", self.address)
 
-    def send_command(self, command):
+    def send_command(self, command, params=None):
+        if params is None:
+            params = {}
+
         self.log.debug("Send command: %s", command)
-        roomba_command = OrderedDict()
-        roomba_command["command"] = command
-        roomba_command["time"] = self.to_timestamp(datetime.datetime.now())
-        roomba_command["initiator"] = "localApp"
+        roomba_command = {
+            "command": command,
+            "time": self.to_timestamp(datetime.datetime.now()),
+            "initiator": "localApp"
+        }
+        roomba_command.update(params)
+
         str_command = json.dumps(roomba_command)
         self.log.debug("Publishing Roomba Command : %s", str_command)
         self.client.publish("cmd", str_command)
