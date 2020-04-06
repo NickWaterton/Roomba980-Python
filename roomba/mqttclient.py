@@ -80,12 +80,14 @@ class RoombaMQTTClient:
             mqtt_client.tls_set(
                 ca_certs=self.cert_path,
                 cert_reqs=ssl.CERT_NONE,
-                tls_version=ssl.PROTOCOL_TLS)
+                tls_version=ssl.PROTOCOL_TLS,
+                ciphers='DEFAULT@SECLEVEL=1')
         except ValueError:  # try V1.3 version
             self.log.warning("TLS Setting failed - trying 1.3 version")
             mqtt_client._ssl_context = None
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
             ssl_context.verify_mode = ssl.CERT_NONE
+            ssl_context.set_ciphers('DEFAULT@SECLEVEL=1')
             ssl_context.load_default_certs()
             mqtt_client.tls_set_context(ssl_context)
         mqtt_client.tls_insecure_set(True)
