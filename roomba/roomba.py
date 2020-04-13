@@ -386,7 +386,7 @@ class Roomba(object):
             # self.log.error("Exception: %s" % exc_type)
             # if e[0] == 111: #errno.ECONNREFUSED - does not work with
             # python 3.0 so...
-            if exc_type == socket.error or exc_type == ConnectionRefusedError:
+            if exc_type == socket.error:
                 count += 1
                 if count <= max_retries:
                     self.log.error("Attempting new Connection# %d" % count)
