@@ -174,6 +174,10 @@ class Roomba:
         self.update_seconds = 300  # update with all values every 5 minutes
         self.client = self._get_client(address, blid, password, cert_name)
         self._thread = threading.Thread(target=self.periodic_connection)
+        self.on_message_callbacks = []
+
+    def register_on_message_callback(self, callback):
+        self.on_message_callbacks.append(callback)
 
     def _get_client(self, address, blid, password, cert_path):
         client = RoombaMQTTClient(
@@ -274,6 +278,10 @@ class Roomba:
             self.log.debug("Publishing master_state %s", self.address)
             self.decode_topics(self.master_state)  # publish all values
             self.time = time.time()
+
+        # call the callback functions
+        for callback in self.on_message_callbacks:
+            callback(json_data)
 
     def on_publish(self, mosq, obj, mid):
         pass
