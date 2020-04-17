@@ -309,9 +309,13 @@ class Roomba:
 
     def set_preference(self, preference, setting):
         self.log.debug("Set preference: %s, %s", preference, setting)
-        val = False
-        if setting.lower() == "true":
-            val = True
+        val = setting
+        # Parse boolean string
+        if isinstance(setting, str):
+            if setting.lower() == "true":
+                val = True
+            elif setting.lower() == "false":
+                val = False
         tmp = {preference: val}
         roomba_command = {"state": tmp}
         str_command = json.dumps(roomba_command)
