@@ -21,11 +21,12 @@ Nick Wateton 7th Oct 2019 V1.2.5: changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix 
 Nick Waterton 12th Nov 2019 V1.2.6: added set_ciphers('DEFAULT@SECLEVEL=1') to ssl context to work arounf dh_key_too_small error.
 Nick Waterton 14th Jan 2020 V1.2.7: updated error code list.
 Nick Waterton 16th march 2020 V 1.2.8 fixed __version__ for Pillow v7 (replaced with __version__)
+Nick Waterton 24th April 2020 V 1.2.9 added possibility to send json commands to Roomba
 '''
 
 from __future__ import print_function
 from __future__ import absolute_import
-__version__ = "1.2.8"
+__version__ = "1.2.9"
 
 from ast import literal_eval
 from collections import OrderedDict, Mapping
@@ -35,6 +36,10 @@ except ImportError:
     from password import Password
 import datetime
 import json
+try:
+    json_parse_exception = json.decoder.JSONDecodeError
+except AttributeError:  # Python 2
+    json_parse_exception = ValueError
 import math
 import logging
 import os
@@ -487,7 +492,10 @@ class Roomba(object):
     def send_command(self, command):
         self.log.info("Received COMMAND: %s" % command)
         Command = OrderedDict()
-        Command["command"] = command
+        try:
+            Command = json.loads(command, object_pairs_hook=OrderedDict)
+        except json_parse_exception:
+            Command["command"] = command
         Command["time"] = self.totimestamp(datetime.datetime.now())
         Command["initiator"] = "localApp"
         myCommand = json.dumps(Command)
