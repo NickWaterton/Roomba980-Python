@@ -131,8 +131,7 @@ class Roomba:
         blid=None,
         password=None,
         continuous=True,
-        delay=1,
-        cert_name=None
+        delay=1
     ):
         """
         address is the IP address of the Roomba, the continuous flag enables a
@@ -172,19 +171,18 @@ class Roomba:
         self.master_state = {}  # all info from roomba stored here
         self.time = time.time()
         self.update_seconds = 300  # update with all values every 5 minutes
-        self.client = self._get_client(address, blid, password, cert_name)
+        self.client = self._get_client(address, blid, password)
         self._thread = threading.Thread(target=self.periodic_connection)
         self.on_message_callbacks = []
 
     def register_on_message_callback(self, callback):
         self.on_message_callbacks.append(callback)
 
-    def _get_client(self, address, blid, password, cert_path):
+    def _get_client(self, address, blid, password):
         client = RoombaMQTTClient(
             address=address,
             blid=blid,
-            password=password,
-            cert_path=cert_path)
+            password=password)
         client.set_on_message(self.on_message)
         client.set_on_connect(self.on_connect)
         client.set_on_publish(self.on_publish)
