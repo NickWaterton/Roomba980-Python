@@ -7,7 +7,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='roombapy',
-    version='1.5.2',
+    version='1.5.3',
     license='MIT',
     description='Python program and library to control Wi-Fi enabled iRobot Roomba vacuum cleaners',
     long_description=long_description,
