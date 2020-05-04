@@ -1,7 +1,15 @@
 import logging
 import ssl
-import os.path
+from enum import Enum
 import paho.mqtt.client as mqtt
+
+
+class RoombaMQTTError(Enum):
+    BAD_PROTOCOL = 1
+    BAD_CLIENT_ID = 2
+    SERVER_UNAVAILABLE = 3
+    BAD_USERNAME_OR_PASSWORD = 4
+    NOT_AUTHORISED = 5
 
 
 class RoombaMQTTClient:
@@ -11,6 +19,8 @@ class RoombaMQTTClient:
     password = None
     log = None
     was_connected = False
+    on_connect = None
+    on_disconnect = None
 
     def __init__(self, address, blid, password, port=8883):
         self.address = address
@@ -24,7 +34,7 @@ class RoombaMQTTClient:
         self.mqtt_client.on_message = on_message
 
     def set_on_connect(self, on_connect):
-        self.mqtt_client.on_connect = on_connect
+        self.on_connect = on_connect
 
     def set_on_publish(self, on_publish):
         self.mqtt_client.on_publish = on_publish
@@ -33,7 +43,7 @@ class RoombaMQTTClient:
         self.mqtt_client.on_subscribe = on_subscribe
 
     def set_on_disconnect(self, on_disconnect):
-        self.mqtt_client.on_disconnect = on_disconnect
+        self.on_disconnect = on_disconnect
 
     def connect(self):
         if not self.was_connected:
@@ -48,24 +58,17 @@ class RoombaMQTTClient:
     def disconnect(self):
         self.mqtt_client.disconnect()
 
-    def loop_start(self):
-        self.mqtt_client.loop_start()
-
-    def loop_stop(self):
-        self.mqtt_client.loop_stop()
-
     def subscribe(self, topic):
         self.mqtt_client.subscribe(topic)
 
     def publish(self, topic, payload):
         self.mqtt_client.publish(topic, payload)
 
-    def get_address(self):
-        return self.address
-
     def _get_mqtt_client(self):
         mqtt_client = mqtt.Client(client_id=self.blid)
         mqtt_client.username_pw_set(username=self.blid, password=self.password)
+        mqtt_client.on_connect = self._internal_on_connect
+        mqtt_client.on_disconnect = self._internal_on_disconnect
 
         self.log.debug("Setting TLS certificate")
         try:
@@ -82,3 +85,22 @@ class RoombaMQTTClient:
         mqtt_client.tls_insecure_set(True)
 
         return mqtt_client
+
+    def _internal_on_connect(self, client, userdata, flags, rc):
+        self.log.debug("Connected to Roomba %s, response code = %s", self.address, rc)
+        connection_error = self._find_connection_error(rc)
+        if self.on_connect is not None:
+            self.on_connect(connection_error)
+
+    def _internal_on_disconnect(self, client, userdata, flags, rc):
+        self.log.debug("Disconnected from Roomba %s, response code = %s", self.address, rc)
+        connection_error = self._find_connection_error(rc)
+        if self.on_disconnect is not None:
+            self.on_disconnect(connection_error)
+
+    @staticmethod
+    def _find_connection_error(response_code):
+        if response_code == 0:
+            return None
+        else:
+            return RoombaMQTTError(response_code)

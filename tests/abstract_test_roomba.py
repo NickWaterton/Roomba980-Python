@@ -13,14 +13,18 @@ ROOMBA_CONFIG = {
 class AbstractTestRoomba:
 
     @staticmethod
-    def get_default_roomba():
-        return Roomba(
+    def get_default_roomba(
             address=ROOMBA_CONFIG['host'],
             blid=ROOMBA_CONFIG['username'],
             password=ROOMBA_CONFIG['password'],
             continuous=ROOMBA_CONFIG['continuous'],
-            delay=ROOMBA_CONFIG['delay'],
-        )
+            delay=ROOMBA_CONFIG['delay']):
+        return Roomba(
+            address=address,
+            blid=blid,
+            password=password,
+            continuous=continuous,
+            delay=delay)
 
     @staticmethod
     def get_message(topic, payload):
