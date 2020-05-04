@@ -24,8 +24,9 @@ setup(
     packages=find_packages(),
     install_requires=['paho-mqtt'],
     entry_points={
-        'console_scripts': [
-            'roomba=roomba.__main__:main'
+        "console_scripts": [
+            "roomba-discovery=roomba.entry_points:discovery",
+            "roomba-password=roomba.entry_points:password"
         ]
-    },
+    }
 )

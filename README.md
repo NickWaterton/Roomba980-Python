@@ -14,8 +14,18 @@ Supports Python 3.6, 3.7 (thanks to pschmitt for adding Python 3 compatibility).
 
 ## How to get your username/blid and password
 
-Please refer to [here](https://github.com/NickWaterton/Roomba980-Python#how-to-get-your-usernameblid-and-password) or 
-[here](https://github.com/koalazak/dorita980#how-to-get-your-usernameblid-and-password) to retrieve both the BLID (username) and the password.
+To get password from Roomba type in console:
+```
+$> roomba-password <ip>
+```
+It will find your Roomba in local network, then follow the instructions in console to get password.
+If IP address not provided password will be request for auto discovered robot. 
+
+Also you can just ask Roomba for info:
+```
+$> roomba-discovery <ip adress is optional>
+```
+
 
 ## Data/Feedback
 master_state starts empty, and fills with time, it is published in full every 5 minutes by default (but updates to it are published live)

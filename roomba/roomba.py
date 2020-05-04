@@ -32,6 +32,37 @@ class RoombaConnectionError(Exception):
     pass
 
 
+class RoombaInfo:
+    hostname = None
+    firmware = None
+    ip = None
+    mac = None
+    robot_name = None
+    sku = None
+    capabilities = None
+    blid = None
+    password = None
+
+    def __init__(self, hostname, robot_name, ip, mac, firmware, sku, capabilities):
+        self.hostname = hostname
+        self.firmware = firmware
+        self.ip = ip
+        self.mac = mac
+        self.robot_name = robot_name
+        self.sku = sku
+        self.capabilities = capabilities
+        self.blid = hostname.split('-')[1]
+
+    def __str__(self) -> str:
+        return ', '.join(['{key}={value}'.format(key=key, value=self.__dict__.get(key)) for key in self.__dict__])
+
+    def __hash__(self) -> int:
+        return hash(self.mac)
+
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, RoombaInfo) and self.mac == o.mac
+
+
 class Roomba:
     """
     This is a Class for Roomba 900 series WiFi connected Vacuum cleaners
@@ -89,7 +120,7 @@ class Roomba:
         19: "Undocking issue",
         20: "Docking issue",
         21: "Navigation problem",
-        22: "Navigation problem", 
+        22: "Navigation problem",
         23: "Battery issue",
         24: "Navigation problem",
         25: "Reboot required",
@@ -174,6 +205,7 @@ class Roomba:
         self.client = self._get_client(address, blid, password)
         self._thread = threading.Thread(target=self.periodic_connection)
         self.on_message_callbacks = []
+        self.error_message = None
 
     def register_on_message_callback(self, callback):
         self.on_message_callbacks.append(callback)
@@ -370,9 +402,9 @@ class Roomba:
             # order), else return as is...
             json_data = json.loads(
                 payload.decode("utf-8")
-                .replace(":nan", ":NaN")
-                .replace(":inf", ":Infinity")
-                .replace(":-inf", ":-Infinity"),
+                       .replace(":nan", ":NaN")
+                       .replace(":inf", ":Infinity")
+                       .replace(":-inf", ":-Infinity"),
                 object_pairs_hook=OrderedDict,
             )
             # if it's not a dictionary, probably just a number
@@ -507,10 +539,7 @@ class Roomba:
                 self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"]
                 == "none"
                 and self.cleanMissionStatus_phase == "charge"
-                and (
-                    self.current_state == self.states["pause"]
-                    or self.current_state == self.states["recharge"]
-                )
+                and (self.current_state == self.states["pause"] or self.current_state == self.states["recharge"])
             ):
                 self.current_state = self.states["cancelled"]
         except KeyError:
