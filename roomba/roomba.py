@@ -318,7 +318,7 @@ class Roomba:
         self.log.debug("Send command: %s", command)
         roomba_command = {
             "command": command,
-            "time": datetime.timestamp(datetime.now()),
+            "time": int(datetime.timestamp(datetime.now())),
             "initiator": "localApp"
         }
         roomba_command.update(params)
