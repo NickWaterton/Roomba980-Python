@@ -97,6 +97,7 @@ class Roomba:
     }
 
     # From http://homesupport.irobot.com/app/answers/detail/a_id/9024/~/roomba-900-error-messages
+    # https://homesupport.irobot.com/app/answers/detail/a_id/21127/kw/charging%20error
     _ErrorMessages = {
         0: "None",
         1: "Left wheel off floor",
@@ -147,13 +148,36 @@ class Roomba:
         47: "Reboot required",
         48: "Path blocked",
         52: "Pad required attention",
+        53: "Software update required",
         65: "Hardware problem detected",
         66: "Low memory",
         68: "Hardware problem detected",
         73: "Pad type changed",
         74: "Max area reached",
         75: "Navigation problem",
-        76: "Hardware problem detected"
+        76: "Hardware problem detected",
+        88: "Back-up refused",
+        89: "Mission runtime too long",
+        101: "Battery isn't connected",
+        102: "Charging error",
+        103: "Charging error",
+        104: "No charge current",
+        105: "Charging current too low",
+        106: "Battery too warm",
+        107: "Battery temperature incorrect",
+        108: "Battery communication failure",
+        109: "Battery error",
+        110: "Battery cell imbalance",
+        111: "Battery communication failure",
+        112: "Invalid charging load",
+        114: "Internal battery failure",
+        115: "Cell failure during charging",
+        116: "Charging error of Home Base",
+        118: "Battery communication failure",
+        119: "Charging timeout",
+        120: "Battery not initialized",
+        122: "Charging system error",
+        123: "Battery not initialized",
     }
 
     def __init__(
@@ -202,6 +226,7 @@ class Roomba:
         self.client = self._get_client(address, blid, password)
         self._thread = threading.Thread(target=self.periodic_connection)
         self.on_message_callbacks = []
+        self.error_code = None
         self.error_message = None
         self.client_error = None
 
@@ -404,16 +429,16 @@ class Roomba:
         topic name strings are expressely converted to strings to avoid unicode
         representations
         """
-        for k, v in state.items():
-            if isinstance(v, dict):
+        for key, value in state.items():
+            if isinstance(value, dict):
                 if prefix is None:
-                    self.decode_topics(v, k)
+                    self.decode_topics(value, key)
                 else:
-                    self.decode_topics(v, prefix + "_" + k)
+                    self.decode_topics(value, prefix + "_" + key)
             else:
-                if isinstance(v, list):
+                if isinstance(value, list):
                     newlist = []
-                    for i in v:
+                    for i in value:
                         if isinstance(i, dict):
                             for ki, vi in i.items():
                                 newlist.append((str(ki), vi))
@@ -421,32 +446,33 @@ class Roomba:
                             if isinstance(i, str):
                                 i = str(i)
                             newlist.append(i)
-                    v = newlist
+                    value = newlist
                 if prefix is not None:
-                    k = prefix + "_" + k
+                    key = prefix + "_" + key
                 # all data starts with this, so it's redundant
-                k = k.replace("state_reported_", "")
+                key = key.replace("state_reported_", "")
                 # save variables for drawing map
-                if k == "pose_theta":
-                    self.co_ords["theta"] = v
-                if k == "pose_point_x":  # x and y are reversed...
-                    self.co_ords["y"] = v
-                if k == "pose_point_y":
-                    self.co_ords["x"] = v
-                if k == "bin_full":
-                    self.bin_full = v
-                if k == "cleanMissionStatus_error":
+                if key == "pose_theta":
+                    self.co_ords["theta"] = value
+                if key == "pose_point_x":  # x and y are reversed...
+                    self.co_ords["y"] = value
+                if key == "pose_point_y":
+                    self.co_ords["x"] = value
+                if key == "bin_full":
+                    self.bin_full = value
+                if key == "cleanMissionStatus_error":
                     try:
-                        self.error_message = self._ErrorMessages[v]
+                        self.error_code = value
+                        self.error_message = self._ErrorMessages[value]
                     except KeyError as e:
-                        self.log.warning("Error looking up Roomba error " "message: %s", e)
-                        self.error_message = "Unknown Error number: %d" % v
+                        self.log.warning("Error looking up Roomba error message: %s", e)
+                        self.error_message = "Unknown Error number: %d" % value
                     self.publish("error_message", self.error_message)
-                if k == "cleanMissionStatus_phase":
+                if key == "cleanMissionStatus_phase":
                     self.previous_cleanMissionStatus_phase = (
                         self.cleanMissionStatus_phase
                     )
-                    self.cleanMissionStatus_phase = v
+                    self.cleanMissionStatus_phase = value
 
         if prefix is None:
             self.update_state_machine()
