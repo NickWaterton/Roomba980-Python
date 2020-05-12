@@ -24,6 +24,7 @@ import json
 import logging
 import threading
 import time
+from roomba.const import ROOMBA_ERROR_MESSAGES, ROOMBA_STATES
 
 MAX_CONNECTION_RETRIES = 3
 
@@ -78,108 +79,6 @@ class Roomba:
     be decoded and published on the designated mqtt client topic.
     """
 
-    states = {
-        "charge": "Charging",
-        "new": "New Mission",
-        "run": "Running",
-        "resume": "Running",
-        "hmMidMsn": "Recharging",
-        "recharge": "Recharging",
-        "stuck": "Stuck",
-        "hmUsrDock": "User Docking",
-        "dock": "Docking",
-        "dockend": "Docking - End Mission",
-        "cancelled": "Cancelled",
-        "stop": "Stopped",
-        "pause": "Paused",
-        "hmPostMsn": "End Mission",
-        "": None,
-    }
-
-    # From http://homesupport.irobot.com/app/answers/detail/a_id/9024/~/roomba-900-error-messages
-    # https://homesupport.irobot.com/app/answers/detail/a_id/21127/kw/charging%20error
-    _ErrorMessages = {
-        0: "None",
-        1: "Left wheel off floor",
-        2: "Main brushes stuck",
-        3: "Right wheel off floor",
-        4: "Left wheel stuck",
-        5: "Right wheel stuck",
-        6: "Stuck near a cliff",
-        7: "Left wheel error",
-        8: "Bin error",
-        9: "Bumper stuck",
-        10: "Right wheel error",
-        11: "Bin error",
-        12: "Cliff sensor issue",
-        13: "Both wheels off floor",
-        14: "Bin missing",
-        15: "Reboot required",
-        16: "Bumped unexpectedly",
-        17: "Path blocked",
-        18: "Docking issue",
-        19: "Undocking issue",
-        20: "Docking issue",
-        21: "Navigation problem",
-        22: "Navigation problem",
-        23: "Battery issue",
-        24: "Navigation problem",
-        25: "Reboot required",
-        26: "Vacuum problem",
-        27: "Vacuum problem",
-        29: "Software update needed",
-        30: "Vacuum problem",
-        31: "Reboot required",
-        32: "Smart map problem",
-        33: "Path blocked",
-        34: "Reboot required",
-        35: "Unrecognised cleaning pad",
-        36: "Bin full",
-        37: "Tank needed refilling",
-        38: "Vacuum problem",
-        39: "Reboot required",
-        40: "Navigation problem",
-        41: "Timed out",
-        42: "Localization problem",
-        43: "Navigation problem",
-        44: "Pump issue",
-        45: "Lid open",
-        46: "Low battery",
-        47: "Reboot required",
-        48: "Path blocked",
-        52: "Pad required attention",
-        53: "Software update required",
-        65: "Hardware problem detected",
-        66: "Low memory",
-        68: "Hardware problem detected",
-        73: "Pad type changed",
-        74: "Max area reached",
-        75: "Navigation problem",
-        76: "Hardware problem detected",
-        88: "Back-up refused",
-        89: "Mission runtime too long",
-        101: "Battery isn't connected",
-        102: "Charging error",
-        103: "Charging error",
-        104: "No charge current",
-        105: "Charging current too low",
-        106: "Battery too warm",
-        107: "Battery temperature incorrect",
-        108: "Battery communication failure",
-        109: "Battery error",
-        110: "Battery cell imbalance",
-        111: "Battery communication failure",
-        112: "Invalid charging load",
-        114: "Internal battery failure",
-        115: "Cell failure during charging",
-        116: "Charging error of Home Base",
-        118: "Battery communication failure",
-        119: "Charging timeout",
-        120: "Battery not initialized",
-        122: "Charging system error",
-        123: "Battery not initialized",
-    }
-
     def __init__(
         self,
         address=None,
@@ -189,14 +88,7 @@ class Roomba:
         delay=1
     ):
         """
-        address is the IP address of the Roomba, the continuous flag enables a
-        continuous mqtt connection, if this is set to False, the client connects
-        and disconnects every 'delay' seconds (1 by default, but can be
-        changed). This is to allow other programs access, as there can only be
-        one Roomba connection at a time.
-        As cloud connections are unaffected, I reccomend leaving this as True.
-        leave topic as is, unless debugging (# = all messages).
-        if a python standard logging object exists, it will be used for logging.
+        Roomba client initialization
         """
         self.log = logging.getLogger(__name__)
         self.address = address
@@ -463,10 +355,10 @@ class Roomba:
                 if key == "cleanMissionStatus_error":
                     try:
                         self.error_code = value
-                        self.error_message = self._ErrorMessages[value]
+                        self.error_message = ROOMBA_ERROR_MESSAGES[value]
                     except KeyError as e:
                         self.log.warning("Error looking up Roomba error message: %s", e)
-                        self.error_message = "Unknown Error number: %d" % value
+                        self.error_message = "Unknown Error number: %s" % value
                     self.publish("error_message", self.error_message)
                 if key == "cleanMissionStatus_phase":
                     self.previous_cleanMissionStatus_phase = (
@@ -491,23 +383,6 @@ class Roomba:
         "stop"          : Stopped
         "pause"         : paused
 
-        available states:
-        states = {  "charge":"Charging",
-                    "new":"New Mission",
-                    "run":"Running",
-                    "resume":"Running",
-                    "hmMidMsn":"Recharging",
-                    "recharge":"Recharging",
-                    "stuck":"Stuck",
-                    "hmUsrDock":"User Docking",
-                    "dock":"Docking",
-                    "dockend":"Docking - End Mission",
-                    "cancelled":"Cancelled",
-                    "stop":"Stopped",
-                    "pause":"Paused",
-                    "hmPostMsn":"End Mission",
-                    "":None}
-
         Normal Sequence is "" -> charge -> run -> hmPostMsn -> charge
         Mid mission recharge is "" -> charge -> run -> hmMidMsn -> charge
                                    -> run -> hmPostMsn -> charge
@@ -525,92 +400,87 @@ class Roomba:
 
         current_mission = self.current_state
 
-        # if self.current_state == None: #set initial state here for debugging
-        #    self.current_state = self.states["recharge"]
-        #    self.show_final_map = False
-
-        #  deal with "bin full" timeout on mission
         try:
             if (
                 self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"]
                 == "none"
                 and self.cleanMissionStatus_phase == "charge"
-                and (self.current_state == self.states["pause"] or self.current_state == self.states["recharge"])
+                and (self.current_state == ROOMBA_STATES["pause"] or self.current_state == ROOMBA_STATES["recharge"])
             ):
-                self.current_state = self.states["cancelled"]
+                self.current_state = ROOMBA_STATES["cancelled"]
         except KeyError:
             pass
 
         if (
-            self.current_state == self.states["charge"]
+            self.current_state == ROOMBA_STATES["charge"]
             and self.cleanMissionStatus_phase == "run"
         ):
-            self.current_state = self.states["new"]
+            self.current_state = ROOMBA_STATES["new"]
         elif (
-            self.current_state == self.states["run"]
+            self.current_state == ROOMBA_STATES["run"]
             and self.cleanMissionStatus_phase == "hmMidMsn"
         ):
-            self.current_state = self.states["dock"]
+            self.current_state = ROOMBA_STATES["dock"]
         elif (
-            self.current_state == self.states["dock"]
+            self.current_state == ROOMBA_STATES["dock"]
             and self.cleanMissionStatus_phase == "charge"
         ):
-            self.current_state = self.states["recharge"]
+            self.current_state = ROOMBA_STATES["recharge"]
         elif (
-            self.current_state == self.states["recharge"]
+            self.current_state == ROOMBA_STATES["recharge"]
             and self.cleanMissionStatus_phase == "charge"
             and self.bin_full
         ):
-            self.current_state = self.states["pause"]
+            self.current_state = ROOMBA_STATES["pause"]
         elif (
-            self.current_state == self.states["run"]
+            self.current_state == ROOMBA_STATES["run"]
             and self.cleanMissionStatus_phase == "charge"
         ):
-            self.current_state = self.states["recharge"]
+            self.current_state = ROOMBA_STATES["recharge"]
         elif (
-            self.current_state == self.states["recharge"]
+            self.current_state == ROOMBA_STATES["recharge"]
             and self.cleanMissionStatus_phase == "run"
         ):
-            self.current_state = self.states["pause"]
+            self.current_state = ROOMBA_STATES["pause"]
         elif (
-            self.current_state == self.states["pause"]
+            self.current_state == ROOMBA_STATES["pause"]
             and self.cleanMissionStatus_phase == "charge"
         ):
-            self.current_state = self.states["pause"]
+            self.current_state = ROOMBA_STATES["pause"]
             # so that we will draw map and can update recharge time
             current_mission = None
         elif (
-            self.current_state == self.states["charge"]
+            self.current_state == ROOMBA_STATES["charge"]
             and self.cleanMissionStatus_phase == "charge"
         ):
             # so that we will draw map and can update charge status
             current_mission = None
         elif (
-            self.current_state == self.states["stop"]
-            or self.current_state == self.states["pause"]
+            self.current_state == ROOMBA_STATES["stop"]
+            or self.current_state == ROOMBA_STATES["pause"]
         ) and self.cleanMissionStatus_phase == "hmUsrDock":
-            self.current_state = self.states["cancelled"]
+            self.current_state = ROOMBA_STATES["cancelled"]
         elif (
-            self.current_state == self.states["hmUsrDock"]
-            or self.current_state == self.states["cancelled"]
+            self.current_state == ROOMBA_STATES["hmUsrDock"]
+            or self.current_state == ROOMBA_STATES["cancelled"]
         ) and self.cleanMissionStatus_phase == "charge":
-            self.current_state = self.states["dockend"]
+            self.current_state = ROOMBA_STATES["dockend"]
         elif (
-            self.current_state == self.states["hmPostMsn"]
+            self.current_state == ROOMBA_STATES["hmPostMsn"]
             and self.cleanMissionStatus_phase == "charge"
         ):
-            self.current_state = self.states["dockend"]
+            self.current_state = ROOMBA_STATES["dockend"]
         elif (
-            self.current_state == self.states["dockend"]
+            self.current_state == ROOMBA_STATES["dockend"]
             and self.cleanMissionStatus_phase == "charge"
         ):
-            self.current_state = self.states["charge"]
+            self.current_state = ROOMBA_STATES["charge"]
 
         else:
-            self.current_state = self.states[self.cleanMissionStatus_phase]
+            self.current_state = ROOMBA_STATES[self.cleanMissionStatus_phase]
 
         if new_state is not None:
-            self.current_state = self.states[new_state]
+            self.current_state = ROOMBA_STATES[new_state]
             self.log.debug("Current state: %s", self.current_state)
 
         if self.current_state != current_mission:

@@ -15,23 +15,27 @@ Supports Python 3.6, 3.7 (thanks to pschmitt for adding Python 3 compatibility).
 ## How to get your username/blid and password
 
 To get password from Roomba type in console:
-```
-$> roomba-password <ip>
+```shell script
+$ roomba-password <ip>
 ```
 It will find your Roomba in local network, then follow the instructions in console to get password.
 If IP address not provided password will be request for auto discovered robot. 
 
 Also you can just ask Roomba for info:
-```
-$> roomba-discovery <ip adress is optional>
+```shell script
+$ roomba-discovery <ip adress is optional>
 ```
 
+To test connection with iRobot:
+```shell script
+$ roomba-connect <ip> <password>
+```
 
 ## Data/Feedback
 master_state starts empty, and fills with time, it is published in full every 5 minutes by default (but updates to it are published live)
 
 master_state should contain:
-```javascript
+```json
 {
   "state": {
     "reported": {

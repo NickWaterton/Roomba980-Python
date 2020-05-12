@@ -26,7 +26,8 @@ setup(
     entry_points={
         "console_scripts": [
             "roomba-discovery=roomba.entry_points:discovery",
-            "roomba-password=roomba.entry_points:password"
+            "roomba-password=roomba.entry_points:password",
+            "roomba-connect=roomba.entry_points:connect"
         ]
     }
 )

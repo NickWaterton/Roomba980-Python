@@ -1,15 +1,7 @@
 import logging
 import ssl
-from enum import Enum
 import paho.mqtt.client as mqtt
-
-
-class RoombaMQTTError(Enum):
-    BAD_PROTOCOL = 1
-    BAD_CLIENT_ID = 2
-    SERVER_UNAVAILABLE = 3
-    BAD_USERNAME_OR_PASSWORD = 4
-    NOT_AUTHORISED = 5
+from roomba.const import MQTT_ERROR_MESSAGES
 
 
 class RoombaMQTTClient:
@@ -90,19 +82,12 @@ class RoombaMQTTClient:
 
     def _internal_on_connect(self, client, userdata, flags, rc):
         self.log.debug("Connected to Roomba %s, response code = %s", self.address, rc)
-        connection_error = self._find_connection_error(rc)
+        connection_error = MQTT_ERROR_MESSAGES[rc]
         if self.on_connect is not None:
             self.on_connect(connection_error)
 
     def _internal_on_disconnect(self, client, userdata, flags, rc):
         self.log.debug("Disconnected from Roomba %s, response code = %s", self.address, rc)
-        connection_error = self._find_connection_error(rc)
+        connection_error = MQTT_ERROR_MESSAGES[rc]
         if self.on_disconnect is not None:
             self.on_disconnect(connection_error)
-
-    @staticmethod
-    def _find_connection_error(response_code):
-        if response_code == 0:
-            return None
-        else:
-            return RoombaMQTTError(response_code)

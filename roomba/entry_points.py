@@ -1,6 +1,7 @@
 import sys
 from roomba.discovery import RoombaDiscovery
 from roomba.getpassword import RoombaPassword
+from roomba.roomba import Roomba
 
 
 def discovery():
@@ -31,9 +32,37 @@ def password():
     print(roomba_info)
 
 
+def connect():
+    roomba_ip = _get_ip_from_arg()
+    _validate_ip(roomba_ip)
+
+    roomba_password = _get_password_from_arg()
+    _validate_password(roomba_password)
+
+    roomba_discovery = RoombaDiscovery()
+    roomba_info = roomba_discovery.find(roomba_ip)
+    _validate_roomba_info(roomba_info)
+
+    roomba = Roomba(
+        roomba_info.ip,
+        roomba_info.blid,
+        roomba_password
+    )
+    roomba.register_on_message_callback(lambda msg: print(msg))
+    roomba.connect()
+
+    while True:
+        pass
+
+
 def _validate_ip(ip):
     if ip is None:
         raise Exception('ip cannot be null')
+
+
+def _validate_password(ip):
+    if ip is None:
+        raise Exception('password cannot be null')
 
 
 def _validate_roomba_info(roomba_info):
@@ -49,6 +78,12 @@ def _wait_for_input():
 
 
 def _get_ip_from_arg():
-    if len(sys.argv) == 1:
+    if len(sys.argv) < 2:
         return None
     return str(sys.argv[1])
+
+
+def _get_password_from_arg():
+    if len(sys.argv) < 3:
+        return None
+    return str(sys.argv[2])
