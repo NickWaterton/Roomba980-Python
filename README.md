@@ -1,5 +1,9 @@
 roombapy
 ================
+![Travis (.com)](https://img.shields.io/travis/com/pschmitt/roombapy)
+![PyPI](https://img.shields.io/pypi/v/roombapy)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/roombapy)
+![PyPI - License](https://img.shields.io/pypi/l/roombapy)
 
 Unofficial iRobot Roomba python library (SDK).
 
