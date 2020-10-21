@@ -21,7 +21,7 @@ setup(
         'Topic :: System :: Networking'
     ],
     keywords='roomba irobot braava home-assistant',
-    packages=find_packages(),
+    packages=find_packages(exclude=('tests', 'tests.*')),
     install_requires=['paho-mqtt'],
     entry_points={
         "console_scripts": [
