@@ -6,7 +6,7 @@ authors = ["Philipp Schmitt <philipp@schmitt.co>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.7"
 paho-mqtt = "^1.5.1"
 
 [tool.poetry.dev-dependencies]
