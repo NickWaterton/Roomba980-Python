@@ -43,11 +43,7 @@ def connect():
     roomba_info = roomba_discovery.find(roomba_ip)
     _validate_roomba_info(roomba_info)
 
-    roomba = Roomba(
-        roomba_info.ip,
-        roomba_info.blid,
-        roomba_password
-    )
+    roomba = Roomba(roomba_info.ip, roomba_info.blid, roomba_password)
     roomba.register_on_message_callback(lambda msg: print(msg))
     roomba.connect()
 
@@ -57,24 +53,26 @@ def connect():
 
 def _validate_ip(ip):
     if ip is None:
-        raise Exception('ip cannot be null')
+        raise Exception("ip cannot be null")
 
 
 def _validate_password(ip):
     if ip is None:
-        raise Exception('password cannot be null')
+        raise Exception("password cannot be null")
 
 
 def _validate_roomba_info(roomba_info):
     if roomba_info is None:
-        raise Exception('cannot find roomba')
+        raise Exception("cannot find roomba")
 
 
 def _wait_for_input():
-    print('Roomba have to be on Home Base powered on.\n'
-          'Press and hold HOME button until you hear series of tones.\n'
-          'Release button, Wi-Fi LED should be flashing')
-    input('Press Enter to continue...')
+    print(
+        "Roomba have to be on Home Base powered on.\n"
+        "Press and hold HOME button until you hear series of tones.\n"
+        "Release button, Wi-Fi LED should be flashing"
+    )
+    input("Press Enter to continue...")
 
 
 def _get_ip_from_arg():

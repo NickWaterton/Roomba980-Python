@@ -5,7 +5,7 @@ MQTT_ERROR_MESSAGES = {
     2: "Bad client id",
     3: "Server unavailable",
     4: "Bad username or password",
-    5: "Not authorised"
+    5: "Not authorised",
 }
 
 ROOMBA_ERROR_MESSAGES = {

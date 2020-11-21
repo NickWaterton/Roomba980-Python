@@ -1,30 +1,31 @@
 from roomba.roomba import Roomba
 
 ROOMBA_CONFIG = {
-    'host': '127.0.0.1',
-    'username': 'test',
-    'password': 'test',
-    'name': 'Roomba',
-    'continuous': True,
-    'delay': 120,
+    "host": "127.0.0.1",
+    "username": "test",
+    "password": "test",
+    "name": "Roomba",
+    "continuous": True,
+    "delay": 120,
 }
 
 
 class AbstractTestRoomba:
-
     @staticmethod
     def get_default_roomba(
-            address=ROOMBA_CONFIG['host'],
-            blid=ROOMBA_CONFIG['username'],
-            password=ROOMBA_CONFIG['password'],
-            continuous=ROOMBA_CONFIG['continuous'],
-            delay=ROOMBA_CONFIG['delay']):
+        address=ROOMBA_CONFIG["host"],
+        blid=ROOMBA_CONFIG["username"],
+        password=ROOMBA_CONFIG["password"],
+        continuous=ROOMBA_CONFIG["continuous"],
+        delay=ROOMBA_CONFIG["delay"],
+    ):
         return Roomba(
             address=address,
             blid=blid,
             password=password,
             continuous=continuous,
-            delay=delay)
+            delay=delay,
+        )
 
     @staticmethod
     def get_message(topic, payload):
@@ -32,8 +33,8 @@ class AbstractTestRoomba:
             pass
 
         message = Message
-        setattr(message, 'topic', topic)
-        setattr(message, 'payload', payload)
-        setattr(message, 'qos', 'qos')
+        setattr(message, "topic", topic)
+        setattr(message, "payload", payload)
+        setattr(message, "qos", "qos")
 
         return message

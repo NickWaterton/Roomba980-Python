@@ -44,7 +44,9 @@ class RoombaInfo:
     blid = None
     password = None
 
-    def __init__(self, hostname, robot_name, ip, mac, firmware, sku, capabilities):
+    def __init__(
+        self, hostname, robot_name, ip, mac, firmware, sku, capabilities
+    ):
         self.hostname = hostname
         self.firmware = firmware
         self.ip = ip
@@ -52,10 +54,15 @@ class RoombaInfo:
         self.robot_name = robot_name
         self.sku = sku
         self.capabilities = capabilities
-        self.blid = hostname.split('-')[1]
+        self.blid = hostname.split("-")[1]
 
     def __str__(self) -> str:
-        return ', '.join(['{key}={value}'.format(key=key, value=self.__dict__.get(key)) for key in self.__dict__])
+        return ", ".join(
+            [
+                "{key}={value}".format(key=key, value=self.__dict__.get(key))
+                for key in self.__dict__
+            ]
+        )
 
     def __hash__(self) -> int:
         return hash(self.mac)
@@ -80,12 +87,7 @@ class Roomba:
     """
 
     def __init__(
-        self,
-        address=None,
-        blid=None,
-        password=None,
-        continuous=True,
-        delay=1
+        self, address=None, blid=None, password=None, continuous=True, delay=1
     ):
         """
         Roomba client initialization
@@ -100,16 +102,16 @@ class Roomba:
 
         self.stop_connection = False
         self.periodic_connection_running = False
-        self.topic = '#'
-        self.exclude = ''
+        self.topic = "#"
+        self.exclude = ""
         self.delay = delay
         self.periodic_connection_duration = 10
         self.roomba_connected = False
         self.indent = 0
         self.master_indent = 0
         self.co_ords = {"x": 0, "y": 0, "theta": 180}
-        self.cleanMissionStatus_phase = ''
-        self.previous_cleanMissionStatus_phase = ''
+        self.cleanMissionStatus_phase = ""
+        self.previous_cleanMissionStatus_phase = ""
         self.current_state = None
         self.bin_full = False
         self.master_state = {}  # all info from roomba stored here
@@ -126,10 +128,7 @@ class Roomba:
         self.on_message_callbacks.append(callback)
 
     def _get_client(self, address, blid, password):
-        client = RoombaMQTTClient(
-            address=address,
-            blid=blid,
-            password=password)
+        client = RoombaMQTTClient(address=address, blid=blid, password=password)
         client.set_on_message(self.on_message)
         client.set_on_connect(self.on_connect)
         client.set_on_disconnect(self.on_disconnect)
@@ -152,7 +151,9 @@ class Roomba:
         attempt = 1
         while attempt <= MAX_CONNECTION_RETRIES:
             try:
-                self.log.debug("Connecting to %s, attempt %s", self.address, attempt)
+                self.log.debug(
+                    "Connecting to %s, attempt %s", self.address, attempt
+                )
                 self.client.connect()
                 return True
             except Exception as e:
@@ -161,7 +162,9 @@ class Roomba:
             attempt += 1
 
         self.log.error("Unable to connect to %s", self.address)
-        raise RoombaConnectionError("Unable to connect to Roomba at {}".format(self.address))
+        raise RoombaConnectionError(
+            "Unable to connect to Roomba at {}".format(self.address)
+        )
 
     def disconnect(self):
         if self.continuous:
@@ -187,7 +190,9 @@ class Roomba:
         self.log.info("Connecting to Roomba %s", self.address)
         self.client_error = error
         if error is not None:
-            self.log.error("Roomba %s connection error, code %s", self.address, error)
+            self.log.error(
+                "Roomba %s connection error, code %s", self.address, error
+            )
             return
 
         self.roomba_connected = True
@@ -197,7 +202,11 @@ class Roomba:
         self.roomba_connected = False
         self.client_error = error
         if error is not None:
-            self.log.warning("Unexpectedly disconnected from Roomba %s, code %s", self.address, error)
+            self.log.warning(
+                "Unexpectedly disconnected from Roomba %s, code %s",
+                self.address,
+                error,
+            )
             return
 
         self.log.info("Disconnected from Roomba %s", self.address)
@@ -214,7 +223,12 @@ class Roomba:
         log_string, json_data = self.decode_payload(msg.topic, msg.payload)
         self.dict_merge(self.master_state, json_data)
 
-        self.log.debug("Received Roomba Data %s: %s, %s", self.address, str(msg.topic), str(msg.payload))
+        self.log.debug(
+            "Received Roomba Data %s: %s, %s",
+            self.address,
+            str(msg.topic),
+            str(msg.payload),
+        )
 
         self.decode_topics(json_data)
 
@@ -236,7 +250,7 @@ class Roomba:
         roomba_command = {
             "command": command,
             "time": int(datetime.timestamp(datetime.now())),
-            "initiator": "localApp"
+            "initiator": "localApp",
         }
         roomba_command.update(params)
 
@@ -295,9 +309,9 @@ class Roomba:
             # order), else return as is...
             json_data = json.loads(
                 payload.decode("utf-8")
-                       .replace(":nan", ":NaN")
-                       .replace(":inf", ":Infinity")
-                       .replace(":-inf", ":-Infinity"),
+                .replace(":nan", ":NaN")
+                .replace(":inf", ":Infinity")
+                .replace(":-inf", ":-Infinity"),
                 object_pairs_hook=OrderedDict,
             )
             # if it's not a dictionary, probably just a number
@@ -357,7 +371,9 @@ class Roomba:
                         self.error_code = value
                         self.error_message = ROOMBA_ERROR_MESSAGES[value]
                     except KeyError as e:
-                        self.log.warning("Error looking up Roomba error message: %s", e)
+                        self.log.warning(
+                            "Error looking up Roomba error message: %s", e
+                        )
                         self.error_message = "Unknown Error number: %s" % value
                     self.publish("error_message", self.error_message)
                 if key == "cleanMissionStatus_phase":
@@ -402,10 +418,15 @@ class Roomba:
 
         try:
             if (
-                self.master_state["state"]["reported"]["cleanMissionStatus"]["mssnM"]
+                self.master_state["state"]["reported"]["cleanMissionStatus"][
+                    "mssnM"
+                ]
                 == "none"
                 and self.cleanMissionStatus_phase == "charge"
-                and (self.current_state == ROOMBA_STATES["pause"] or self.current_state == ROOMBA_STATES["recharge"])
+                and (
+                    self.current_state == ROOMBA_STATES["pause"]
+                    or self.current_state == ROOMBA_STATES["recharge"]
+                )
             ):
                 self.current_state = ROOMBA_STATES["cancelled"]
         except KeyError:

@@ -6,10 +6,10 @@ from roomba.roomba import RoombaInfo
 
 
 class RoombaDiscovery:
-    udp_bind_address = ''
-    udp_address = '<broadcast>'
+    udp_bind_address = ""
+    udp_address = "<broadcast>"
     udp_port = 5678
-    roomba_message = 'irobotmcs'
+    roomba_message = "irobotmcs"
     amount_of_broadcasted_messages = 5
     server_socket = None
     log = None
@@ -46,12 +46,14 @@ class RoombaDiscovery:
                 raw_response, addr = self.server_socket.recvfrom(1024)
                 if ip is not None and addr[0] != ip:
                     continue
-                self.log.debug("Received response: %s, address: %s", raw_response, addr)
+                self.log.debug(
+                    "Received response: %s, address: %s", raw_response, addr
+                )
                 data = raw_response.decode()
                 if self._is_from_irobot(data):
                     return _decode_data(data)
         except socket.timeout:
-            self.log.info('Socket timeout')
+            self.log.info("Socket timeout")
             return None
 
     def _is_from_irobot(self, data):
@@ -59,18 +61,25 @@ class RoombaDiscovery:
             return False
 
         json_response = json.loads(data)
-        if 'Roomba' in json_response['hostname'] or 'iRobot' in json_response['hostname']:
+        if (
+            "Roomba" in json_response["hostname"]
+            or "iRobot" in json_response["hostname"]
+        ):
             return True
 
         return False
 
     def _broadcast_message(self, amount):
         for i in range(amount):
-            self.server_socket.sendto(self.roomba_message.encode(), (self.udp_address, self.udp_port))
+            self.server_socket.sendto(
+                self.roomba_message.encode(), (self.udp_address, self.udp_port)
+            )
             self.log.debug("Broadcast message sent: " + str(i))
 
     def _send_message(self, udp_address):
-        self.server_socket.sendto(self.roomba_message.encode(), (udp_address, self.udp_port))
+        self.server_socket.sendto(
+            self.roomba_message.encode(), (udp_address, self.udp_port)
+        )
         self.log.debug("Message sent")
 
     def _start_server(self):
@@ -81,13 +90,14 @@ class RoombaDiscovery:
 def _decode_data(data):
     json_response = json.loads(data)
     return RoombaInfo(
-        hostname=json_response['hostname'],
-        robot_name=json_response['robotname'],
-        ip=json_response['ip'],
-        mac=json_response['mac'],
-        firmware=json_response['sw'],
-        sku=json_response['sku'],
-        capabilities=json_response['cap'])
+        hostname=json_response["hostname"],
+        robot_name=json_response["robotname"],
+        ip=json_response["ip"],
+        mac=json_response["mac"],
+        firmware=json_response["sw"],
+        sku=json_response["sku"],
+        capabilities=json_response["cap"],
+    )
 
 
 def _get_socket():

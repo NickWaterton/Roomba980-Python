@@ -67,13 +67,14 @@ class RoombaMQTTClient:
             mqtt_client.tls_set(
                 cert_reqs=ssl.CERT_NONE,
                 tls_version=ssl.PROTOCOL_TLS,
-                ciphers='DEFAULT:!DH')
+                ciphers="DEFAULT:!DH",
+            )
         except ValueError:  # try V1.3 version
             self.log.warning("TLS Setting failed - trying 1.3 version")
             mqtt_client._ssl_context = None
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
             ssl_context.verify_mode = ssl.CERT_NONE
-            ssl_context.set_ciphers('DEFAULT:!DH')
+            ssl_context.set_ciphers("DEFAULT:!DH")
             ssl_context.load_default_certs()
             mqtt_client.tls_set_context(ssl_context)
         mqtt_client.tls_insecure_set(True)
@@ -81,13 +82,17 @@ class RoombaMQTTClient:
         return mqtt_client
 
     def _internal_on_connect(self, client, userdata, flags, rc):
-        self.log.debug("Connected to Roomba %s, response code = %s", self.address, rc)
+        self.log.debug(
+            "Connected to Roomba %s, response code = %s", self.address, rc
+        )
         connection_error = MQTT_ERROR_MESSAGES[rc]
         if self.on_connect is not None:
             self.on_connect(connection_error)
 
     def _internal_on_disconnect(self, client, userdata, rc):
-        self.log.debug("Disconnected from Roomba %s, response code = %s", self.address, rc)
+        self.log.debug(
+            "Disconnected from Roomba %s, response code = %s", self.address, rc
+        )
         connection_error = MQTT_ERROR_MESSAGES[rc]
         if self.on_disconnect is not None:
             self.on_disconnect(connection_error)

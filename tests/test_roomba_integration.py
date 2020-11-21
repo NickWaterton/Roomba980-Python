@@ -5,31 +5,32 @@ import os
 from tests import abstract_test_roomba
 
 BROKER_CONFIG = {
-    'listeners': {
-        'default': {
-            'type': 'tcp',
-            'bind': 'localhost:8883',
-            'max_connections': 10,
-            'ssl': 'on',
-            'certfile': os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test.crt'),
-            'keyfile': os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test.key')
+    "listeners": {
+        "default": {
+            "type": "tcp",
+            "bind": "localhost:8883",
+            "max_connections": 10,
+            "ssl": "on",
+            "certfile": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "test.crt"
+            ),
+            "keyfile": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "test.key"
+            ),
         },
     },
-    'auth': {
-        'allow-anonymous': False,
-        'password-file': os.path.join(os.path.dirname(os.path.realpath(__file__)), 'passwd'),
-        'plugins': [
-            'auth_file', 'auth_anonymous'
-        ]
+    "auth": {
+        "allow-anonymous": False,
+        "password-file": os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "passwd"
+        ),
+        "plugins": ["auth_file", "auth_anonymous"],
     },
-    'topic-check': {
-        'enabled': False
-    }
+    "topic-check": {"enabled": False},
 }
 
 
 class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
-
     @pytest.mark.asyncio
     async def test_roomba_connect(self, broker, event_loop):
         # given
@@ -47,7 +48,7 @@ class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
     @pytest.mark.asyncio
     async def test_roomba_connect_error(self, broker, event_loop):
         # given
-        roomba = self.get_default_roomba(blid='wrong')
+        roomba = self.get_default_roomba(blid="wrong")
 
         # when
         await self.start_broker(broker, event_loop)
