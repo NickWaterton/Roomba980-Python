@@ -1,6 +1,6 @@
-import socket
 import json
 import logging
+import socket
 
 from roomba.roomba import RoombaInfo
 

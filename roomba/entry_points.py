@@ -1,4 +1,5 @@
 import sys
+
 from roomba.discovery import RoombaDiscovery
 from roomba.getpassword import RoombaPassword
 from roomba.roomba import Roomba

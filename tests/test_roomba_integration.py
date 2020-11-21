@@ -1,7 +1,9 @@
 import asyncio
+import os
+
 import pytest
 from hbmqtt.broker import Broker
-import os
+
 from tests import abstract_test_roomba
 
 BROKER_CONFIG = {

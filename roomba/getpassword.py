@@ -1,6 +1,6 @@
+import logging
 import socket
 import ssl
-import logging
 import struct
 
 

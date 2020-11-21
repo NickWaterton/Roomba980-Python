@@ -16,15 +16,16 @@ Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines
 if you don't have OpenCV
 """
 
-from collections.abc import Mapping
-from collections import OrderedDict
-from roomba.mqttclient import RoombaMQTTClient
-from datetime import datetime
 import json
 import logging
 import threading
 import time
+from collections import OrderedDict
+from collections.abc import Mapping
+from datetime import datetime
+
 from roomba.const import ROOMBA_ERROR_MESSAGES, ROOMBA_STATES
+from roomba.mqttclient import RoombaMQTTClient
 
 MAX_CONNECTION_RETRIES = 3
 
