@@ -86,7 +86,7 @@ class RoombaMQTTClient:
         if self.on_connect is not None:
             self.on_connect(connection_error)
 
-    def _internal_on_disconnect(self, client, userdata, flags, rc):
+    def _internal_on_disconnect(self, client, userdata, rc):
         self.log.debug("Disconnected from Roomba %s, response code = %s", self.address, rc)
         connection_error = MQTT_ERROR_MESSAGES[rc]
         if self.on_disconnect is not None:
