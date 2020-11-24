@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "roombapy"
-version = "1.6.1"
+version = "1.6.2"
 description = "Python program and library to control Wi-Fi enabled iRobot Roombas"
 authors = ["Philipp Schmitt <philipp@schmitt.co>"]
 license = "MIT"
