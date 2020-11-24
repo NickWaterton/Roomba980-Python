@@ -105,5 +105,6 @@ ROOMBA_STATES = {
     "stop": "Stopped",
     "pause": "Paused",
     "hmPostMsn": "End Mission",
+    "evac": "Emptying Bin",
     "": None,
 }
