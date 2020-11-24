@@ -4,6 +4,19 @@ version = "1.6.1"
 description = "Python program and library to control Wi-Fi enabled iRobot Roombas"
 authors = ["Philipp Schmitt <philipp@schmitt.co>"]
 license = "MIT"
+repository = "https://github.com/pschmitt/roombapy"
+classifiers = [
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Networking"
+]
+exclude = ["tests/*"]
+
+[tool.poetry.scripts]
+roomba-connect = "roombapy.entry_points:connect"
+roomba-discovery = "roombapy.entry_points:discovery"
+roomba-password = "roombapy.entry_points:password"
 
 [tool.poetry.dependencies]
 python = ">=3.7"

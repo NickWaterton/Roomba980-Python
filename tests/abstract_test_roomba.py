@@ -1,4 +1,4 @@
-from roomba.roomba import Roomba
+from roombapy.roomba import Roomba
 
 ROOMBA_CONFIG = {
     "host": "127.0.0.1",

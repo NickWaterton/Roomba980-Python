@@ -24,8 +24,8 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import datetime
 
-from roomba.const import ROOMBA_ERROR_MESSAGES, ROOMBA_STATES
-from roomba.mqttclient import RoombaMQTTClient
+from roombapy.const import ROOMBA_ERROR_MESSAGES, ROOMBA_STATES
+from roombapy.mqttclient import RoombaMQTTClient
 
 MAX_CONNECTION_RETRIES = 3
 

@@ -3,7 +3,7 @@ import ssl
 
 import paho.mqtt.client as mqtt
 
-from roomba.const import MQTT_ERROR_MESSAGES
+from roombapy.const import MQTT_ERROR_MESSAGES
 
 
 class RoombaMQTTClient:

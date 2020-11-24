@@ -1,8 +1,8 @@
 import sys
 
-from roomba.discovery import RoombaDiscovery
-from roomba.getpassword import RoombaPassword
-from roomba.roomba import Roomba
+from roombapy.discovery import RoombaDiscovery
+from roombapy.getpassword import RoombaPassword
+from roombapy.roomba import Roomba
 
 
 def discovery():
