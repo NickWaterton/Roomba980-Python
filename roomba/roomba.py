@@ -392,7 +392,7 @@ class Roomba(object):
             # self.log.error("Exception: %s" % exc_type)
             # if e[0] == 111: #errno.ECONNREFUSED - does not work with
             # python 3.0 so...
-            if exc_type == socket.error or exc_type == ConnectionRefusedError:
+            if exc_type == socket.error:
                 count += 1
                 if count <= max_retries:
                     self.log.error("Attempting new Connection# %d" % count)
@@ -512,7 +512,15 @@ class Roomba(object):
         myCommand = json.dumps(Command)
         self.log.info("Publishing Roomba Setting : %s" % myCommand)
         self.client.publish("delta", myCommand)
-
+    
+    def set_cleanSchedule(self, setting):
+        self.log.info("Received cleanSchedule:")
+        tmp = {"cleanSchedule": setting}
+        Command = {"state": tmp}
+        myCommand = json.dumps(Command)
+        self.log.info("Publishing Roomba cleanSchedule : %s" % myCommand)
+        self.client.publish("delta", myCommand)
+    
     def publish(self, topic, message):
         if self.mqttc is not None and message is not None:
             self.log.debug("Publishing item: %s: %s"

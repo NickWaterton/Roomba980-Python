@@ -5,6 +5,7 @@ start_roomba
 .ropeproject
 .autoenv.zsh
 dist/
+build/
 *.egg-info/
 *_map.html
 style.css
