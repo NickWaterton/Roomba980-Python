@@ -119,6 +119,7 @@ class Roomba(object):
               "cancelled": "Cancelled",
               "stop": "Stopped",
               "pause": "Paused",
+              "evac" : "Emptying",
               "hmPostMsn": "End Mission",
               "":  None}
 
@@ -1204,6 +1205,11 @@ class Roomba(object):
             self.display_text = "Completed: " + \
                 time.strftime("%a %b %d %H:%M:%S")
             self.log.info("MAP: end of mission")
+
+        elif self.current_state == self.states["evac"]:
+            self.display_text = "Emptying Bin: " + \
+                time.strftime("%a %b %d %H:%M:%S")
+            self.log.info("MAP: emptying bin")
 
         elif self.current_state == self.states["dockend"]:
             self.log.info("MAP: mission completed: ignoring new co-ords in "
