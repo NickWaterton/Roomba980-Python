@@ -905,6 +905,7 @@ GET
 * /api/local/info/
 * /api/local/action/
 * /api/local/config/
+
 POST
 * /api/local/action/
 * /map/values
