@@ -1017,9 +1017,12 @@ You would POST:
 To copy the last command example.
 
 ### Web Interface
-The web interface can be used for debugging. You can watch values like as roomba runs, or is simulated. You can interactively change the size/rotation of the map, to get the values correct for your floor plan.
-It is available on `http://Your_Server_IP:webport/map/map.html` Each roomba would have it's own webport, which you specify at startup. See REST Interface for details.
+The web interface can be used for debugging. You can watch value update as roomba runs, or is simulated. You can interactively change the size/rotation of the map, to get the values correct for your floor plan.
+
+It is available on `http://Your_Server_IP:webport/map/map.html` Each roomba would have it's own webport, which you specify at startup. See [REST Interface](#rest-interface) for details.
+
 The Web interface looks like this:
+
 ![iRobot Roomba Web Interface](/roomba/res/web_interface.png)
 If you restart the server, you need to refresh/reload the web page.
 
@@ -1461,7 +1464,9 @@ NULL=Unknown
 ```
 ### Rules
 **NOTE:** I do not use these rules anymore, as I have moved over to the HabApp rules engine (see https://github.com/spacemanspiff2007/HABApp), so they probably won't work properly anymore
+
 **NOTE:** You will have to change the roomba item names to match your roomba item names eg `upstairs_roomba_command` etc.
+
 These use one of my functions getTimestamp, here it is:
 ```
 val Functions$Function2<GenericItem, String, String> getTimestamp = [  //function (lambda) to get a timestamp. Returns formatted string and optionally updates an item
