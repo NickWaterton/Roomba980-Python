@@ -900,15 +900,14 @@ myroomba = Roomba(address, blid, roombaPassword, webport=8200)
 The web interface is now available in a web browser at `http://localhost:8200/map/map.html`
 ## REST api
 The end points for the REST api are:
-GET
-* /api/local/map/
-* /api/local/info/
-* /api/local/action/
-* /api/local/config/
-
-POST
-* /api/local/action/
-* /map/values
+* GET
+    * /api/local/map/
+    * /api/local/info/
+    * /api/local/action/
+    * /api/local/config/
+* POST
+    * /api/local/action/
+    * /map/values
 
 ### GET usage
 You can call the GET endpoints from a web browser, or via curl etc.
