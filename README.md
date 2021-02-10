@@ -198,7 +198,7 @@ I advise you to experiment with the map size (if you are using maps), as that is
 the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, roomba rotation). See the examples.
 
 ### Example output
-Logging is supported with the python standard logging module (the logger is `roomba`)
+Logging is supported with the python standard logging module (the logger is `Roomba`)
 ```bash
 [2021-02-05 12:42:06,718][ INFO](Roomba              ) *******************
 [2021-02-05 12:42:06,719][ INFO](Roomba              ) * Program Started *
