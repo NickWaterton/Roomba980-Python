@@ -282,6 +282,15 @@ either with or without the IP address of your roomba.
 
 You can also specify a config file other than the default (-h for options). Results are displayed and saved to the config file.
 
+## config.ini
+By default, all settings are stored in the *config.ini* file. You can change this file if you like (but there is really no need).
+
+An exaple file *config_example.ini* is given to show the structire of the file. It is a standard `ini` file with each section being the ip address of each robot.
+
+Any setting that can be added on the command line can be entered in the *config.ini* file. The key is the same as the long format of the cli setting. This allows you to make different settings for different robots.
+
+**NOTE:** Anything entered in the *config.ini* file overrides the command line setting.
+
 ## API
 The API calls are properties or methods of two classes (see `roomba_direct.py` for an example of how to use the password class)
 * password
