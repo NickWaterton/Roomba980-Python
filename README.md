@@ -286,6 +286,7 @@ You can also specify a config file other than the default (-h for options). Resu
 The API calls are properties or methods of two classes (see `roomba_direct.py` for an example of how to use the password class)
 * password
 * Roomba
+
 In practice you should only need to use the Roomba class, which contains a reference to the password class.
 ### Classes
 ```python
