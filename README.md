@@ -888,7 +888,7 @@ mosquitto_pub -t "/roomba/setting" -m "carpetBoost true"
 Or call directly from a python script (see simple example above).
 Or use with the REST interface
 
-#REST interface
+# REST interface
 To enable the REST interface, enter a value for `webport` in the Roomba contstructor. eg:
 ```bash
 myroomba = Roomba(address, blid, roombaPassword, webport=8200)
