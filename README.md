@@ -1016,6 +1016,8 @@ You would POST:
 ``` 
 To copy the last command example.
 
+Note that with this example, you could get the same result by using GET to `/api/local/action/cleanRoom?pmap_id=v3R-QnXXXXXXXXXURA&regions=5`, and if you only had one pmap, you could even leave that out - `/api/local/action/cleanRoom?regions=5` would do the same thing.
+
 ### Web Interface
 The web interface can be used for debugging. You can watch value update as roomba runs, or is simulated. You can interactively change the size/rotation of the map, to get the values correct for your floor plan.
 
