@@ -1024,6 +1024,7 @@ The web interface can be used for debugging. You can watch value update as roomb
 It is available on `http://Your_Server_IP:webport/map/map.html` Each roomba would have it's own webport, which you specify at startup. See [REST Interface](#rest-interface) for details.
 
 The Web interface looks like this:
+**NOTE:** *Save values* currently just displays the entry you need to **manually** make in the config.ini file. it does not actually "save" anything. It may do in the future...
 
 ![iRobot Roomba Web Interface](/roomba/res/web_interface.png)
 If you restart the server, you need to refresh/reload the web page.
