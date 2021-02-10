@@ -1,0 +1,13 @@
+body {
+  padding: 10px;
+}
+
+.data {
+  font-size: 15px;
+  font-weight: 50
+}
+
+#path_layer, #robot_body_layer, #text_layer {
+  max-width: 98vw;
+  max-height: 84vh;
+}

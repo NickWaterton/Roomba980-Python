@@ -8,5 +8,6 @@ dist/
 build/
 *.egg-info/
 *_map.html
-style.css
-Roomba.log
+*.log*
+*.txt
+*.bak

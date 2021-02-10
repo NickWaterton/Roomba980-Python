@@ -1,20 +1,24 @@
-from __future__ import print_function
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+__version__ = "2.0a"
+'''
+Python 3.6
+Quick Program to get blid and password from roomba
+
+Nick Waterton 5th May 2017: V 1.0: Initial Release
+Nick Waterton 22nd Dec 2020: V2.0: Updated for i and S Roomba versions, update to minimum python version 3.6
+'''
+
 from pprint import pformat
 import json
 import logging
 import socket
-import six
 import ssl
 import sys
-try:
-    import configparser
-except:
-    from six.moves import configparser
-    
-if sys.version_info[0] < 3: #fix more python 3 incompatibilities
-    input = raw_input
-
-log = logging.getLogger(__name__)
+import time
+from ast import literal_eval
+import configparser
 
 class Password(object):
     '''
@@ -24,21 +28,31 @@ class Password(object):
     V 1.2.3 NW 9/10/2018 added support for Roomba i7
     V 1.2.5 NW 7/10/2019 changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix i7 software connection problem
     V 1.2.6 NW 12/11/2019 add cipher to ssl to avoid dh_key_too_small issue
+    V 2.0 NW 22nd Dec 2020 updated for S and i versions plus braava jet m6, min version of python 3.6
     '''
 
-    VERSION = __version__ = "1.2.6"
+    VERSION = __version__ = "2.0a"
+    
+    config_dicts = ['data', 'mapsize', 'pmaps', 'regions']
 
     def __init__(self, address='255.255.255.255', file=".\config.ini"):
         self.address = address
         self.file = file
-        #self.log = logging.getLogger(__name__+'.Roomba_getpassword')
-        if __name__ == "password": 
-            self.log = logging.getLogger("__main__")    #another logging fix NW 3/2/2018
-        else:
-            self.log = logging.getLogger("roomba.__main__")
-        #self.log.info("__name__ is %s" % __name__)
-        self.log.info("Using Password version %s" % self.VERSION)
-        self.get_password()
+        self.log = logging.getLogger('Roomba.{}'.format(__class__.__name__))
+        self.log.info("Using Password version {}".format(self.__version__))
+        
+    def read_config_file(self):
+        #read config file
+        Config = configparser.ConfigParser()
+        roombas = {}
+        try:
+            Config.read(self.file)
+            self.log.info("reading/writing info from config file {}".format(self.file))
+            roombas = {s:{k:literal_eval(v) if k in self.config_dicts else v for k, v in Config.items(s)} for s in Config.sections()}   
+            #self.log.info('data read from {}: {}'.format(self.file, pformat(roombas)))
+        except Exception as e:
+            self.log.exception(e)
+        return roombas
 
     def receive_udp(self):
         #set up UDP socket to receive data from robot
@@ -47,142 +61,198 @@ class Password(object):
         s.settimeout(10)
         if self.address == '255.255.255.255':
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        s.bind(("", port))  #bind all intefaces to port
-        print("waiting on port: %d for data" % port)
+        s.bind(("", port))  #bind all interfaces to port
+        self.log.info("waiting on port: {} for data".format(port))
         message = 'irobotmcs'
         s.sendto(message.encode(), (self.address, port))
         roomba_dict = {}
         while True:
             try:
                 udp_data, addr = s.recvfrom(1024)   #wait for udp data
-                #print('Received: Robot addr: %s Data: %s ' % (addr, udp_data))
-                if len(udp_data) > 0:
-                    if udp_data != message:
-                        try:
-                            if self.address != addr[0]:
-                                self.log.warn(
-                                    "supplied address %s does not match "
-                                    "discovered address %s, using discovered "
-                                    "address..." % (self.address, addr[0]))
-                            if udp_data.decode() != message:
-                                parsedMsg = json.loads(udp_data.decode()) #1.2.3 added .decode() to avoid python 3 bytes error
-                                roomba_dict[addr]=parsedMsg
-                        except Exception as e:
-                            print("json decode error: %s" % e)
-                            print('RECEIVED: %s', pformat(udp_data))
-                        # print('Robot Data: %s '
-                        #       % json.dumps(parsedMsg, indent=2))
-                else:
-                    break
+                #self.log.debug('Received: Robot addr: {} Data: {}'.format(addr, udp_data))
+                if udp_data and udp_data.decode() != message:
+                    try:
+                        #if self.address != addr[0]:
+                        #    self.log.warning(
+                        #        "supplied address {} does not match "
+                        #        "discovered address {}, using discovered "
+                        #        "address...".format(self.address, addr[0]))
+                        
+                        parsedMsg = json.loads(udp_data.decode())
+                        if addr[0] not in roomba_dict.keys():
+                            s.sendto(message.encode(), (self.address, port))
+                            roomba_dict[addr[0]]=parsedMsg
+                            self.log.info('Robot at IP: {} Data: {}'.format(addr[0], json.dumps(parsedMsg, indent=2)))
+                    except Exception as e:
+                        self.log.info("json decode error: {}".format(e))
+                        self.log.info('RECEIVED: {}'.format(pformat(udp_data)))
+
             except socket.timeout:
                 break
         s.close()
         return roomba_dict
 
     def get_password(self):
-        import struct
+        #load roombas from config file
+        file_roombas = self.read_config_file()
         #get roomba info
-        blid=None
         roombas = self.receive_udp()
 
         if len(roombas) == 0:
-            print("No Roombas found, try again...")
+            self.log.warning("No Roombas found on network, try again...")
             return False
-        else:
-            print("found %d Roomba(s)" % len(roombas))
+            
+        self.log.info("{} robot(s) already defined in file{}, found {} robot(s) on network".format(len(file_roombas), self.file, len(roombas)))
 
-        for address,parsedMsg in six.iteritems(roombas):
-            addr = address[0]
+        for addr, parsedMsg in roombas.items():
+            blid=None
+            robotname = parsedMsg.get('robotname', 'unknown')
             if int(parsedMsg["ver"]) < 2:
-                print("Roombas at address: %s does not have the correct "
-                      "firmware version. Your version info is: %s"
-                      % (addr,json.dumps(parsedMsg, indent=2)))
+                self.log.info("Roombas at address: {} does not have the correct "
+                      "firmware version. Your version info is: {}".format(addr,json.dumps(parsedMsg, indent=2)))
+                continue
+            
+            self.log.info("To add/update Your robot details,"
+                          "make sure your robot ({}) at IP {} is on the Home Base and "
+                          "powered on (green lights on). Then press and hold the HOME "
+                          "button on your robot until it plays a series of tones "
+                          "(about 2 seconds). Release the button and your robot will "
+                          "flash WIFI light.".format(robotname, addr))
+            char = input("Press <Enter> to continue...\r\ns<Enter> to skip configuring this robot: ")
+            if char == 's':
+                self.log.info('Skipping')
                 continue
 
-            print("Make sure your robot (%s) at IP %s is on the Home Base and "
-                  "powered on (green lights on). Then press and hold the HOME "
-                  "button on your robot until it plays a series of tones "
-                  "(about 2 seconds). Release the button and your robot will "
-                  "flash WIFI light."
-                  % (parsedMsg["robotname"],addr))
-            input("Press Enter to continue...")
-
-            print("Received: %s"  % json.dumps(parsedMsg, indent=2))
-            print("\r\rRoomba (%s) IP address is: %s"
-                  % (parsedMsg["robotname"],addr))
-            hostname = parsedMsg["hostname"].split('-')
-            if hostname[0] == 'Roomba' or hostname[0] == 'iRobot':  #for i7 robot name is now iRobot
-                blid = hostname[1]
-
-            if hasattr(str, 'decode'):
-                # this is 0xf0 (mqtt reserved) 0x05(data length)
-                # 0xefcc3b2900 (data)
-                packet = 'f005efcc3b2900'.decode("hex")
-            else:
-                #this is 0xf0 (mqtt reserved) 0x05(data length)
-                # 0xefcc3b2900 (data)
-                packet = bytes.fromhex('f005efcc3b2900')
-            #send socket
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(10)
-
-            #ssl wrap
-            wrappedSocket = ssl.wrap_socket(
-                sock, ssl_version=ssl.PROTOCOL_TLS, ciphers='DEFAULT@SECLEVEL=1')   #ciphers='HIGH:!DH:!aNULL' may work as well
-            #connect and send packet
-            try:
-                wrappedSocket.connect((addr, 8883))
-            except Exception as e:
-                print("Connection Error %s" % e)
-
-            wrappedSocket.send(packet)
-            data = b''
-            data_len = 35
-            while True:
-                try:
-                    # NOTE data is 0xf0 (mqtt RESERVED) length (0x23 = 35),
-                    # 0xefcc3b2900 (magic packet), 0xXXXX... (30 bytes of
-                    # password). so 7 bytes, followed by 30 bytes of password
-                    # (total of 37)
-                    if len(data) >= data_len+2:
-                        break
-                    data_received = wrappedSocket.recv(1024)
-                except socket.error as e:
-                    print("Socket Error: %s" % e)
-                    break
-
-                if len(data_received) == 0:
-                    print("socket closed")
-                    break
-                else:
-                    data += data_received
-                    if len(data) >= 2:
-                        data_len = struct.unpack("B", data[1:2])[0]
-
-            #close socket
-            wrappedSocket.close()
-            # if len(data) > 0:
-            #     import binascii
-            #     print("received data: hex: %s, length: %d"
-            #           % (binascii.hexlify(data), len(data)))
+            #self.log.info("Received: %s"  % json.dumps(parsedMsg, indent=2))
+            
+            self.log.info("Roomba ({}) IP address is: {}".format(robotname, addr))
+            blid = parsedMsg["hostname"].split('-')[1]
+                
+            data = self.get_password_from_roomba(addr)
+            
             if len(data) <= 7:
-                print('Error getting password, receive %d bytes. Follow the '
-                      'instructions and try again.' % len(data))
-                return False
+                self.log.error( 'Error getting password for robot {} at ip{}, received {} bytes. '
+                                'Follow the instructions and try again.'.format(robotname, addr, len(data)))
+                continue
+            # Convert password to str
+            password = str(data[7:].decode().rstrip('\x00')) #for i7 - has null termination
+            self.log.info("blid is: {}".format(blid))
+            self.log.info('Password=> {} <= Yes, all this string.'.format(password))
+            self.log.info('Use these credentials in roomba.py')
+            
+            file_roombas.setdefault(addr, {})
+            file_roombas[addr]['blid'] = blid
+            file_roombas[addr]['password'] = password
+            file_roombas[addr]['data'] = parsedMsg
+        return self.save_config_file(file_roombas)
+        
+    def get_password_from_roomba(self, addr):
+        '''
+        Send MQTT magic packet to addr
+        this is 0xf0 (mqtt reserved) 0x05(data length) 0xefcc3b2900 (data)
+        Should receive 37 bytes containing the password for roomba at addr
+        This is is 0xf0 (mqtt RESERVED) length (0x23 = 35) 0xefcc3b2900 (magic packet), 
+        followed by 0xXXXX... (30 bytes of password). so 7 bytes, followed by 30 bytes of password
+        total of 37 bytes
+        Uses 10 second timeout for socket connection
+        '''
+        data = b''
+        packet = bytes.fromhex('f005efcc3b2900')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(10)
+        
+        #context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+        context = ssl.SSLContext()
+        #context.set_ciphers('DEFAULT@SECLEVEL=1:HIGH:!DH:!aNULL')
+        wrappedSocket = context.wrap_socket(sock)
+        
+        try:
+            wrappedSocket.connect((addr, 8883))
+            self.log.debug('Connection Successful')
+            wrappedSocket.send(packet)
+            self.log.debug('Waiting for data')
+        
+            while len(data) < 37:
+                data_received = wrappedSocket.recv(1024)
+                data+= data_received
+                if len(data_received) == 0:
+                    self.log.info("socket closed")
+                    break
+                
+            wrappedSocket.close()
+            return data
+            
+        except socket.timeout as e:
+            self.log.error('Connection Timeout Error (for {}): {}'.format(addr, e))
+        except (ConnectionRefusedError, OSError) as e:
+            if e.errno == 111:      #errno.ECONNREFUSED
+                self.log.error('Unable to Connect to roomba at ip {}, make sure nothing else is connected (app?), '
+                               'as only one connection at a time is allowed'.format(addr))
+            elif e.errno == 113:    #errno.No Route to Host
+                self.log.error('Unable to contact roomba on ip {} is the ip correct?'.format(addr))
             else:
-                # Convert password to str
-                #password = str(data[7:].decode()) #old version
-                password = str(data[7:].decode().rstrip('\x00')) #for i7 - has null termination
-                print("blid is: %s" % blid)
-                print('Password=> %s <= Yes, all this string.' % password)
-                print('Use these credentials in roomba.py')
+                self.log.error("Connection Error (for {}): {}".format(addr, e))
+        except Exception as e:
+            self.log.exception(e)
 
-                Config = configparser.ConfigParser()
+        self.log.error('Unable to get password from roomba')
+        return data
+        
+    def save_config_file(self, roomba):
+        Config = configparser.ConfigParser()
+        if roomba:
+            for addr, data in roomba.items():
                 Config.add_section(addr)
-                Config.set(addr,'blid', blid)
-                Config.set(addr,'password', password)
-                Config.set(addr,'data', pformat(parsedMsg))
-                # write config file
-                with open(self.file, 'w') as cfgfile:
-                    Config.write(cfgfile)
+                for k, v in data.items():
+                    #self.log.info('saving K: {}, V: {}'.format(k, pformat(v) if k in self.config_dicts else v))
+                    Config.set(addr,k, pformat(v) if k in self.config_dicts else v)
+            # write config file
+            with open(self.file, 'w') as cfgfile:
+                Config.write(cfgfile)
+            self.log.info('Configuration saved to {}'.format(self.file))
+        else: return False
         return True
+        
+    def get_roombas(self):
+        roombas = self.read_config_file()
+        if not roombas:
+            self.log.warn("No roomba or config file defined, I will attempt to "
+                          "discover Roombas, please put the Roomba on the dock "
+                          "and follow the instructions:")
+            self.get_password()
+            return self.get_roombas()
+        self.log.info("{} Roombas Found".format(len(roombas)))
+        for ip in roombas.keys():
+            roombas[ip]["roomba_name"] = roombas[ip]['data']['robotname']
+        return roombas
+        
+def main():
+    import argparse
+    loglevel = logging.DEBUG
+    LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+    LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+    logging.basicConfig(format=LOG_FORMAT, datefmt=LOG_DATE_FORMAT, level=loglevel)
+    
+    #-------- Command Line -----------------
+    parser = argparse.ArgumentParser(
+        description='Forward MQTT data from Roomba 980 to local MQTT broker')
+    parser.add_argument(
+        '-f', '--configfile',
+        action='store',
+        type=str,
+        default="./config.ini",
+        help='config file name, default: ./config.ini)')
+    parser.add_argument(
+        '-R','--roombaIP',
+        action='store',
+        type=str,
+        default='255.255.255.255',
+        help='ipaddress of Roomba (default: 255.255.255.255)')
+    arg = parser.parse_args()
+
+    get_passwd = Password(arg.roombaIP, file=arg.configfile)
+    get_passwd.get_password()
+
+if __name__ == '__main__':
+    main()
+

@@ -1,0 +1,135 @@
+Group item=roomba_items {
+    Group item=downstairs_roomba_items label="Downstairs Roomba" {
+        Switch item=downstairs_roomba_command mappings=[start="Start",stop="Stop",pause="Pause",dock="Dock",resume="Resume",train="Train", reset="Reset"]
+        Group item=downstairs_roomba_items label="Map" icon="map" {
+            Frame label="Map" {
+                Webview icon="map" url="http://your_OH_ip:port/static/roomba/Downstairsroomba_map.html" height=21 label="Map"
+            }
+        }
+        Group item=downstairs_roomba_items label="Settings" icon="select"{
+            Text item=downstairs_roomba_cleanSchedule
+            Switch item=downstairs_roomba_edgeClean
+            Switch item=downstairs_roomba_carpetBoost
+            Switch item=downstairs_roomba_vacHigh visibility=[downstairs_roomba_carpetBoost==OFF]
+            Switch item=downstairs_roomba_noAutoPasses
+            Switch item=downstairs_roomba_twoPass visibility=[downstairs_roomba_noAutoPasses==OFF]
+            Switch item=downstairs_roomba_binPause
+        }
+        Frame item=downstairs_roomba_lastcommand label="Status [%s]" {
+            Text item=downstairs_roomba_softwareVer
+            Text item=downstairs_roomba_batPct
+            Text item=downstairs_roomba_phase
+            Text item=downstairs_roomba_lastcommand
+            Switch item=downstairs_roomba_full mappings=[ON="FULL", OFF="Not Full"]
+            Switch item=downstairs_roomba_bin_present mappings=[OFF="Removed", ON="Installed"]
+            Text item=downstairs_roomba_rssi
+            Text item=downstairs_roomba_lastheardfrom
+        }
+        Frame item=downstairs_roomba_status label="Mission [%s]" {
+            Text item=downstairs_roomba_status
+            Text item=downstairs_roomba_rechrgM visibility=[downstairs_roomba_status=="Recharging"]
+            Text item=downstairs_roomba_mission
+            Text item=downstairs_roomba_percent_complete
+            Switch item=downstairs_roomba_error mappings=[ON="ERROR!", OFF="Normal"]
+            Text item=downstairs_roomba_errortext
+            Text item=downstairs_roomba_mssnM
+            Text item=downstairs_roomba_sqft
+            Text item=downstairs_roomba_nMssn
+            Text item=downstairs_roomba_lastmissioncompleted
+            Text item=downstairs_roomba_initiator
+        }
+        Frame label="Location" {
+            Text item=downstairs_roomba_theta
+            Text item=downstairs_roomba_x
+            Text item=downstairs_roomba_y
+        }
+    }
+    Group item=mopster_roomba_items label="Downstairs Mop" {
+        Switch item=mopster_roomba_command mappings=[start="Start",stop="Stop",pause="Pause",dock="Dock",resume="Resume",train="Train"]
+        Group item=mopster_roomba_items label="Map" icon="map" {
+            Frame label="Map" {
+                Webview icon="map" url="http://your_OH_ip:port/static/roomba/Mopsterroomba_map.html" height=21 label="Map"
+            }
+        }
+        Group item=mopster_roomba_items label="Settings" icon="select"{
+            Text item=mopster_roomba_cleanSchedule
+        }
+        Frame item=mopster_roomba_lastcommand label="Status [%s]" {
+            Text item=mopster_roomba_softwareVer
+            Text item=mopster_roomba_batPct
+            Text item=mopster_roomba_phase
+            Text item=mopster_roomba_lastcommand
+            Switch item=mopster_roomba_lid_closed  mappings=[OFF="Open", ON="Closed"]
+            Switch item=mopster_roomba_bin_present mappings=[OFF="Removed", ON="Installed"]
+            Text item=mopster_roomba_tankLvl
+            Text item=mopster_roomba_detectedPad
+            Text item=mopster_roomba_padWetness_disposable
+            Text item=mopster_roomba_padWetness_reusable
+            Text item=mopster_roomba_rssi
+            Text item=mopster_roomba_lastheardfrom
+        }
+        Frame item=mopster_roomba_status label="Mission [%s]" {
+            Text item=mopster_roomba_status
+            Text item=mopster_roomba_rechrgM visibility=[mopster_roomba_status=="Recharging"]
+            Text item=mopster_roomba_mission
+            Text item=mopster_roomba_percent_complete
+            Switch item=mopster_roomba_error mappings=[ON="ERROR!", OFF="Normal"]
+            Text item=mopster_roomba_errortext
+            Text item=mopster_roomba_mssnM
+            Text item=mopster_roomba_sqft
+            Text item=mopster_roomba_nMssn
+            Text item=mopster_roomba_lastmissioncompleted
+            Text item=mopster_roomba_initiator
+        }
+        Frame label="Location" {
+            Text item=mopster_roomba_theta
+            Text item=mopster_roomba_x
+            Text item=mopster_roomba_y
+        }
+    }
+    Group item=upstairs_roomba_items label="Upstairs Roomba" {
+        Switch item=upstairs_roomba_command mappings=[start="Start",stop="Stop",pause="Pause",dock="Dock",resume="Resume"]
+        Group item=upstairs_roomba_items label="Map" icon="map" {
+            Frame label="Map" {
+                Webview icon="map" url="http://your_OH_ip:port/static/roomba/Upstairsroomba_map.html" height=21 label="Map"
+            }
+        }
+        Group item=upstairs_roomba_items label="Settings" icon="select"{
+            Text item=upstairs_roomba_cleanSchedule
+            Switch item=upstairs_roomba_edgeClean
+            Switch item=upstairs_roomba_carpetBoost
+            Switch item=upstairs_roomba_vacHigh visibility=[upstairs_roomba_carpetBoost==OFF]
+            Switch item=upstairs_roomba_noAutoPasses
+            Switch item=upstairs_roomba_twoPass visibility=[upstairs_roomba_noAutoPasses==OFF]
+            Switch item=upstairs_roomba_binPause
+        }
+        Frame item=upstairs_roomba_lastcommand label="Status [%s]" {
+            Text item=upstairs_roomba_softwareVer
+            Text item=upstairs_roomba_batPct
+            Text item=upstairs_roomba_phase
+            Text item=upstairs_roomba_lastcommand
+            Switch item=upstairs_roomba_full mappings=[ON="FULL", OFF="Not Full"]
+            Switch item=upstairs_roomba_bin_present mappings=[OFF="Removed", ON="Installed"]
+            Text item=upstairs_roomba_rssi
+            Text item=upstairs_roomba_lastheardfrom
+        }
+        Frame item=upstairs_roomba_status label="Mission [%s]" {
+            Text item=upstairs_roomba_status
+            Text item=upstairs_roomba_rechrgM visibility=[upstairs_roomba_status=="Recharging"]
+            Text item=upstairs_roomba_mission
+            Text item=upstairs_roomba_percent_complete
+            Switch item=upstairs_roomba_error mappings=[ON="ERROR!", OFF="Normal"]
+            Text item=upstairs_roomba_errortext
+            Text item=upstairs_roomba_mssnM
+            Text item=upstairs_roomba_sqft
+            Text item=upstairs_roomba_nMssn
+            Text item=upstairs_roomba_lastmissioncompleted
+            Text item=upstairs_roomba_initiator
+        }
+        Frame label="Location" {
+            Text item=upstairs_roomba_theta
+            Text item=upstairs_roomba_x
+            Text item=upstairs_roomba_y
+        }
+    }
+}

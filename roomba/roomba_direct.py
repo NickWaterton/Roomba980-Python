@@ -1,41 +1,30 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # hacky fixes NW 30th Nov 2019
 # Pillow fix for V 7 __version__ replaced with __version__
+# Jan 8th 2021 NW Complete re-write
 
-from __future__ import print_function
-from ast import literal_eval
+__version__ = "2.0a"
+
+import logging
 from logging.handlers import RotatingFileHandler
 import sys
-if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 5):  #added for python 2.7 and < 3.4 fix NW 15/9/2017
-    import roomba
-    try:
-        from roomba import Password
-    except ImportError:
-        from password  import Password
-else:
-    from roomba import roomba
-    try:
-        from roomba.password import Password
-    except ImportError:
-        from password  import Password
+from roomba import Roomba
+from password  import Password
+from ast import literal_eval
 import argparse
-import json
-import logging
 import os
-import six
-import socket
 import time
+import textwrap
 # Import trickery
 global HAVE_CV2
 global HAVE_MQTT
 global HAVE_PIL
-HAVE_CV2 = HAVE_MQTT = HAVE_PIL = False #fix for if neither PIL or OPENCV is installed (RPI versions) NW 3/2/2018
-try:
-    import configparser
-except:
-    from six.moves import configparser
+HAVE_CV2 = HAVE_MQTT = HAVE_PIL = False
+import configparser
+import asyncio
+
 try:
     import paho.mqtt.client as mqtt
     HAVE_MQTT = True
@@ -47,100 +36,108 @@ try:
 except ImportError:
     print("CV or numpy module not found, falling back to PIL")
 
-# NOTE: MUST use Pillow Pillow 4.1.1 to avoid some horrible memory leaks in the
-# text handling!
 try:
     from PIL import Image
     HAVE_PIL = True
 except ImportError:
     print("PIL module not found, maps are disabled")
+    
+import asyncio
+if sys.version_info < (3, 7):
+    asyncio.get_running_loop = asyncio.get_event_loop
 
 def parse_args():
     default_icon_path = os.path.join(os.path.dirname(__file__), 'res')
     #-------- Command Line -----------------
     parser = argparse.ArgumentParser(
-        description='Forward MQTT data from Roomba 980 to local MQTT broker')
+        description='Forward MQTT data from Roomba to local MQTT broker')
     parser.add_argument(
         '-f', '--configfile',
         action='store',
         type=str,
         default="./config.ini",
-        help='config file name (default: ./config.ini)')
+        help='config file name (default: %(default)s)')
     parser.add_argument(
-        '-n', '--roombaName',
+        '-n', '--roomba_name',
         action='store',
         type=str,
-        default="", help='optional Roomba name (default: "")')
+        default="", help='optional Roomba name (default: "%(default)s")')
     parser.add_argument(
         '-t', '--topic',
         action='store',
         type=str,
         default="#",
         help='Roomba MQTT Topic to subscribe to (can use wildcards # and '
-             '+ default: #)')
+             '+ default: %(default)s)')
     parser.add_argument(
-        '-T', '--brokerFeedback',
+        '-T', '--broker_feedback',
         action='store',
         type=str,
         default="/roomba/feedback",
         help='Topic on broker to publish feedback to (default: '
-             '/roomba/feedback</name>)')
+             '%(default)s</name>)')
     parser.add_argument(
-        '-C', '--brokerCommand',
+        '-C', '--broker_command',
         action='store',
         type=str,
         default="/roomba/command",
         help='Topic on broker to publish commands to (default: '
-             '/roomba/command</name>)')
+             '%(default)s</name>)')
     parser.add_argument(
-        '-S', '--brokerSetting',
+        '-S', '--broker_setting',
         action='store',
         type=str,
         default="/roomba/setting",
         help='Topic on broker to publish settings to (default: '
-             '/roomba/setting</name>)')
+             '%(default)s</name>)')
     parser.add_argument(
         '-b', '--broker',
         action='store',
         type=str,
         default=None,
-        help='ipaddress of MQTT broker (default: None)')
+        help='ipaddress of MQTT broker (default: %(default)s)')
     parser.add_argument(
         '-p', '--port',
         action='store',
         type=int,
         default=1883,
-        help='MQTT broker port number (default: 1883)')
+        help='MQTT broker port number (default: %(default)s)')
     parser.add_argument(
         '-U', '--user',
         action='store',
         type=str,
         default=None,
-        help='MQTT broker user name (default: None)')
+        help='MQTT broker user name (default: %(default)s)')
     parser.add_argument(
-        '-P', '--password',
+        '-P', '--broker_password',
         action='store',
         type=str,
         default=None,
-        help='MQTT broker password (default: None)')
+        help='MQTT broker password (default: %(default)s)')
     parser.add_argument(
-        '-R', '--roombaIP',
+        '-R', '--roomba_ip',
         action='store',
         type=str,
-        default=None,
-        help='ipaddress of Roomba 980 (default: None)')
+        default='255.255.255.255',
+        help='ipaddress of Roomba (default: %(default)s)')
     parser.add_argument(
         '-u', '--blid',
         action='store',
         type=str,
         default=None,
-        help='Roomba 980 blid (default: None)')
+        help='Roomba blid (default: %(default)s)')
     parser.add_argument(
-        '-w', '--roombaPassword',
+        '-w', '--password',
         action='store',
         type=str,
         default=None,
-        help='Roomba 980 password (default: None)')
+        help='Roomba password (default: %(default)s)')
+    parser.add_argument(
+        '-wp', '--webport',
+        action='store',
+        type=int,
+        default=None,
+        help='Optional web server port number (default: %(default)s)')
     parser.add_argument(
         '-i', '--indent',
         action='store',
@@ -151,13 +148,13 @@ def parse_args():
         '-l', '--log',
         action='store',
         type=str,
-        default="./Roomba.log",
-        help='path/name of log file (default: ./Roomba.log)')
+        default="./roomba.log",
+        help='path/name of log file (default: %(default)s)')
     parser.add_argument(
         '-e', '--echo',
         action='store_false',
         default = True,
-        help='Echo to Console (default: True)')
+        help='Echo to Console (default: %(default)s)')
     parser.add_argument(
         '-D', '--debug',
         action='store_true',
@@ -167,69 +164,64 @@ def parse_args():
         '-r', '--raw',
         action='store_true',
         default = False,
-        help='Output raw data to mqtt, no decoding of json data')
+        help='Output raw data to mqtt, no decoding of json data (default: %(default)s)')
     parser.add_argument(
         '-j', '--pretty_print',
         action='store_true',
         default = False,
-        help='pretty print json in logs')
-    parser.add_argument(
-        '-c','--continuous',
-        action='store_false',
-        default = True,
-        help='Continuous connection to Roomba (default: True)')
-    parser.add_argument(
-        '-d', '--delay',
-        action='store',
-        type=int,
-        default=1000,
-        help='Disconnect period for non-continuous connection (default: '
-             '1000ms)')
+        help='pretty print json in logs (default: %(default)s)')
     parser.add_argument(
         '-m', '--drawmap',
         action='store_false',
-        default = True,
-        help='Draw Roomba cleaning map (default: True)')
+        default = False,
+        help='Draw Roomba cleaning map (default: %(default)s)')
     parser.add_argument(
-        '-M', '--mapPath',
+        '-M', '--mappath',
         action='store',
         type=str,
         default=".",
-        help='Location to store maps to (default: .)')
+        help='Location to store maps to (default: %(default)s)')
     parser.add_argument(
-        '-s', '--mapSize',
+        '-sq', '--max_sqft',
+        action='store',
+        type=int,
+        default=0,
+        help='Max Square Feet of map (default: %(default)s)')
+    parser.add_argument(
+        '-s', '--mapsize',
         action='store',
         type=str,
         default="(800,1500,0,0,0,0)",
-        help='Map Size, Dock offset and skew for the map. (800,1500) is the '
-             'size, (0,0) is the dock location, in the center of the map, 0 '
-             'is the rotation of the map, 0 is the rotation of the roomba. '
+        help='Map Size, Dock offset and skew for the map.'
+             '(800,1500) is the size, (0,0) is the dock location, '
+             'in the center of the map, 0 is the rotation of the map, '
+             '0 is the rotation of the roomba. '
              'Use single quotes around the string. (default: '
-             '"(800,1500,0,0,0,0)")')
+             '"%(default)s")')
     parser.add_argument(
-        '-I', '--iconPath',
+        '-I', '--iconpath',
         action='store',
         type=str,
         default=default_icon_path,
-        help='location of icons. (default: "./")')
+        help='location of icons. (default: "%(default)s")')
     parser.add_argument(
-        '-o', '--roomOutline',
+        '-o', '--room_outline',
         action='store_false',
         default = True,
-        help='Draw room outline (default: True)')
+        help='Draw room outline (default: %(default)s)')
     parser.add_argument(
         '-x', '--exclude',
-        action='store',type=str, default="", help='Exclude topics that have this in them (default: "")')
+        action='store',type=str, default="", help='Exclude topics that have this in them (default: "%(default)s")')
     parser.add_argument(
         '--cert',
         action='store',
         type=str,
         default='/etc/ssl/certs/ca-certificates.crt',
-        help='Set the certificate to use for MQTT communication with the Roomba')
+        help='Set the certificate to use for MQTT communication with the Roomba (depreciated)')
     parser.add_argument(
         '--version',
         action='version',
-        version="%(prog)s ({})".format(roomba.__version__),
+        version="%(prog)s ({}) Roomba {}".format(__version__, Roomba.__version__),
         help='Display version of this program')
     return parser.parse_args()
 
@@ -237,204 +229,106 @@ def main():
 
     #----------- Local Routines ------------
 
-    def broker_on_connect(client, userdata, flags, rc):
-        log.debug("Broker Connected with result code " + str(rc))
-        #subscribe to roomba feedback, if there is more than one roomba, the
-        # roombaName is added to the topic to subscribe to
-        if rc == 0:
-            if brokerCommand != "":
-                if len(roombas) == 1:
-                    mqttc.subscribe(brokerCommand)
-                else:
-                    for myroomba in roomba_list:
-                        mqttc.subscribe(
-                            brokerCommand + "/" + myroomba.roombaName)
-            if brokerSetting != "":
-                if len(roombas) == 1:
-                    mqttc.subscribe(brokerSetting)
-                else:
-                    for myroomba in roomba_list:
-                        mqttc.subscribe(
-                            brokerSetting + "/" + myroomba.roombaName)
-
-    def broker_on_message(mosq, obj, msg):
-        # publish to roomba, if there is more than one roomba, the roombaName
-        # is added to the topic to publish to
-        msg.payload = msg.payload.decode("utf-8")
-        if "command" in msg.topic:
-            log.info("Received COMMAND: %s" % str(msg.payload))
-            if len(roombas) == 1:
-                roomba_list[0].send_command(str(msg.payload))
-            else:
-                for myroomba in roomba_list:
-                    if myroomba.roombaName in msg.topic:
-                        myroomba.send_command(str(msg.payload))
-        elif "setting" in msg.topic:
-            log.info("Received SETTING: %s" % str(msg.payload))
-            cmd = str(msg.payload).split()
-            if len(roombas) == 1:
-                roomba_list[0].set_preference(cmd[0], cmd[1])
-            else:
-                for myroomba in roomba_list:
-                    if myroomba.roombaName in msg.topic:
-                        myroomba.set_preference(cmd[0], cmd[1])
-        else:
-            log.warn("Unknown topic: %s" % str(msg.topic))
-
-    def broker_on_publish(mosq, obj, mid):
-        pass
-
-    def broker_on_subscribe(mosq, obj, mid, granted_qos):
-        log.debug("Broker Subscribed: %s %s" % (str(mid), str(granted_qos)))
-
-    def broker_on_disconnect(mosq, obj, rc):
-        log.debug("Broker disconnected")
-        if rc == 0:
-            sys.exit(0)
-
-    def broker_on_log(mosq, obj, level, string):
-        log.info(string)
-
-    def read_config_file(file="./config.ini"):
-        #read config file
-        Config = configparser.ConfigParser()
-        try:
-            Config.read(file)
-            log.info("reading info from config file %s" % file)
-            roombas = {}
-            for address in Config.sections():
-                roomba_data = literal_eval(Config.get(address, "data"))
-                roombas[address] = {
-                    "blid": Config.get(address, "blid"),
-                    "password": Config.get(address, "password"),
-                    "roombaName": roomba_data.get("robotname", None)}
-        except Exception as e:
-            log.warn("Error reading config file %s" %e)
-        return roombas
-
-    def create_html(myroomba,mapPath="."):
+    def create_html(myroomba,mappath="."):
         '''
         Create html files for live display of roomba maps - but only if they
         don't already exist
+        NOTE add {{ for { in html where you need variable substitution
         '''
         #default css and html
-        css='''body {
-    background-color: white;
-    color: white;
-    margin: 0;
-    padding: 0;
-    }
-img,video {
-    width: auto;
-    max-height:100%;
-    }
-'''
-        html='''<!DOCTYPE html>
-<html>
-<head>
-<link href="style.css" rel="stylesheet" type="text/css">
-</head>
-<script>
+        css =   '''\
+                body {
+                    background-color: white;
+                    margin: 0;
+                    color: white;
+                    padding: 0;
+                    }
+                img,video {
+                    width: auto;
+                    max-height:100%;
+                    }
+                '''
+        html = '''\
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <link href="style.css" rel="stylesheet" type="text/css">
+                </head>
+                <script>
 
-function refresh(node)
-{
-   var times = 1000; // gap in Milli Seconds;
+                function refresh(node)
+                {{
+                   var times = 1000; // gap in Milli Seconds;
 
-   (function startRefresh()
-   {
-      var address;
-      if(node.src.indexOf('?')>-1)
-       address = node.src.split('?')[0];
-      else
-       address = node.src;
-      node.src = address+"?time="+new Date().getTime();
+                   (function startRefresh()
+                   {{
+                      var address;
+                      if(node.src.indexOf('?')>-1)
+                       address = node.src.split('?')[0];
+                      else
+                       address = node.src;
+                      node.src = address+"?time="+new Date().getTime();
 
-      setTimeout(startRefresh,times);
-   })();
+                      setTimeout(startRefresh,times);
+                   }})();
 
-}
+                }}
 
-window.onload = function()
-{
-  var node = document.getElementById('img');
-  refresh(node);
-  // you can refresh as many images you want just repeat above steps
-}
-</script>
+                window.onload = function()
+                {{
+                  var node = document.getElementById('img');
+                  refresh(node);
+                  // you can refresh as many images you want just repeat above steps
+                }}
+                </script>
 
-<body>
-'''
-        html +='<img id="img" src="%smap.png" alt="Roomba Map Live" style="position:absolute;top:0;left:0"/>' % myroomba.roombaName
-        html +='''
-</body>
-</html>
-'''
-        #python 3 workaround
-        try:
-            FileNotFoundError
-        except NameError:
-            #py2
-            FileNotFoundError = PermissionError = IOError
-
-        #check is style.css exists, if not create it
-        css_path = mapPath+"/style.css"
-        try:
-            fn = open(css_path , "r")  #check if file exists (or is readable)
-            fn.close()
-        except (IOError,FileNotFoundError):
-            log.warn("CSS file not found, creating %s" % css_path)
-            try:
-                with open(css_path , "w") as fn:
-                    fn.write(css)
-            except (IOError, PermissionError) as e:
-                log.error("unable to create file %s, error: %s" % (css_path, e))
-        #check is html exists, if not create it
-        html_path = mapPath+"/"+ myroomba.roombaName + "roomba_map.html"
-        try:
-            fn = open(html_path, "r")  #check if file exists (or is readable)
-            fn.close()
-        except (IOError,FileNotFoundError):
-            log.warn("html file not found, creating %s" % html_path)
-            try:
-                with open(html_path, "w") as fn:
-                    fn.write(html)
-                make_executable(html_path)
-            except (IOError, PermissionError) as e:
-                log.error("unable to create file %s, error: %s" % (html_path, e))
-
-    def make_executable(path):
-        mode = os.stat(path).st_mode
-        mode |= (mode & 0o444) >> 2    # copy R bits to X
-        os.chmod(path, mode)
+                <body>
+                <img id="img" src="{}map.png" alt="Roomba Map Live" style="position:absolute;top:0;left:0"/>
+                </body>
+                </html>
+                '''.format(myroomba.roombaName)
+                
+        def write_file(fname, data, mode=0o666):
+            if not os.path.isfile(fname):
+                log.warn("{} file not found, creating".format(fname))
+                try:
+                    with open(fname , "w") as fn:
+                        fn.write(textwrap.dedent(data))
+                    os.chmod(fname, mode)
+                except (IOError, PermissionError) as e:
+                    log.error("unable to create file {}, error: {}".format(fname, e))
+                    
+        #check if style.css exists, if not create it
+        css_path = '{}/style.css'.format(mappath)
+        write_file(css_path, css)
+                
+        #check if html exists, if not create it
+        html_path = '{}/{}roomba_map.html'.format(mappath, myroomba.roombaName)
+        write_file(html_path, html, 0o777)
 
     def setup_logger(logger_name, log_file, level=logging.DEBUG, console=False):
-        try:
+        try: 
             l = logging.getLogger(logger_name)
-            if logger_name ==__name__:
-                formatter = logging.Formatter(
-                    '[%(levelname)1.1s %(asctime)s] %(message)s')
-            else:
-                formatter = logging.Formatter('%(message)s')
-            fileHandler = RotatingFileHandler(
-                log_file, mode='a', maxBytes=2000000, backupCount=5)
-            fileHandler.setFormatter(formatter)
+            formatter = logging.Formatter('[%(asctime)s][%(levelname)5.5s](%(name)-20s) %(message)s')
+            if log_file is not None:
+                fileHandler = logging.handlers.RotatingFileHandler(log_file, mode='a', maxBytes=10000000, backupCount=10)
+                fileHandler.setFormatter(formatter)
             if console == True:
-              streamHandler = logging.StreamHandler()
+                #formatter = logging.Formatter('[%(levelname)1.1s %(name)-20s] %(message)s')
+                streamHandler = logging.StreamHandler()
+                streamHandler.setFormatter(formatter)
 
             l.setLevel(level)
-            l.addHandler(fileHandler)
+            if log_file is not None:
+                l.addHandler(fileHandler)
             if console == True:
-              streamHandler.setFormatter(formatter)
               l.addHandler(streamHandler)
-        except IOError as e:
-            if e[0] == 13: #errno Permission denied
-                print("Error: %s: You probably don't have permission to "
-                      "write to the log file/directory - try sudo" % e)
-            else:
-                print("Log Error: %s" % e)
+                 
+        except Exception as e:
+            print("Error in Logging setup: %s - do you have permission to write the log file??" % e)
             sys.exit(1)
 
-    arg = parse_args()
+    arg = parse_args()  #note: all options can be included in the config file
     
     if arg.debug:
         log_level = logging.DEBUG
@@ -442,12 +336,12 @@ window.onload = function()
         log_level = logging.INFO
 
     #setup logging
-    setup_logger(__name__, arg.log,level=log_level,console=arg.echo)
+    setup_logger('Roomba', arg.log, level=log_level,console=arg.echo)
     
-    log = logging.basicConfig(level=logging.DEBUG, 
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    #log = logging.basicConfig(level=logging.DEBUG, 
+    #    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    log = logging.getLogger(__name__)
+    log = logging.getLogger('Roomba')
 
     log.info("*******************")
     log.info("* Program Started *")
@@ -455,23 +349,13 @@ window.onload = function()
     
     log.debug('Debug Mode')
 
-    log.info("Roomba.py Version: %s" % roomba.__version__)
+    log.info("Roomba.py Version: %s" % Roomba.__version__)
 
     log.info("Python Version: %s" % sys.version.replace('\n',''))
 
     if HAVE_MQTT:
-        import paho.mqtt # bit of a kludge, just to get the version number
+        import paho.mqtt
         log.info("Paho MQTT Version: %s" % paho.mqtt.__version__)
-        if (sys.version_info.major == 2 and sys.version_info.minor == 7 and
-            sys.version_info.micro < 9 and
-            int(paho.mqtt.__version__.split(".")[0]) >= 1 and
-            int(paho.mqtt.__version__.split(".")[1]) > 2):
-            log.error("NOTE: if your python version is less than 2.7.9, "
-                      "and Paho MQTT verion is not 1.2.3 or lower, this "
-                      "program will NOT WORK")
-            log.error("Please use <sudo> pip install paho-mqtt==1.2.3 to "
-                      "downgrade paho-mqtt, or use a later version of python")
-            sys.exit(1)
 
     if HAVE_CV2:
         log.info("CV Version: %s" % cv2.__version__)
@@ -479,127 +363,101 @@ window.onload = function()
     if HAVE_PIL:
         import PIL #bit of a kludge, just to get the version number
         log.info("PIL Version: %s" % PIL.__version__)
-        if int(PIL.__version__.split(".")[0]) < 4:
-            log.warn("WARNING: PIL version is %s, this is not the latest! "
-                     "You can get bad memory leaks with old versions of PIL"
-                     % Image.__version__)
-            log.warn("run: 'pip install --upgrade pillow' to fix this")
 
     log.debug("-- DEBUG Mode ON -")
     log.info("<CNTRL C> to Exit")
-    log.info("Roomba 980 MQTT data Interface")
+    log.info("Roomba MQTT data Interface")
+    
+    group = None
+    options = vars(arg) #use args as dict
 
-    roombas = {}
-
-    if arg.blid is None or arg.roombaPassword is None:
-        roombas = read_config_file(arg.configfile)
-        if len(roombas) == 0:
-            log.warn("No roomba or config file defined, I will attempt to "
-                     "discover Roombas, please put the Roomba on the dock "
-                     "and follow the instructions:")
-            if arg.roombaIP is None:
-                Password(file=arg.configfile)
-            else:
-                Password(arg.roombaIP,file=arg.configfile)
-            roombas = read_config_file(arg.configfile)
-            if len(roombas) == 0:
-                log.error("No Roombas found! You must specify RoombaIP, blid "
-                          "and roombaPassword to run this program, or have "
-                          "a config file, use -h to show options.")
-                sys.exit(0)
-            else:
-                log.info("Success! %d Roombas Found!" % len(roombas))
+    if arg.blid is None or arg.password is None:
+        get_passwd = Password(arg.roomba_ip,file=arg.configfile)
+        roombas = get_passwd.get_roombas()
     else:
-        roombas[arg.roombaIP] = {
-            "blid": arg.blid,
-            "password": arg.roombaPassword,
-            "roombaName": arg.roombaName}
-
-    # set broker = "127.0.0.1"  # mosquitto broker is running on localhost
-    mqttc = None
-    if arg.broker is not None:
-        brokerCommand = arg.brokerCommand
-        brokerSetting = arg.brokerSetting
-
-        # connect to broker
-        mqttc = mqtt.Client()
-        # Assign event callbacks
-        mqttc.on_message = broker_on_message
-        mqttc.on_connect = broker_on_connect
-        mqttc.on_disconnect = broker_on_disconnect
-        mqttc.on_publish = broker_on_publish
-        mqttc.on_subscribe = broker_on_subscribe
-        # uncomment to enable logging
-        # mqttc.on_log = broker_on_log
-
-        try:
-            if arg.user != None:
-                mqttc.username_pw_set(arg.user, arg.password)
-            log.info("connecting to broker")
-            # Ping MQTT broker every 60 seconds if no data is published
-            # from this script.
-            mqttc.connect(arg.broker, arg.port, 60)
-
-        except socket.error:
-            log.error("Unable to connect to MQTT Broker")
-            mqttc = None
-
+        roombas = {arg.roomba_ip: {"blid": arg.blid,
+                                   "password": arg.password,
+                                   "roomba_name": arg.roomba_name}}
+                                   
     roomba_list = []
-    for addr, info in six.iteritems(roombas):
-        log.info("Creating Roomba object %s" % addr)
-        #NOTE: cert_name is a default certificate. change this if your
-        # certificates are in a different place. any valid certificate will
-        # do, it's not used but needs to be there to enable mqtt TLS encryption
-        # instansiate Roomba object
+    for addr, info in roombas.items():
+        log.info("Creating Roomba object {}, {}".format(addr, info.get("roomba_name", addr)))
+        #get options from config (if they exist) this overrides command line options.
+        for opt, value in options.copy().items():
+            config_value = info.get(opt)
+            if config_value is None:
+               options[opt] = value
+            elif value is None or isinstance(value, str):
+                options[opt] = config_value
+            else:
+                options[opt] = literal_eval(config_value)
+                
         # minnimum required to connect on Linux Debian system
         # myroomba = Roomba(address, blid, roombaPassword)
-        roomba_list.append(
-            roomba.Roomba(addr, blid=info["blid"],
-            password=info["password"],
-            topic=arg.topic, continuous=arg.continuous,
-            clean=False,
-            cert_name=arg.cert,
-            roombaName=info["roombaName"]))
-
-    for myroomba in roomba_list:
-        log.info("connecting Roomba %s" % myroomba.address)
-        # auto create html files (if they don't exist)
-        create_html(myroomba,arg.mapPath)
-        # all these are optional, if you don't include them, the defaults
-        # will work just fine
-        if arg.exclude != "":
+        myroomba =  Roomba(addr,
+                           blid=arg.blid,
+                           password=arg.password,
+                           topic=arg.topic,
+                           roombaName=arg.roomba_name,
+                           webport=arg.webport)
+                           
+        if arg.webport:
+            arg.webport+=1
+                    
+        if arg.exclude:
             myroomba.exclude = arg.exclude
-        myroomba.set_options(
-            raw=arg.raw, indent=arg.indent, pretty_print=arg.pretty_print)
-        if not arg.continuous:
-            myroomba.delay = arg.delay//1000
-        if arg.mapSize != "" and arg.mapPath != "":
+            
+        #set various options
+        myroomba.set_options(raw=arg.raw,
+                             indent=arg.indent,
+                             pretty_print=arg.pretty_print,
+                             max_sqft=arg.max_sqft)
+            
+        if arg.mappath and arg.mapsize and arg.drawmap:
+            # auto create html files (if they don't exist)
+            create_html(myroomba, arg.mappath)
             # enable live maps, class default is no maps
-            myroomba.enable_map(enable=True, mapSize=arg.mapSize,
-                                mapPath=arg.mapPath, iconPath=arg.iconPath,
-                                roomOutline=arg.roomOutline)
+            myroomba.enable_map(enable=True,
+                                mapSize=arg.mapsize,
+                                mapPath=arg.mappath,
+                                iconPath=arg.iconpath,
+                                roomOutline=arg.room_outline)
+                                
         if arg.broker is not None:
             # if you want to publish Roomba data to your own mqtt broker
             # (default is not to) if you have more than one roomba, and
             # assign a roombaName, it is addded to this topic
             # (ie brokerFeedback/roombaName)
-            myroomba.set_mqtt_client(mqttc, arg.brokerFeedback)
-        # finally connect to Roomba - (required!)
-        myroomba.connect()
-
+            myroomba.setup_mqtt_client(arg.broker,
+                                       arg.port,
+                                       arg.user,
+                                       arg.broker_password,
+                                       arg.broker_feedback,
+                                       arg.broker_command,
+                                       arg.broker_setting)
+             
+        roomba_list.append(myroomba)   
+        
+    
+    loop = asyncio.get_event_loop()
+    loop.set_debug(arg.debug)
+    
+    group = asyncio.gather(*[myroomba.async_connect() for myroomba in roomba_list])
+    
+    if not group:
+        for myroomba in roomba_list:
+            myroomba.connect()            #start each roomba connection individually
+    
     try:
-        if mqttc is not None:
-            mqttc.loop_forever()
-        else:
-            while True:
-                log.info("Roomba Data: %s" %
-                         json.dumps(myroomba.master_state, indent=2))
-                time.sleep(5)
-
+        loop.run_forever()
+            
     except (KeyboardInterrupt, SystemExit):
         log.info("System exit Received - Exiting program")
-        mqttc.disconnect()
-        sys.exit(0)
+        for myroomba in roomba_list:
+                myroomba.disconnect()
+        
+    finally:
+        pass
 
 
 if __name__ == '__main__':

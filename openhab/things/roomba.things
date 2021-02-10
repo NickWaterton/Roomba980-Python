@@ -1,0 +1,131 @@
+Bridge mqtt:broker:proliant "Proliant" [ 
+  host="Your_MQTT_broker_IP",
+  port="1883",
+  secure=false,
+  //retainMessages=false,
+  clientID="Openhab2_mqtt2"
+]
+
+//Roomba things
+Thing mqtt:topic:upstairs_roomba "Upstairs Roomba"  (mqtt:broker:proliant) {
+    Channels:
+    /* Roomba Commands */
+    Type string : roomba_command "Roomba" [ commandTopic="/roomba/command/Upstairs" ]
+    /* Settings */
+    Type switch : roomba_edgeClean    "Edge Clean"              [ commandTopic="/roomba/setting/Upstairs", stateTopic="/roomba/feedback/Upstairs/openOnly", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="openOnly %s", on="false", off="true" ]
+    Type switch : roomba_carpetBoost  "Auto carpet Boost"       [ commandTopic="/roomba/setting/Upstairs", stateTopic="/roomba/feedback/Upstairs/carpetBoost", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="carpetBoost %s", on="false", off="true"  ]
+    Type switch : roomba_vacHigh      "Vacuum Boost"            [ commandTopic="/roomba/setting/Upstairs", stateTopic="/roomba/feedback/Upstairs/vacHigh", transformationPattern="MAP:switch.map", formatBeforePublish="vacHigh %s", on="false", off="true"  ]
+    Type switch : roomba_noAutoPasses "Auto Passes"             [ commandTopic="/roomba/setting/Upstairs", stateTopic="/roomba/feedback/Upstairs/noAutoPasses", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="noAutoPasses %s", on="false", off="true"  ]
+    Type switch : roomba_twoPass      "Two Passes"              [ commandTopic="/roomba/setting/Upstairs", stateTopic="/roomba/feedback/Upstairs/twoPass", transformationPattern="MAP:switch.map", formatBeforePublish="twoPass %s", on="false", off="true"  ]
+    Type switch : roomba_binPause     "Always Complete (even if bin is full)" [ commandTopic="/roomba/setting/Upstairs", stateTopic="/roomba/feedback/Upstairs/binPause", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="binPause %s", on="false", off="true"  ]
+    /* Roomba Feedback */
+    Type string : roomba_softwareVer "Software Version"         [ stateTopic="/roomba/feedback/Upstairs/softwareVer" ]
+    Type number : roomba_batPct "Battery"                       [ stateTopic="/roomba/feedback/Upstairs/batPct" ]
+    Type string : roomba_lastcommand  "Last Command"            [ stateTopic="/roomba/feedback/Upstairs/lastCommand_command" ]
+    Type switch : roomba_bin_present "Bin Present"              [ stateTopic="/roomba/feedback/Upstairs/bin_present", transformationPattern="MAP:switch.map" ]
+    Type switch : roomba_full "Bin Full"                        [ stateTopic="/roomba/feedback/Upstairs/bin_full", transformationPattern="MAP:switch.map" ]
+    /* Mission values */
+    Type string : roomba_mission  "Mission"                     [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_cycle" ]
+    Type number : roomba_nMssn    "Cleaning Mission number"     [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_nMssn" ]
+    Type string : roomba_phase    "Phase"                       [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_phase" ]
+    Type string : roomba_initiator  "Initiator"                 [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_initiator" ]
+    Type switch : roomba_error "Error"                          [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_error" ]
+    Type string : roomba_errortext  "Error Message"             [ stateTopic="/roomba/feedback/Upstairs/error_message" ]
+    Type number : roomba_mssnM "Cleaning Elapsed Time"          [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_mssnM" ]
+    Type number : roomba_sqft "Square Ft Cleaned"               [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_sqft" ]
+    Type number : roomba_percent_complete "Mission % complete"  [ stateTopic="/roomba/feedback/Upstairs/roomba_percent_complete" ]
+    Type number : roomba_expireM "Mission Recharge Time"        [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_expireM" ]
+    Type number : roomba_rechrgM "Remaining Time To Recharge"   [ stateTopic="/roomba/feedback/Upstairs/cleanMissionStatus_rechrgM" ]
+    Type string : roomba_status    "Status"                     [ stateTopic="/roomba/feedback/Upstairs/state" ]
+    /* Schedule */
+    Type string : roomba_cycle   "Day of Week"                  [ stateTopic="/roomba/feedback/Upstairs/cleanSchedule_cycle" ]
+    Type string : roomba_cleanSchedule_h   "Hour of Day"        [ stateTopic="/roomba/feedback/Upstairs/cleanSchedule_h" ]
+    Type string : roomba_cleanSchedule_m   "Minute of Hour"     [ stateTopic="/roomba/feedback/Upstairs/cleanSchedule_m" ]
+    Type string : roomba_cleanSchedule2    "New Schedule"       [ stateTopic="/roomba/feedback/Upstairs/cleanSchedule2" ]
+    /* General */
+    Type number : roomba_theta "Theta"                          [ stateTopic="/roomba/feedback/Upstairs/pose_theta" ]
+    Type number : roomba_x "X"                                  [ stateTopic="/roomba/feedback/Upstairs/pose_point_x" ]
+    Type number : roomba_y "Y"                                  [ stateTopic="/roomba/feedback/Upstairs/pose_point_y" ]
+    Type number : roomba_rssi "RSSI"                            [ stateTopic="/roomba/feedback/Upstairs/signal_rssi" ]
+}
+
+Thing mqtt:topic:downstairs_roomba "Downstairs Roomba"  (mqtt:broker:proliant) {
+    Channels:
+    /* Roomba Commands */
+    Type string : roomba_command "Roomba" [ commandTopic="/roomba/command/Downstairs" ]
+    /* Settings */
+    Type switch : roomba_edgeClean    "Edge Clean"              [ commandTopic="/roomba/setting/Downstairs", stateTopic="/roomba/feedback/Downstairs/openOnly", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="openOnly %s", on="false", off="true" ]
+    Type switch : roomba_carpetBoost  "Auto carpet Boost"       [ commandTopic="/roomba/setting/Downstairs", stateTopic="/roomba/feedback/Downstairs/carpetBoost", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="carpetBoost %s", on="false", off="true"  ]
+    Type switch : roomba_vacHigh      "Vacuum Boost"            [ commandTopic="/roomba/setting/Downstairs", stateTopic="/roomba/feedback/Downstairs/vacHigh", transformationPattern="MAP:switch.map", formatBeforePublish="vacHigh %s", on="false", off="true"  ]
+    Type switch : roomba_noAutoPasses "Auto Passes"             [ commandTopic="/roomba/setting/Downstairs", stateTopic="/roomba/feedback/Downstairs/noAutoPasses", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="noAutoPasses %s", on="false", off="true"  ]
+    Type switch : roomba_twoPass      "Two Passes"              [ commandTopic="/roomba/setting/Downstairs", stateTopic="/roomba/feedback/Downstairs/twoPass", transformationPattern="MAP:switch.map", formatBeforePublish="twoPass %s", on="false", off="true"  ]
+    Type switch : roomba_binPause     "Always Complete (even if bin is full)" [ commandTopic="/roomba/setting/Downstairs", stateTopic="/roomba/feedback/Downstairs/binPause", transformationPattern="MAP:inverse_switch.map", formatBeforePublish="binPause %s", on="false", off="true"  ]
+    /* Roomba Feedback */
+    Type string : roomba_softwareVer "Software Version"         [ stateTopic="/roomba/feedback/Downstairs/softwareVer" ]
+    Type number : roomba_batPct "Battery"                       [ stateTopic="/roomba/feedback/Downstairs/batPct" ]
+    Type string : roomba_lastcommand  "Last Command"            [ stateTopic="/roomba/feedback/Downstairs/lastCommand_command" ]
+    Type switch : roomba_bin_present "Bin Present"              [ stateTopic="/roomba/feedback/Downstairs/bin_present", transformationPattern="MAP:switch.map" ]
+    Type switch : roomba_full "Bin Full"                        [ stateTopic="/roomba/feedback/Downstairs/bin_full", transformationPattern="MAP:switch.map" ]
+    /* Mission values */
+    Type string : roomba_mission  "Mission"                     [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_cycle" ]
+    Type number : roomba_nMssn    "Cleaning Mission number"     [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_nMssn" ]
+    Type string : roomba_phase    "Phase"                       [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_phase" ]
+    Type string : roomba_initiator  "Initiator"                 [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_initiator" ]
+    Type switch : roomba_error "Error"                          [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_error" ]
+    Type string : roomba_errortext  "Error Message"             [ stateTopic="/roomba/feedback/Downstairs/error_message" ]
+    Type number : roomba_mssnM "Cleaning Elapsed Time"          [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_mssnM" ]
+    Type number : roomba_sqft "Square Ft Cleaned"               [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_sqft" ]
+    Type number : roomba_percent_complete "Mission % complete"  [ stateTopic="/roomba/feedback/Downstairs/roomba_percent_complete" ]
+    Type number : roomba_expireM "Mission Recharge Time"        [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_expireM" ]
+    Type number : roomba_rechrgM "Remaining Time To Recharge"   [ stateTopic="/roomba/feedback/Downstairs/cleanMissionStatus_rechrgM" ]
+    Type string : roomba_status    "Status"                     [ stateTopic="/roomba/feedback/Downstairs/state" ]
+    /* Schedule */
+    Type string : roomba_cycle   "Day of Week"                  [ stateTopic="/roomba/feedback/Downstairs/cleanSchedule_cycle" ]
+    Type string : roomba_cleanSchedule_h   "Hour of Day"        [ stateTopic="/roomba/feedback/Downstairs/cleanSchedule_h" ]
+    Type string : roomba_cleanSchedule_m   "Minute of Hour"     [ stateTopic="/roomba/feedback/Downstairs/cleanSchedule_m" ]
+    Type string : roomba_cleanSchedule2    "New Schedule"       [ stateTopic="/roomba/feedback/Downstairs/cleanSchedule2" ]
+    /* General */
+    Type number : roomba_theta "Theta"                          [ stateTopic="/roomba/feedback/Downstairs/pose_theta" ]
+    Type number : roomba_x "X"                                  [ stateTopic="/roomba/feedback/Downstairs/pose_point_x" ]
+    Type number : roomba_y "Y"                                  [ stateTopic="/roomba/feedback/Downstairs/pose_point_y" ]
+    Type number : roomba_rssi "RSSI"                            [ stateTopic="/roomba/feedback/Downstairs/signal_rssi" ]
+}
+
+Thing mqtt:topic:downstairs_mop "Downstairs Braava Jet M6"  (mqtt:broker:proliant) {
+    Channels:
+    /* Braava Commands */
+    Type string : roomba_command "Braava" [ commandTopic="/roomba/command/Mopster" ]
+    /* Braava Feedback */
+    Type string : roomba_softwareVer "Software Version"         [ stateTopic="/roomba/feedback/Mopster/softwareVer" ]
+    Type number : roomba_batPct "Battery"                       [ stateTopic="/roomba/feedback/Mopster/batPct" ]
+    Type string : roomba_lastcommand  "Last Command"            [ stateTopic="/roomba/feedback/Mopster/lastCommand_command" ]
+    Type string : roomba_detectedPad  "Detected Pad"            [ stateTopic="/roomba/feedback/Mopster/detectedPad" ]
+    Type switch : roomba_lid_closed "Lid Closed"                [ stateTopic="/roomba/feedback/Mopster/mopReady_lidClosed", transformationPattern="MAP:switch.map" ]
+    Type switch : roomba_bin_present "Bin Present"              [ stateTopic="/roomba/feedback/Mopster/mopReady_tankPresent", transformationPattern="MAP:switch.map" ]
+    Type number : roomba_tankLvl "Tank Level"                   [ stateTopic="/roomba/feedback/Mopster/tankLvl" ]
+    Type number : roomba_padWetness_disposable "Disposable Pad Wetness" [ stateTopic="/roomba/feedback/Mopster/padWetness_disposable" ]
+    Type number : roomba_padWetness_reusable   "Reusable Pad Wetness"   [ stateTopic="/roomba/feedback/Mopster/padWetness_reusable" ]
+    /* Mission values */
+    Type string : roomba_mission  "Mission"                     [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_cycle" ]
+    Type number : roomba_nMssn    "Cleaning Mission number"     [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_nMssn" ]
+    Type string : roomba_phase    "Phase"                       [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_phase" ]
+    Type string : roomba_initiator  "Initiator"                 [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_initiator" ]
+    Type switch : roomba_error "Error"                          [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_error" ]
+    Type string : roomba_errortext  "Error Message"             [ stateTopic="/roomba/feedback/Mopster/error_message" ]
+    Type number : roomba_mssnM "Cleaning Elapsed Time"          [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_mssnM" ]
+    Type number : roomba_sqft "Square Ft Cleaned"               [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_sqft" ]
+    Type number : roomba_percent_complete "Mission % complete"  [ stateTopic="/roomba/feedback/Mopster/roomba_percent_complete" ]
+    Type number : roomba_expireM "Mission Recharge Time"        [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_expireM" ]
+    Type number : roomba_rechrgM "Remaining Time To Recharge"   [ stateTopic="/roomba/feedback/Mopster/cleanMissionStatus_rechrgM" ]
+    Type string : roomba_status    "Status"                     [ stateTopic="/roomba/feedback/Mopster/state" ]
+    /* Schedule */
+    Type string : roomba_cycle   "Day of Week"                  [ stateTopic="/roomba/feedback/Mopster/cleanSchedule_cycle" ]
+    Type string : roomba_cleanSchedule_h   "Hour of Day"        [ stateTopic="/roomba/feedback/Mopster/cleanSchedule_h" ]
+    Type string : roomba_cleanSchedule_m   "Minute of Hour"     [ stateTopic="/roomba/feedback/Mopster/cleanSchedule_m" ]
+    Type string : roomba_cleanSchedule2    "New Schedule"       [ stateTopic="/roomba/feedback/Mopster/cleanSchedule2" ]
+    /* General */
+    Type number : roomba_theta "Theta"                          [ stateTopic="/roomba/feedback/Mopster/pose_theta" ]
+    Type number : roomba_x "X"                                  [ stateTopic="/roomba/feedback/Mopster/pose_point_x" ]
+    Type number : roomba_y "Y"                                  [ stateTopic="/roomba/feedback/Mopster/pose_point_y" ]
+    Type number : roomba_rssi "RSSI"                            [ stateTopic="/roomba/feedback/Mopster/signal_rssi" ]
+}

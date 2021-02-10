@@ -1,44 +1,132 @@
 /* Roomba items */
-Group roomba_items  "Roomba"        <roomba>        (gGF)
+Group roomba_items             "Roombas"                  <roomba>
+Group downstairs_roomba_items  "Downstairs Roomba"        <roomba>        (roomba_items)
+Group upstairs_roomba_items    "Upstairs Roomba"          <roomba>        (roomba_items)
+Group mopster_roomba_items     "Downstairs Mop"           <roomba>        (roomba_items)
 
-/* Roomba Commands */
-String roomba_command "Roomba" <roomba> (roomba_items) {mqtt=">[proliant:/roomba/command:command:*:${command}]", autoupdate=false}
+/* Upstairs Roomba Commands */
+String upstairs_roomba_command "Roomba" <roomba> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_command" }
 /* Settings */
-Switch roomba_edgeClean    "Edge Clean [%s]" <switch> (roomba_items) {mqtt=">[proliant:/roomba/setting:command:ON:openOnly false],>[proliant:/roomba/setting:command:OFF:openOnly true],<[proliant:/roomba/feedback/openOnly:state:MAP(inverse_switch.map)]", autoupdate=false}
-Switch roomba_carpetBoost  "Auto carpet Boost [%s]" <switch> (roomba_items) {mqtt=">[proliant:/roomba/setting:command:ON:carpetBoost true],>[proliant:/roomba/setting:command:OFF:carpetBoost false],<[proliant:/roomba/feedback/carpetBoost:state:MAP(switch.map)]", autoupdate=false}
-Switch roomba_vacHigh      "Vacuum Boost [%s]" <switch> (roomba_items) {mqtt=">[proliant:/roomba/setting:command:ON:vacHigh true],>[proliant:/roomba/setting:command:OFF:vacHigh false],<[proliant:/roomba/feedback/vacHigh:state:MAP(switch.map)]", autoupdate=false}
-Switch roomba_noAutoPasses "Auto Passes [%s]" <switch> (roomba_items) {mqtt=">[proliant:/roomba/setting:command:ON:noAutoPasses false],>[proliant:/roomba/setting:command:OFF:noAutoPasses true],<[proliant:/roomba/feedback/noAutoPasses:state:MAP(inverse_switch.map)]", autoupdate=false}
-Switch roomba_twoPass      "Two Passes [%s]" <switch> (roomba_items) {mqtt=">[proliant:/roomba/setting:command:ON:twoPass true],>[proliant:/roomba/setting:command:OFF:twoPass false],<[proliant:/roomba/feedback/twoPass:state:MAP(switch.map)]", autoupdate=false}
-Switch roomba_binPause     "Always Complete (even if bin is full) [%s]" <switch> (roomba_items) {mqtt=">[proliant:/roomba/setting:command:ON:binPause false],>[proliant:/roomba/setting:command:OFF:binPause true],<[proliant:/roomba/feedback/binPause:state:MAP(inverse_switch.map)]", autoupdate=false}
+Switch upstairs_roomba_edgeClean     "Edge Clean [%s]" <switch> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_edgeClean", autoupdate="false" }
+Switch upstairs_roomba_carpetBoost   "Auto carpet Boost [%s]" <switch> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_carpetBoost", autoupdate="false" }
+Switch upstairs_roomba_vacHigh       "Vacuum Boost [%s]" <switch> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_vacHigh", autoupdate="false" }
+Switch upstairs_roomba_noAutoPasses  "Auto Passes [%s]" <switch> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_noAutoPasses", autoupdate="false" }
+Switch upstairs_roomba_twoPass       "Two Passes [%s]" <switch> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_twoPass", autoupdate="false" }
+Switch upstairs_roomba_binPause      "Always Complete (even if bin is full) [%s]" <switch> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_binPause", autoupdate="false" }
 /* Roomba Feedback */
-String roomba_softwareVer  "Software Version [%s]" <text> (roomba_items) {mqtt="<[proliant:/roomba/feedback/softwareVer:state:default]"}
-Number roomba_batPct "Battery [%d%%]" <battery> (roomba_items, Battery)  {mqtt="<[proliant:/roomba/feedback/batPct:state:default]"}
-String roomba_lastcommand  "Last Command [%s]" <roomba> (roomba_items) {mqtt="<[proliant:/roomba/feedback/lastCommand_command:state:default]"}
-Switch roomba_bin_present  "Bin Present [%s]" <trashpresent> (roomba_items) {mqtt="<[proliant:/roomba/feedback/bin_present:state:MAP(switch.map)]"}
-Switch roomba_full   "Bin Full [%s]" <trash> (roomba_items) {mqtt="<[proliant:/roomba/feedback/bin_full:state:MAP(switch.map)]"}
+String upstairs_roomba_softwareVer   "Software Version [%s]" <text> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_softwareVer" }
+Number upstairs_roomba_batPct  "Battery [%d%%]" <battery> (upstairs_roomba_items, Battery)  { channel="mqtt:topic:upstairs_roomba:roomba_batPct" }
+String upstairs_roomba_lastcommand   "Last Command [%s]" <roomba> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_lastcommand" }
+Switch upstairs_roomba_bin_present   "Bin Present [%s]" <trashpresent> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_bin_present" }
+Switch upstairs_roomba_full    "Bin Full [%s]" <trash> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_full" }
 /* Mission values */
-String roomba_mission  "Mission [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_cycle:state:default]"}
-Number roomba_nMssn    "Cleaning Mission Number [%d]" <number> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_nMssn:state:default]"}
-String roomba_phase    "Phase [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_phase:state:default]"}
-String roomba_initiator  "Initiator [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_initiator:state:default]"}
-Switch roomba_error "Error [%]" <roombaerror> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_error:state:MAP(switchFromMqtt.map)]"}
-String roomba_errortext  "Error Message [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/error_message:state:default]"}
-Number roomba_mssnM "Cleaning Elapsed Time [%d m]" <clock> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_mssnM:state:default]"}
-Number roomba_sqft "Square Ft Cleaned [%d]" <groundfloor> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_sqft:state:default]"}
-Number roomba_expireM "Mission Recharge Time [%d m]" <clock> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_expireM:state:default]"}
-Number roomba_rechrgM "Remaining Time To Recharge [%d m]" <clock> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/cleanMissionStatus_rechrgM:state:default]"}
-String roomba_status    "Status [%s]" <msg> (roomba_items) {mqtt="<[proliant:/roomba/feedback/state:state:default]"}
-Dimmer roomba_percent_complete    "Mission % Completed [%d%%]" <humidity> (roomba_items)
-DateTime roomba_lastmissioncompleted "Last Mission Completed [%1$ta %1$tR]" <calendar>
+String upstairs_roomba_mission   "Mission [%s]" <msg> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_mission" }
+Number upstairs_roomba_nMssn     "Cleaning Mission Number [%d]" <number> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_nMssn" }
+String upstairs_roomba_phase     "Phase [%s]" <msg> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_phase" }
+String upstairs_roomba_initiator   "Initiator [%s]" <msg> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_initiator" }
+Switch upstairs_roomba_error  "Error [%d]" <roombaerror> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_error" }
+String upstairs_roomba_errortext   "Error Message [%s]" <msg> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_errortext" }
+Number upstairs_roomba_mssnM  "Cleaning Elapsed Time [%d m]" <clock> (upstairs_roomba_items)  { channel="mqtt:topic:upstairs_roomba:roomba_mssnM" }
+Number upstairs_roomba_sqft  "Square Ft Cleaned [%d]" <groundfloor> (upstairs_roomba_items)  { channel="mqtt:topic:upstairs_roomba:roomba_sqft" }
+Number upstairs_roomba_expireM  "Mission Recharge Time [%d m]" <clock> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_expireM" }
+Number upstairs_roomba_rechrgM  "Remaining Time To Recharge [%d m]" <clock> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_rechrgM" }
+String upstairs_roomba_status     "Status [%s]" <msg> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_status" }
+Number upstairs_roomba_percent_complete     "Mission % Completed [%d%%]" <humidity> (upstairs_roomba_items)  { channel="mqtt:topic:upstairs_roomba:roomba_percent_complete" }
+DateTime upstairs_roomba_lastmissioncompleted  "Last Mission Completed [%1$ta %1$tR]" <calendar>
 /* Schedule */
-String roomba_cycle   "Day of Week [%s]" <calendar> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanSchedule_cycle:state:default]"}
-String roomba_cleanSchedule_h   "Hour of Day [%s]" <clock> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanSchedule_h:state:default]"}
-String roomba_cleanSchedule_m   "Minute of Hour [%s]" <clock> (roomba_items) {mqtt="<[proliant:/roomba/feedback/cleanSchedule_m:state:default]"}
-String roomba_cleanSchedule "Schedule [%s]" <calendar> (roomba_items)
+String upstairs_roomba_cycle    "Day of Week [%s]" <calendar> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_cycle" }
+String upstairs_roomba_cleanSchedule_h    "Hour of Day [%s]" <clock> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_cleanSchedule_h" }
+String upstairs_roomba_cleanSchedule_m    "Minute of Hour [%s]" <clock> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_cleanSchedule_m" }
+String upstairs_roomba_cleanSchedule2     "Schedule [%s]" <clock> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_cleanSchedule2" }
+String upstairs_roomba_cleanSchedule  "Schedule [%s]" <calendar> (upstairs_roomba_items)
 /* General */
-Switch roomba_control "Roomba ON/OFF [%s]" <switch> (roomba_items)
-Number roomba_theta "Theta [%d]" <angle> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/pose_theta:state:default]"}
-Number roomba_x "X [%d]" <map> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/pose_point_x:state:default]"}
-Number roomba_y "Y [%d]" <map> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/pose_point_y:state:default]"}
-Number roomba_rssi "RSSI [%d]" <network> (roomba_items)  {mqtt="<[proliant:/roomba/feedback/signal_rssi:state:default]"}
-DateTime roomba_lastheardfrom "Last Update [%1$ta %1$tR]" <clock>
+Switch upstairs_roomba_control  "Upstairs Roomba ON/OFF [%s]" <switch> (upstairs_roomba_items)
+Number upstairs_roomba_theta  "Theta [%d]" <angle> (upstairs_roomba_items)  { channel="mqtt:topic:upstairs_roomba:roomba_theta" }
+Number upstairs_roomba_x  "X [%d]" <map> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_x" }
+Number upstairs_roomba_y  "Y [%d]" <map> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_y" }
+Number upstairs_roomba_rssi  "RSSI [%d]" <network> (upstairs_roomba_items) { channel="mqtt:topic:upstairs_roomba:roomba_rssi" }
+DateTime upstairs_roomba_lastheardfrom  "Last Update [%1$ta %1$tR]" <clock> { channel="mqtt:topic:upstairs_roomba:roomba_rssi" [profile="timestamp-update"] }
+
+/* Downstairs Roomba Commands */
+String downstairs_roomba_command "Roomba" <roomba> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_command" }
+/* Settings */
+Switch downstairs_roomba_edgeClean     "Edge Clean [%s]" <switch> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_edgeClean", autoupdate="false" }
+Switch downstairs_roomba_carpetBoost   "Auto carpet Boost [%s]" <switch> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_carpetBoost", autoupdate="false" }
+Switch downstairs_roomba_vacHigh       "Vacuum Boost [%s]" <switch> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_vacHigh", autoupdate="false" }
+Switch downstairs_roomba_noAutoPasses  "Auto Passes [%s]" <switch> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_noAutoPasses", autoupdate="false" }
+Switch downstairs_roomba_twoPass       "Two Passes [%s]" <switch> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_twoPass", autoupdate="false" }
+Switch downstairs_roomba_binPause      "Always Complete (even if bin is full) [%s]" <switch> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_binPause", autoupdate="false" }
+/* Roomba Feedback */
+String downstairs_roomba_softwareVer   "Software Version [%s]" <text> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_softwareVer" }
+Number downstairs_roomba_batPct  "Battery [%d%%]" <battery> (downstairs_roomba_items, Battery)  { channel="mqtt:topic:downstairs_roomba:roomba_batPct" }
+String downstairs_roomba_lastcommand   "Last Command [%s]" <roomba> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_lastcommand" }
+Switch downstairs_roomba_bin_present   "Bin Present [%s]" <trashpresent> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_bin_present" }
+Switch downstairs_roomba_full    "Bin Full [%s]" <trash> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_full" }
+/* Mission values */
+String downstairs_roomba_mission   "Mission [%s]" <msg> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_mission" }
+Number downstairs_roomba_nMssn     "Cleaning Mission Number [%d]" <number> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_nMssn" }
+String downstairs_roomba_phase     "Phase [%s]" <msg> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_phase" }
+String downstairs_roomba_initiator   "Initiator [%s]" <msg> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_initiator" }
+Switch downstairs_roomba_error  "Error [%d]" <roombaerror> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_error" }
+String downstairs_roomba_errortext   "Error Message [%s]" <msg> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_errortext" }
+Number downstairs_roomba_mssnM  "Cleaning Elapsed Time [%d m]" <clock> (downstairs_roomba_items)  { channel="mqtt:topic:downstairs_roomba:roomba_mssnM" }
+Number downstairs_roomba_sqft  "Square Ft Cleaned [%d]" <groundfloor> (downstairs_roomba_items)  { channel="mqtt:topic:downstairs_roomba:roomba_sqft" }
+Number downstairs_roomba_expireM  "Mission Recharge Time [%d m]" <clock> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_expireM" }
+Number downstairs_roomba_rechrgM  "Remaining Time To Recharge [%d m]" <clock> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_rechrgM" }
+String downstairs_roomba_status     "Status [%s]" <msg> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_status" }
+Number downstairs_roomba_percent_complete     "Mission % Completed [%d%%]" <humidity> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_percent_complete" }
+DateTime downstairs_roomba_lastmissioncompleted  "Last Mission Completed [%1$ta %1$tR]" <calendar>
+/* Schedule */
+String downstairs_roomba_cycle    "Day of Week [%s]" <calendar> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_cycle" }
+String downstairs_roomba_cleanSchedule_h    "Hour of Day [%s]" <clock> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_cleanSchedule_h" }
+String downstairs_roomba_cleanSchedule_m    "Minute of Hour [%s]" <clock> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_cleanSchedule_m" }
+String downstairs_roomba_cleanSchedule2     "Schedule [%s]" <clock> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_cleanSchedule2" }
+String downstairs_roomba_cleanSchedule  "Schedule [%s]" <calendar> (downstairs_roomba_items)
+/* General */
+Switch downstairs_roomba_control  "Downstairs Roomba ON/OFF [%s]" <switch> (downstairs_roomba_items)
+Number downstairs_roomba_theta  "Theta [%d]" <angle> (downstairs_roomba_items)  { channel="mqtt:topic:downstairs_roomba:roomba_theta" }
+Number downstairs_roomba_x  "X [%d]" <map> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_x" }
+Number downstairs_roomba_y  "Y [%d]" <map> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_y" }
+Number downstairs_roomba_rssi  "RSSI [%d]" <network> (downstairs_roomba_items) { channel="mqtt:topic:downstairs_roomba:roomba_rssi" }
+DateTime downstairs_roomba_lastheardfrom  "Last Update [%1$ta %1$tR]" <clock> { channel="mqtt:topic:downstairs_roomba:roomba_rssi" [profile="timestamp-update"] }
+
+/* Downstairs Braava Jet M6 Commands */
+String mopster_roomba_command "Mopster" <roomba> (roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_command" }
+/* Settings */
+/* Mop Feedback */
+String mopster_roomba_softwareVer   "Software Version [%s]" <text> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_softwareVer" }
+Number mopster_roomba_batPct  "Battery [%d%%]" <battery> (mopster_roomba_items, Battery)  { channel="mqtt:topic:downstairs_mop:roomba_batPct" }
+String mopster_roomba_lastcommand   "Last Command [%s]" <roomba> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_lastcommand" }
+String mopster_roomba_detectedPad   "Detected Pad [%s]" <msg>    (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_detectedPad" }
+Switch mopster_roomba_lid_closed    "Lid Closed [%s]"   <msg>    (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_lid_closed" }
+Number mopster_roomba_padWetness_disposable "Disposable Pad Wetness [%d]" (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_padWetness_disposable" }
+Number mopster_roomba_padWetness_reusable   "Reusable Pad Wetness [%d]"   (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_padWetness_reusable" }
+Switch mopster_roomba_bin_present   "Tank Present [%s]" <cistern> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_bin_present" }
+Number mopster_roomba_tankLvl "Tank Level [%d%%]"       <cistern> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_tankLvl" }
+/* Mission values */
+String mopster_roomba_mission   "Mission [%s]" <msg> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_mission" }
+Number mopster_roomba_nMssn     "Cleaning Mission Number [%d]" <number> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_nMssn" }
+String mopster_roomba_phase     "Phase [%s]" <msg> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_phase" }
+String mopster_roomba_initiator   "Initiator [%s]" <msg> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_initiator" }
+Switch mopster_roomba_error  "Error [%d]" <roombaerror> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_error" }
+String mopster_roomba_errortext   "Error Message [%s]" <msg> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_errortext" }
+Number mopster_roomba_mssnM  "Cleaning Elapsed Time [%d m]" <clock> (mopster_roomba_items)  { channel="mqtt:topic:downstairs_mop:roomba_mssnM" }
+Number mopster_roomba_sqft  "Square Ft Cleaned [%d]" <groundfloor> (mopster_roomba_items)  { channel="mqtt:topic:downstairs_mop:roomba_sqft" }
+Number mopster_roomba_expireM  "Mission Recharge Time [%d m]" <clock> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_expireM" }
+Number mopster_roomba_rechrgM  "Remaining Time To Recharge [%d m]" <clock> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_rechrgM" }
+String mopster_roomba_status     "Status [%s]" <msg> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_status" }
+Number mopster_roomba_percent_complete     "Mission % Completed [%d%%]" <humidity> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_percent_complete" }
+DateTime mopster_roomba_lastmissioncompleted  "Last Mission Completed [%1$ta %1$tR]" <calendar>
+/* Schedule */
+String mopster_roomba_cycle    "Day of Week [%s]" <calendar> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_cycle" }
+String mopster_roomba_cleanSchedule_h    "Hour of Day [%s]" <clock> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_cleanSchedule_h" }
+String mopster_roomba_cleanSchedule_m    "Minute of Hour [%s]" <clock> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_cleanSchedule_m" }
+String mopster_roomba_cleanSchedule2     "Schedule [%s]" <clock> (mopster_roomba_items) { channel="mqtt:topic:mopster_roomba:roomba_cleanSchedule2" }
+String mopster_roomba_cleanSchedule  "Schedule [%s]" <calendar> (mopster_roomba_items)
+/* General */
+Switch mopster_roomba_control  "Mop ON/OFF [%s]" <switch> (mopster_roomba_items)
+Number mopster_roomba_theta  "Theta [%d]" <angle> (mopster_roomba_items)  { channel="mqtt:topic:downstairs_mop:roomba_theta" }
+Number mopster_roomba_x  "X [%d]" <map> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_x" }
+Number mopster_roomba_y  "Y [%d]" <map> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_y" }
+Number mopster_roomba_rssi  "RSSI [%d]" <network> (mopster_roomba_items) { channel="mqtt:topic:downstairs_mop:roomba_rssi" }
+DateTime mopster_roomba_lastheardfrom  "Last Update [%1$ta %1$tR]" <clock> { channel="mqtt:topic:downstairs_mop:roomba_rssi" [profile="timestamp-update"] }
