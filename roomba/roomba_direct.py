@@ -173,7 +173,7 @@ def parse_args():
     parser.add_argument(
         '-m', '--drawmap',
         action='store_false',
-        default = False,
+        default = True,
         help='Draw Roomba cleaning map (default: %(default)s)')
     parser.add_argument(
         '-M', '--mappath',
