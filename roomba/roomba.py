@@ -443,7 +443,7 @@ class Roomba(object):
                 self.blid = roomba['blid']
                 self.password = roomba['password']
                 self.max_sqft = roomba.get('max_sqft', 0)
-                self.webport = roomba.get('webport', None)
+                self.webport = roomba.get('webport', self.webport)
                 return True        
         
         self.log.warning('No Roomba specified, or found, exiting')
@@ -1209,12 +1209,24 @@ class Roomba(object):
         return self.get_property("phase")
         
     @property
+    def cleanMissionStatus_phase(self):
+        return self.phase
+        
+    @property
+    def cleanMissionStatus(self):
+        return self.get_property("cleanMissionStatus")
+        
+    @property
     def pmaps(self):
         return self.get_property("pmaps")
         
     @property
     def regions(self):
         return self.get_property("regions")
+        
+    @property
+    def pcent_complete(self):
+        return self.update_precent_complete()
         
     def update_precent_complete(self):
         try:

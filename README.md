@@ -71,22 +71,22 @@ The following libraries/modules are used. Some are optional:
 
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
 ```bash
-<sudo> pip install paho-mqtt
+pip install paho-mqtt
 ```
 
 If you want the REST interface, or the built in web server, you need aiohttp installed:
 ```bash
-<sudo> pip install aiohttp
+pip install aiohttp
 ```
 
 For map drawing, you need at least PIL installed (preferably the latest version of pillow)
 ```bash
-<sudo> pip install pillow
+pip install pillow
 ```
 
-For fancy maps, you need openCV installed (V2, or V3). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
+For fancy maps, you need openCV installed (V2,3,4). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
 
-In all cases `pip` may be `pip3` depending on your cdefault python configuration
+In all cases `pip` may be `pip3` depending on your default python configuration
 
 ## Install
 First you need python 3.6 or later installed and then:
@@ -194,8 +194,9 @@ Follow the instructions, the script will attempt to find the roomba, obtain the 
 **NOTE:** You will have to press and hold the HOME button on your robot until it plays a series of tones (about 2 seconds). Release the button and your robot will flash WIFI light to discover your Roomba.
 
 On future runs (Once successful), these values will be taken from the configuration file, so you only have to do this once. You can manually specify these on the command line, some example start up bash scripts are supplied.
+You can also edit the *config.ini* file, to add options for each defined robot.
 I advise you to experiment with the map size (if you are using maps), as that is the one variable that isn't totally automatic. the size, position of the dock etc depend on your house layout.
-the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, roomba rotation). See the examples.
+the syntax of the map layout is (map x,map y, dock x, dock y, map rotation, roomba rotation). you can use the interactive [Web Server](#web-interface) to experiment with different settings to se what fits best.
 
 ### Example output
 Logging is supported with the python standard logging module (the logger is `Roomba`)
@@ -267,7 +268,7 @@ If you get an error like:
 or
 [ERROR](Roomba.Upstairs     ) Connection Error: timed out
 ```
-It usually means something else is already connected to the Roomba, force close the app, and reboot the roomba (press and hold the Start button for 20 seconds). You should then be able to connect.
+It usually means something else is already connected to the Roomba, force close the app, and **reboot the roomba** (press and hold the *Clean* button for 20 seconds). You should then be able to connect.
 
 ## How to get your username/blid and password
 You can get it automatically as described in quick start, or you can run:
@@ -296,21 +297,29 @@ The API calls are properties or methods of two classes (see `roomba_direct.py` f
 * password
 * Roomba
 
-In practice you should only need to use the Roomba class, which contains a reference to the password class.
+In practice you should only need to use the Roomba class, which contains a reference to the password class (the *get_passwd* property).
 ### Classes
 ```python
-password(address='255.255.255.255', file=".\config.ini")
-Roomba(address=None, blid=None, password=None, topic="#", clean=False, roombaName="", file="./config.ini")
+password(address='255.255.255.255', file="./config.ini")
+Roomba(address=None, blid=None, password=None, topic="#", roombaName="", file="./config.ini", log=None, webport=None)
 ```
-### Roomba methods
+If you have a *config.ini* file, you just need to supply *address* (ip address of the robot), the *blid* and *password* and *roombaName* will be filled in from info in the *config.ini* file.
+### Roomba methods/properties
 There are now async methods as well
+
+**NOTE:** *set_cleanSchedule* needs more work for i, M and s series
+
+**NOTE:** *auto_rotate* has been removed, as it was proving difficult to support
+#### Sync methods
 ```python
 connect()
 disconnect()
 send_command(command)
 set_preference(preference, setting)
 set_mqtt_client(mqttc=None, brokerFeedback="")
-set_options(raw=False, indent=0, pretty_print=False)
+set_options(raw=False, indent=0, pretty_print=False, max_sqft=0)
+set_cleanSchedule(schedule)
+get_property(property, cap=False)
 enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./", iconPath="./",
             home_icon_file="home.png",
             roomba_icon_file="roomba.png",
@@ -318,24 +327,47 @@ enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./", iconPath="
             roomba_cancelled_file="roombacancelled.png",
             roomba_battery_file="roomba-charge.png",
             bin_full_file="binfull.png",
-            roomba_size=(50,50), draw_edges = 15, auto_rotate=True)
+            roomba_size=(50,50), draw_edges = 15, auto_rotate=False)
 ```
-### Data Structures
+#### Async methods
+```python
+async_connect()
+async_send_command(command)
+async_set_preference(preference, setting)
+async_set_cleanSchedule(setting)
+get_settings(items)
+```
+#### Properties/Structures
 ```python
 #boolean
 roomba_connected
 bin_full
 #string
-cleanMissionStatus_phase
+cleanMissionStatus_phase    #same as phase
 current_state
 error_message
-#dictionarys
+sku
+phase
+mission
+#dictionarys/lists
+cleanMissionStatus
 co_ords
+pose
+cap
+pmaps
+regions
 master_state
+#numbers:
+batPct
+rechrgM
+mssnM
+expireM
+pcent_complete
 ```
 ### Notes
 If you have multiple roomba's, each roomba has it's own name, and this will be automatically used to differentiate them. feedback is published to `\roomba\feedback\<roomba name>\`, commands go to `\roomba\command\<roomba name>` and settings to `\roomba\setting\<roomba name>`. Maps and so on have <roomba name> prepended to them.
-You can manually specify the roomba name in the object, in your own scripts, in which case the same applies.
+You can manually specify the roomba name when you create the object, *as long as you specify blid and password as well*.
+If you only supply the *address*, all other values will be retrieved from the *config.ini* file if you have one, and will override your other settings, including *roombaName* and *webport* (if *webport* is defined in *config.ini*).
 
 ## Using the library in your python script
 Both these scripts are in the examples directory, as simple.py and complicated.py. To use them, copy them from examples to the main roomba.py directory. Edit them to include your own roomba ip address, blid and password, and run `python simple.py`. For "complicated.py" you also need to add your mqtt broker adddress, username, and password. Then run `python complicated.py`
@@ -689,7 +721,7 @@ master_state should contain (for Romba 600/900 series):
 ```
 There are diferent entries/values for i and s series.
 
-in raw mode, the json from the Roomba is passed directly to the mqtt topic (usually /roomba/feedback), in normal mode, each json item is decoded and published as a seperate topic. To see the topic published and their values run:
+in raw mode, the json from the Roomba is passed directly to the mqtt topic (usually /roomba/feedback/<roombaname>), in normal mode, each json item is decoded and published as a seperate topic. To see the topic published and their values run:
 ```bash
 mosquitto_sub -v -t /roomba/feedback/#
 ```
@@ -871,7 +903,7 @@ Your Roomba should have a name, in which case you get:
 In addition `state` and `error_message` are published which are derived by the class.
 
 ## Commands/Settings
-### Commands
+
 * Commands are:
   * "start"
   * "stop"
@@ -882,7 +914,6 @@ In addition `state` and `error_message` are published which are derived by the c
   * "reset"
   * "locate"
   
-### Settings
 * Settings are:
   * carpetBoost true
   * vacHigh true
@@ -891,11 +922,11 @@ In addition `state` and `error_message` are published which are derived by the c
   * twoPass true
   * binPause true
 
-You publish this as a string to your mqtt broker topic /roomba/command or /roomba/setting (or whatever you have defined if you change these from default)
-Ubuntu example (assuming the broker is on your localhost) - should work for any linux system with mosquitto installed
+You publish this as a string to your mqtt broker topic /roomba/command/<roombaname> or /roomba/setting/<roombaname> (or whatever you have defined if you change these from default)
+Ubuntu example (assuming the broker is on your localhost) - should work for any linux system with mosquitto installed (user and password may be required).
 ```bash
-mosquitto_pub -t "/roomba/command" -m "start"
-mosquitto_pub -t "/roomba/setting" -m "carpetBoost true"
+mosquitto_pub -t "/roomba/command/Upstairs" -m "start"
+mosquitto_pub -t "/roomba/setting/Upstairs" -m "carpetBoost true"
 ```
 
 Or call directly from a python script (see simple example above).
