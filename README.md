@@ -5,8 +5,7 @@ Unofficial iRobot Roomba python library (SDK).
 
 Thanks to https://github.com/koalazak/dorita980 where much of the inner workings were derived from.
 
-**NEW V2.0a 5/2/2021** All new re-write.
-
+**NEW V2.0a 5/2/2021** All new re-write.  
 **NOTE: This is an ALPHA Release - it will have bugs in it - please report them to me**
 
 ## New Features
@@ -14,7 +13,7 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 * Only Python 3.6 and above are supported
 * supports 600, 900, i, and s series Roombas (all WiFi connected roombas)
 * Supports M6 Mop
-* new support for all configurations in config file (config.ini default)
+* new support for all configurations in config file (*config.ini* default)
 * better blid and password discovery, supports multiple robots discovery/config
 * Supports Multiple Roombas or Mops, any combination
 * supports self emptying base
@@ -73,24 +72,20 @@ This script/library is intended to forward roomba data/commands to/from a local 
 ```bash
 pip install paho-mqtt
 ```
-
 If you want the REST interface, or the built in web server, you need aiohttp installed:
 ```bash
 pip install aiohttp
 ```
-
 For map drawing, you need at least PIL installed (preferably the latest version of pillow)
 ```bash
 pip install pillow
 ```
-
 For fancy maps, you need openCV installed (V2,3,4). The installation of this can be complex, so I leave that up to you. Maps works without it, but it's nicer with it.
 
 In all cases `pip` may be `pip3` depending on your default python configuration
 
 ## Install
-First you need python 3.6 or later installed and then:
-
+First you need python 3.6 or later installed and then:  
 Clone this repository:
 ```bash
 git clone https://github.com/NickWaterton/Roomba980-Python.git
@@ -188,9 +183,7 @@ or
 ```bash
 python3 ./roomba.py
 ```
-
-Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file (`config.ini` by default). If this works, the program will then start displaying messages from your Roomba, and printing the master_state every few seconds. the results are logged to a log file (`roomba.log` by default).
-
+Follow the instructions, the script will attempt to find the roomba, obtain the IP, blid, and password - then save these to a local configuration file (*config.ini* by default). If this works, the program will then start displaying messages from your Roomba, and printing the master_state every few seconds. the results are logged to a log file (`roomba.log` by default).  
 **NOTE:** You will have to press and hold the HOME button on your robot until it plays a series of tones (about 2 seconds). Release the button and your robot will flash WIFI light to discover your Roomba.
 
 On future runs (Once successful), these values will be taken from the configuration file, so you only have to do this once. You can manually specify these on the command line, some example start up bash scripts are supplied.
@@ -262,7 +255,7 @@ Logging is supported with the python standard logging module (the logger is `Roo
 [2021-02-05 12:42:07,934][ INFO](Roomba.Downstairs   ) MAP: ignoring new co-ords in charge phase: {'x': 0, 'y': 0, 'theta': 180}
 ```
 
-If you get an error like:
+**NOTE:** If you get an error like:
 ```bash
 [ERROR](Roomba.Upstairs     ) Connection Error: _ssl.c:835: The handshake operation timed out
 or
@@ -275,21 +268,16 @@ You can get it automatically as described in quick start, or you can run:
 ```bash
 ./password.py
 ```
-
 either with or without the IP address of your roomba.
 ```bash
 ./password.py -R <roomba IP>
 ```
-
 You can also specify a config file other than the default (-h for options). Results are displayed and saved to the config file.
 
 ## config.ini
-By default, all settings are stored in the *config.ini* file. You can change this file if you like (but there is really no need).
-
-An exaple file *config_example.ini* is given to show the structure of the file. It is a standard `ini` file with each section being the ip address of each robot.
-
-Any setting that can be added on the command line can be entered in the *config.ini* file. The key is the same as the long format of the cli setting. This allows you to make different settings for different robots.
-
+By default, all settings are stored in the *config.ini* file. You can change this file if you like (but there is really no need).  
+An exaple file *config_example.ini* is given to show the structure of the file. It is a standard `ini` file with each section being the ip address of each robot.  
+Any setting that can be added on the command line can be entered in the *config.ini* file. The key is the same as the long format of the cli setting. This allows you to make different settings for different robots.  
 **NOTE:** Anything entered in the *config.ini* file overrides the command line setting.
 
 ## API
@@ -368,8 +356,7 @@ You can manually specify the roomba name when you create the object, *as long as
 If you only supply the *address*, all other values will be retrieved from the *config.ini* file if you have one, and will override your other settings, including *roombaName* and *webport* (if *webport* is defined in *config.ini*).
 
 ## Using the library in your python script
-Both these scripts are in the examples directory, as simple.py and complicated.py. To use them, copy them from examples to the main roomba.py directory. Edit them to include your own roomba ip address, blid and password, and run `python simple.py`. For "complicated.py" you also need to add your mqtt broker adddress, username, and password. Then run `python complicated.py`
-
+Both these scripts are in the examples directory, as simple.py and complicated.py. To use them, copy them from examples to the main roomba.py directory. Edit them to include your own roomba ip address, blid and password, and run `python simple.py`. For "complicated.py" you also need to add your mqtt broker adddress, username, and password. Then run `python complicated.py`  
 You will need an event loop running, to use the interface.
 ### Simple Version
 ```python
@@ -457,8 +444,7 @@ except (KeyboardInterrupt, SystemExit):
 See `roomba_direct.py` for a more detailed example, and how to handle multiple roombas
 
 ## Data/Feedback
-master_state starts empty, and fills with time, it is published in full every 5 minutes by default (but updates to it are published live)
-
+master_state starts empty, and fills with time, it is published in full every 5 minutes by default (but updates to it are published live)  
 master_state should contain (for Romba 600/900 series):
 ```javascript
 {
@@ -717,13 +703,11 @@ master_state should contain (for Romba 600/900 series):
   }
 }
 ```
-There are diferent entries/values for i and s series.
-
+There are diferent entries/values for i and s series.  
 in raw mode, the json from the Roomba is passed directly to the mqtt topic (usually /roomba/feedback/<roombaname>), in normal mode, each json item is decoded and published as a seperate topic. To see the topic published and their values run:
 ```bash
 mosquitto_sub -v -t /roomba/feedback/#
 ```
-
 Output should look like this (if your roomba does not have a name):
 ```bash
 /roomba/feedback/netinfo_dhcp True
@@ -873,7 +857,6 @@ Output should look like this (if your roomba does not have a name):
 /roomba/feedback/signal_snr 53
 /roomba/feedback/state Charging
 ```
-
 Your Roomba should have a name, in which case you get:
 ```bash
 /roomba/feedback/Mopster/roomba_percent_complete 17
@@ -897,7 +880,6 @@ Your Roomba should have a name, in which case you get:
 /roomba/feedback/Upstairs/roomba_percent_complete 0
 /roomba/feedback/Upstairs/state Charging
 ```
-
 In addition `state` and `error_message` are published which are derived by the class.
 
 ## Commands/Settings
@@ -926,8 +908,7 @@ Ubuntu example (assuming the broker is on your localhost) - should work for any 
 mosquitto_pub -t "/roomba/command/Upstairs" -m "start"
 mosquitto_pub -t "/roomba/setting/Upstairs" -m "carpetBoost true"
 ```
-
-Or call directly from a python script (see simple example above).
+Or call directly from a python script (see simple example above).  
 Or use with the REST interface
 
 # REST interface
@@ -990,8 +971,8 @@ Notice the queried value is always returned as part of the json.
 These give composite reports of multiple values (or are aliases for other settings).
 
 `/api/local/action` allows you to send a command to the robot, such as `start` or `dock`
-eg `http://localhost:8200/api/local/action/start` would start the roomba cleaning.
-You can also start the cleaning of a specific room by adding arguments for pmap_id and region:
+eg `http://localhost:8200/api/local/action/start` would start the roomba cleaning.  
+You can also start the cleaning of a specific room by adding arguments for pmap_id and region:  
 `http://localhost:8200/api/local/action/cleanRoom?pmap_id=HGAHGGSHGS&regions=1,2,3`
 Would start cleaning region 1, 2 and 3 of pmap HGAHGGSHGS. if you leave `pmap_id` out, the first pmap found is used. You can use `pmaps` in `\api\local\info` to find out your pmaps. Which region is which you have to work out for your self. 
 `cleanRoom` is an alias for `start`, it just makes the intention clearer.
@@ -1011,7 +992,7 @@ Would start cleaning region 1, 2 and 3 of pmap HGAHGGSHGS. if you leave `pmap_id
 and special values are not accepted. You can query any value in the roomba configuration, `null` is returned if it does not exist (or is null). 
 
 ## POST Usage
-There are only two endpoints you can post to, and currently `/map/values` does nothing (future use).
+There are only two endpoints you can post to, and currently `/map/values` does nothing (future use).  
 The only end point that it mnakes sense to post to is `/api/local/action/` which is used to send a command to the roomba. You can use GET to send simple commands (like `start`, `dock` etc), but if you want to send a more complex command, then you need to use json.
 A complex command would look like this:
 ```json
@@ -1033,7 +1014,7 @@ A complex command would look like this:
   }
 }
 ``` 
-you can use `/api/local/info/lastCommand` to figure out what the format of the last command you sent was (and get the pmap_id and regions), and post your own json to `/api/local/action/` to replicate a command.
+you can use `/api/local/info/lastCommand` to figure out what the format of the last command you sent was (and get the pmap_id and regions), and post your own json to `/api/local/action/` to replicate a command.  
 You would POST:
 ```json
 {
@@ -1052,18 +1033,14 @@ You would POST:
   "select_all": null
 }
 ``` 
-To copy the last command example.
-
+To copy the last command example.  
 Note that with this example, you could get the same result by using GET to `/api/local/action/cleanRoom?pmap_id=v3R-QnXXXXXXXXXURA&regions=5`, and if you only had one pmap, you could even leave that out - `/api/local/action/cleanRoom?regions=5` would do the same thing.
 
 ### Web Interface
-The web interface can be used for debugging. You can watch value update as roomba runs, or is simulated. You can interactively change the size/rotation of the map, to get the values correct for your floor plan.
-
-It is available on `http://Your_Server_IP:webport/map/map.html` Each roomba would have it's own webport, which you specify at startup. See [REST Interface](#rest-interface) for details.
-
-The Web interface looks like this:
-
-**NOTE:** *Save values* currently just displays the entry you need to **manually** make in the config.ini file. it does not actually "save" anything. It may do in the future...
+The web interface can be used for debugging. You can watch value update as roomba runs, or is simulated. You can interactively change the size/rotation of the map, to get the values correct for your floor plan.  
+It is available on `http://Your_Server_IP:webport/map/map.html` Each roomba would have it's own webport, which you specify at startup. See [REST Interface](#rest-interface) for details.  
+The Web interface looks like this:  
+**NOTE:** *Save values* currently just displays the entry you need to **manually** make in the *config.ini* file. it does not actually "save" anything. It may do in the future...
 
 ![iRobot Roomba Web Interface](/roomba/res/web_interface.png)
 If you restart the server, you need to refresh/reload the web page.
@@ -1505,9 +1482,8 @@ false=ON
 NULL=Unknown
 ```
 ### Rules
-**NOTE:** I do not use these rules anymore, as I have moved over to the HabApp rules engine (see https://github.com/spacemanspiff2007/HABApp), so they probably won't work properly anymore
-
-**NOTE:** You will have to change the roomba item names to match your roomba item names eg `upstairs_roomba_command` etc.
+**NOTE:** I do not use these rules anymore, as I have moved over to the HabApp rules engine (see https://github.com/spacemanspiff2007/HABApp), so they probably won't work properly anymore  
+**NOTE:** You will have to change the roomba item names to match your roomba item names eg `upstairs_roomba_command` etc.  
 
 These use one of my functions getTimestamp, here it is:
 ```
@@ -1694,22 +1670,22 @@ end
 ### Icons
 I also have various roomba icons in /etc/openhab2/icons/classic
 
-These are here in openhab/icons, copy them to /etc/openhab2/icons/classic.
-items and transforms are there also.
+These are here in openhab/icons, copy them to /etc/openhab2/icons/classic.  
+Items and transforms are there also.
 
 ### Mapping
-See `roomba_map.html` - for openhab2 copy this to /etc/openhab2/html (same location as map.png will go in), now you can see the live maps via `http://your_OH_ip:port/static/roomba_map.html` in your browser. I use a subdirectory to avoid cluttering the root html directory, just be consistent in the pathnames, and make sure the directory exists (with write permission) before running roomba.py!
+See `roomba_map.html` - for openhab2 copy this to /etc/openhab2/html (same location as map.png will go in), now you can see the live maps via `http://your_OH_ip:port/static/roomba_map.html` in your browser. I use a subdirectory to avoid cluttering the root html directory, just be consistent in the pathnames, and make sure the directory exists (with write permission) before running roomba.py!  
 If you specify a map location when starting `roomba.py` the file will be generated automatically.
 
 ### General
-start_openhab_roomba is a bash script that starts roomba with the maps in the right location (on Ubuntu) for openhab2, you may have to change this location for other systems (windows, RPi, etc), depending on how you installed Openhab2. You need the mqtt binding installed as well.
+start_openhab_roomba is a bash script that starts roomba with the maps in the right location (on Ubuntu) for openhab2, you may have to change this location for other systems (windows, RPi, etc), depending on how you installed Openhab2. You need the mqtt binding installed as well.  
 In the above rules/sitemap replace `your_OH_ip:port` with your own Openhab2 ip and port - to use this from anywhere, these should be externally available (from outside your own network) addresses, otherwise you can only access then from within your own network (e-mail attachments should work though).
 
 ### Debugging
 You can start `roomba.py` in debugging mode using `-D` switch, this produces a lot more information in the logs, and saves more files. It also uses more CPU cycles.
 
-There is a utility included `replay_log.py`, this takes the log output, and replays it throught the server, so you can simulate Rooba runs, without actually having to run the Roomba.
-this is the help output:
+There is a utility included `replay_log.py`, this takes the log output, and replays it throught the server, so you can simulate Rooba runs, without actually having to run the Roomba.  
+This is the help output:
 ```bash
 usage: replay_log.py [-h] [-n ROOMBANAME] [-pn PUBROOMBANAME]
                      [-m MISSIONSTART] [-s] [-C BROKERCOMMAND] [-b BROKER]
@@ -1747,9 +1723,9 @@ For example:
 ```bash
 ./replay_log.py ./roomba.log -b my_MQTT_broker_IP -m "2021-02-10 09:25:43" -n Upstairs
 ```
-Would start searching `roomba.log` for a "New Mission" for roomba called "Upstairs" after 2021-02-10 09:25:43, and then start publishing the Roomba data in the log to the MQTT simulation topic for that roomba.
+Would start searching `roomba.log` for a "New Mission" for roomba called "Upstairs" after 2021-02-10 09:25:43, and then start publishing the Roomba data in the log to the MQTT simulation topic for that roomba.  
 If you used the `-s` switch, publishing would start immediately, without looking for the "new Mission" event. If you leave the date/time out, publishing starts with the first event in the log.
 
 ## ToDo's
-I'm just using some roomba icons I found on the web, if you have better roomba icons, please let me know.
+I'm just using some roomba icons I found on the web, if you have better roomba icons, please let me know.  
 Update the example map shown here, it's an older version, the new ones are a little nicer. 
