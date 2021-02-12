@@ -305,10 +305,8 @@ Roomba(address=None, blid=None, password=None, topic="#", roombaName="", file=".
 ```
 If you have a *config.ini* file, you just need to supply *address* (ip address of the robot), the *blid* and *password* and *roombaName* will be filled in from info in the *config.ini* file.
 ### Roomba methods/properties
-There are now async methods as well
-
-**NOTE:** *set_cleanSchedule* needs more work for i, M and s series
-
+There are now async methods as well  
+**NOTE:** *set_cleanSchedule* needs more work for i, M and s series  
 **NOTE:** *auto_rotate* has been removed, as it was proving difficult to support
 #### Sync methods
 ```python
