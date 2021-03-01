@@ -22,9 +22,10 @@ Nick Waterton 14th Jan 2020 V1.2.7: updated error code list.
 Nick Waterton 16th march 2020 V 1.2.8 fixed __version__ for Pillow v7 (replaced with __version__)
 Nick Waterton 24th April 2020 V 1.2.9 added possibility to send json commands to Roomba
 Nick Waterton 24th dec 2020 V 2.0.0: Complete re-write
+Nick Waterton 26th Februaury 2021 v 2.0.0b changed battery low and bin full handling, added 'no battery' (error 101).
 '''
 
-__version__ = "2.0.0a"
+__version__ = "2.0.0b"
 
 import asyncio
 from ast import literal_eval
@@ -333,6 +334,7 @@ class Roomba(object):
         74: "Max area reached",
         75: "Navigation problem",
         76: "Hardware problem detected",
+        101:"No battery",
     }
     
 
@@ -385,7 +387,6 @@ class Roomba(object):
         self.simulation_reset = False
         self.max_distance = 250             #max distance to draw lines
         self.bin_full = False
-        self.bin_full_shown = False
         self.icons = icons(base_icon=None, angle=self.angle, fnt=self.fnt, size=(32,32), log=self.log)
         self.base = None                    #base map
         self.room_outline_contour = None
@@ -1692,7 +1693,6 @@ class Roomba(object):
             self.display_text = "Emptying Bin: {}".format(time.strftime("%a %b %d %H:%M:%S"))
             old_x_y = new_co_ords = None
             self.log.info("MAP: emptying bin")
-            self.bin_full_shown = False
 
         elif self.current_state == self.states["completed"]:
             self.display_text = "Completed: {}".format(time.strftime("%a %b %d %H:%M:%S"))
@@ -1721,7 +1721,6 @@ class Roomba(object):
             self.room_outline_contour = self.room_outline = None
             self.show_final_map = False
             self.display_text = None
-            self.bin_full_shown = False
             self.timer('update_after_completed')
             self.log.info("MAP: created new image at start of new run")
 
@@ -1743,10 +1742,14 @@ class Roomba(object):
             self.show_final_map = False
             if self.bin_full:
                 self.display_text = "Bin Full: {}".format(self.display_text)
-                bin_full = True
+                if not self.is_set('bin_full'):
+                    bin_full = True
+                self.timer('bin_full', True, 30)
             else:
                 self.display_text = "Battery low: {}%, {}".format(self.batPct,self.display_text)
-                battery_low = True
+                if not self.is_set('battery_low'):
+                   battery_low = True 
+                self.timer('battery_low', True, 30)             
                 
         elif self.current_state == self.states["hmUsrDock"]:
             self.display_text = "User Docking,{}".format(time.strftime("%a %b %d %H:%M:%S"))
@@ -1762,10 +1765,6 @@ class Roomba(object):
         if self.display_text is None:
             self.display_text = self.current_state
             
-        if self.bin_full and not bin_full:
-            self.display_text = "Bin Full; {}".format(self.display_text)
-            bin_full = True
-
         if self.show_final_map and not self.debug: #just display final map - not live
             self.log.debug("MAP: not updating map - Roomba not running")
             return
@@ -1806,11 +1805,10 @@ class Roomba(object):
             self.log.info("MAP: Drawing cancelled Roomba")
             self.roomba_problem.paste(self.icons['cancelled'],roomba_pos)
             has_problems = True
-        if bin_full and not self.bin_full_shown:
+        if bin_full:
             self.log.info("MAP: Drawing full bin")
             self.roomba_problem.paste(self.icons['bin full'],roomba_pos)
             has_problems = True
-            self.bin_full_shown = True
         if battery_low:
             self.log.info("MAP: Drawing low battery Roomba")
             self.roomba_problem.paste(self.icons['battery'],roomba_pos)
