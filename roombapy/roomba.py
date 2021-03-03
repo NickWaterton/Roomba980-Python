@@ -121,12 +121,16 @@ class Roomba:
         self.client = self._get_client(address, blid, password)
         self._thread = threading.Thread(target=self.periodic_connection)
         self.on_message_callbacks = []
+        self.on_disconnect_callbacks = []
         self.error_code = None
         self.error_message = None
         self.client_error = None
 
     def register_on_message_callback(self, callback):
         self.on_message_callbacks.append(callback)
+
+    def register_on_disconnect_callback(self, callback):
+        self.on_disconnect_callbacks.append(callback)
 
     def _get_client(self, address, blid, password):
         client = RoombaMQTTClient(address=address, blid=blid, password=password)
@@ -179,9 +183,14 @@ class Roomba:
             return
         self.periodic_connection_running = True
         while not self.stop_connection:
-            if self._connect():
-                time.sleep(self.periodic_connection_duration)
-                self.client.disconnect()
+            try:
+                if self._connect():
+                    time.sleep(self.periodic_connection_duration)
+                    self.client.disconnect()
+            except RoombaConnectionError as error:
+                self.periodic_connection_running = False
+                self.on_disconnect(error)
+                return
             time.sleep(self.delay)
 
         self.client.disconnect()
@@ -208,6 +217,11 @@ class Roomba:
                 self.address,
                 error,
             )
+
+            # call the callback functions
+            for callback in self.on_disconnect_callbacks:
+                callback(error)
+
             return
 
         self.log.info("Disconnected from Roomba %s", self.address)
