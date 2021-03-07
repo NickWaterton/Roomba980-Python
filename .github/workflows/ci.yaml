@@ -19,7 +19,7 @@ jobs:
 
       - name: Black
         run: |
-          pre-commit run --hook-stage manual black --all-files
+          pre-commit run --hook-stage manual black
 
   isort:
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
 
       - name: isort
         run: |
-          pre-commit run --hook-stage manual isort --all-files
+          pre-commit run --hook-stage manual isort
 
   flake8:
     runs-on: ubuntu-latest
@@ -55,7 +55,7 @@ jobs:
 
       - name: flake8
         run: |
-          pre-commit run --hook-stage manual flake8 --all-files
+          pre-commit run --hook-stage manual flake8
 
   pytest:
     runs-on: ubuntu-latest
