@@ -25,7 +25,6 @@ from collections.abc import Mapping
 from datetime import datetime
 
 from roombapy.const import ROOMBA_ERROR_MESSAGES, ROOMBA_STATES
-from roombapy.mqttclient import RoombaMQTTClient
 
 MAX_CONNECTION_RETRIES = 3
 
@@ -87,14 +86,14 @@ class Roomba:
     be decoded and published on the designated mqtt client topic.
     """
 
-    def __init__(
-        self, address=None, blid=None, password=None, continuous=True, delay=1
-    ):
+    def __init__(self, remote_client, continuous=True, delay=1):
         """
         Roomba client initialization
         """
         self.log = logging.getLogger(__name__)
-        self.address = address
+
+        self.remote_client = remote_client
+        self._init_remote_client_callbacks()
         self.continuous = continuous
         if self.continuous:
             self.log.debug("CONTINUOUS connection")
@@ -118,7 +117,6 @@ class Roomba:
         self.master_state = {}  # all info from roomba stored here
         self.time = time.time()
         self.update_seconds = 300  # update with all values every 5 minutes
-        self.client = self._get_client(address, blid, password)
         self._thread = threading.Thread(target=self.periodic_connection)
         self.on_message_callbacks = []
         self.on_disconnect_callbacks = []
@@ -132,12 +130,10 @@ class Roomba:
     def register_on_disconnect_callback(self, callback):
         self.on_disconnect_callbacks.append(callback)
 
-    def _get_client(self, address, blid, password):
-        client = RoombaMQTTClient(address=address, blid=blid, password=password)
-        client.set_on_message(self.on_message)
-        client.set_on_connect(self.on_connect)
-        client.set_on_disconnect(self.on_disconnect)
-        return client
+    def _init_remote_client_callbacks(self):
+        self.remote_client.set_on_message(self.on_message)
+        self.remote_client.set_on_connect(self.on_connect)
+        self.remote_client.set_on_disconnect(self.on_disconnect)
 
     def connect(self):
         if self.roomba_connected or self.periodic_connection_running:
@@ -156,24 +152,20 @@ class Roomba:
         attempt = 1
         while attempt <= MAX_CONNECTION_RETRIES:
             try:
-                self.log.debug(
-                    "Connecting to %s, attempt %s", self.address, attempt
-                )
-                self.client.connect()
+                self.remote_client.connect()
                 return True
-            except Exception as e:
-                self.log.error("Error: %s ", e)
-                self.log.debug("Can't connect to %s, retrying", self.address)
+            except Exception:
+                self.log.debug("Can't connect retrying")
             attempt += 1
 
-        self.log.error("Unable to connect to %s", self.address)
+        self.log.error("Unable to connect to %s", self.remote_client.address)
         raise RoombaConnectionError(
-            "Unable to connect to Roomba at {}".format(self.address)
+            "Unable to connect to Roomba at {}".format(self.remote_client.address)
         )
 
     def disconnect(self):
         if self.continuous:
-            self.client.disconnect()
+            self.remote_client.disconnect()
         else:
             self.stop_connection = True
 
@@ -186,27 +178,27 @@ class Roomba:
             try:
                 if self._connect():
                     time.sleep(self.periodic_connection_duration)
-                    self.client.disconnect()
+                    self.remote_client.disconnect()
             except RoombaConnectionError as error:
                 self.periodic_connection_running = False
                 self.on_disconnect(error)
                 return
             time.sleep(self.delay)
 
-        self.client.disconnect()
+        self.remote_client.disconnect()
         self.periodic_connection_running = False
 
     def on_connect(self, error):
-        self.log.info("Connecting to Roomba %s", self.address)
+        self.log.info("Connecting to Roomba %s", self.remote_client.address)
         self.client_error = error
         if error is not None:
             self.log.error(
-                "Roomba %s connection error, code %s", self.address, error
+                "Roomba %s connection error, code %s", self.remote_client.address, error
             )
             return
 
         self.roomba_connected = True
-        self.client.subscribe(self.topic)
+        self.remote_client.subscribe(self.topic)
 
     def on_disconnect(self, error):
         self.roomba_connected = False
@@ -214,7 +206,7 @@ class Roomba:
         if error is not None:
             self.log.warning(
                 "Unexpectedly disconnected from Roomba %s, code %s",
-                self.address,
+                self.remote_client.address,
                 error,
             )
 
@@ -224,7 +216,7 @@ class Roomba:
 
             return
 
-        self.log.info("Disconnected from Roomba %s", self.address)
+        self.log.info("Disconnected from Roomba %s", self.remote_client.address)
 
     def on_message(self, mosq, obj, msg):
         # print("on_message", msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
@@ -240,7 +232,7 @@ class Roomba:
 
         self.log.debug(
             "Received Roomba Data %s: %s, %s",
-            self.address,
+            self.remote_client.address,
             str(msg.topic),
             str(msg.payload),
         )
@@ -249,7 +241,7 @@ class Roomba:
 
         # default every 5 minutes
         if time.time() - self.time > self.update_seconds:
-            self.log.debug("Publishing master_state %s", self.address)
+            self.log.debug("Publishing master_state %s", self.remote_client.address)
             self.decode_topics(self.master_state)  # publish all values
             self.time = time.time()
 
@@ -271,7 +263,7 @@ class Roomba:
 
         str_command = json.dumps(roomba_command)
         self.log.debug("Publishing Roomba Command : %s", str_command)
-        self.client.publish("cmd", str_command)
+        self.remote_client.publish("cmd", str_command)
 
     def set_preference(self, preference, setting):
         self.log.debug("Set preference: %s, %s", preference, setting)
@@ -286,10 +278,7 @@ class Roomba:
         roomba_command = {"state": tmp}
         str_command = json.dumps(roomba_command)
         self.log.debug("Publishing Roomba Setting : %s" % str_command)
-        self.client.publish("delta", str_command)
-
-    def publish(self, topic, message):
-        pass
+        self.remote_client.publish("delta", str_command)
 
     def dict_merge(self, dct, merge_dct):
         """
@@ -390,7 +379,6 @@ class Roomba:
                             "Error looking up Roomba error message: %s", e
                         )
                         self.error_message = "Unknown Error number: %s" % value
-                    self.publish("error_message", self.error_message)
                 if key == "cleanMissionStatus_phase":
                     self.previous_cleanMissionStatus_phase = (
                         self.cleanMissionStatus_phase

@@ -6,7 +6,7 @@ import paho.mqtt.client as mqtt
 from roombapy.const import MQTT_ERROR_MESSAGES
 
 
-class RoombaMQTTClient:
+class RoombaRemoteClient:
     address = None
     port = None
     blid = None
@@ -40,14 +40,19 @@ class RoombaMQTTClient:
         self.on_disconnect = on_disconnect
 
     def connect(self):
-        if not self.was_connected:
-            self.mqtt_client.connect(self.address, self.port)
-            self.was_connected = True
-        else:
-            self.mqtt_client.loop_stop()
-            self.mqtt_client.reconnect()
+        self.log.debug("Connecting to %s", self.address)
+        try:
+            if not self.was_connected:
+                self.mqtt_client.connect(self.address, self.port)
+                self.was_connected = True
+            else:
+                self.mqtt_client.loop_stop()
+                self.mqtt_client.reconnect()
 
-        self.mqtt_client.loop_start()
+            self.mqtt_client.loop_start()
+        except Exception as e:
+            self.log.error("Can't connect to %s, error: %s", self.address, e)
+            raise e
 
     def disconnect(self):
         self.mqtt_client.disconnect()
