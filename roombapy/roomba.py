@@ -122,7 +122,9 @@ class Roomba:
 
         self.log.error("Unable to connect to %s", self.remote_client.address)
         raise RoombaConnectionError(
-            "Unable to connect to Roomba at {}".format(self.remote_client.address)
+            "Unable to connect to Roomba at {}".format(
+                self.remote_client.address
+            )
         )
 
     def disconnect(self):
@@ -155,7 +157,9 @@ class Roomba:
         self.client_error = error
         if error is not None:
             self.log.error(
-                "Roomba %s connection error, code %s", self.remote_client.address, error
+                "Roomba %s connection error, code %s",
+                self.remote_client.address,
+                error
             )
             return
 
@@ -203,7 +207,9 @@ class Roomba:
 
         # default every 5 minutes
         if time.time() - self.time > self.update_seconds:
-            self.log.debug("Publishing master_state %s", self.remote_client.address)
+            self.log.debug(
+                "Publishing master_state %s", self.remote_client.address
+            )
             self.decode_topics(self.master_state)  # publish all values
             self.time = time.time()
 
