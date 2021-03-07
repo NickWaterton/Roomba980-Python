@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        args:
+          - --config
+          - pyproject.toml
+          - --safe
+          - --quiet
+# TODO fix all errors then enable
+#  - repo: https://gitlab.com/pycqa/flake8
+#    rev: 3.8.4
+#    hooks:
+#      - id: flake8
+#        additional_dependencies:
+#          - flake8-docstrings==1.5.0
+          # Temporarily every now and then for noqa cleanup; not done by
+          # default yet due to https://github.com/plinss/flake8-noqa/issues/1
+          # - flake8-noqa==1.1.0
+#          - pydocstyle==5.1.1
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.7.0
+    hooks:
+      - id: isort
