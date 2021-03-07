@@ -159,7 +159,7 @@ class Roomba:
             self.log.error(
                 "Roomba %s connection error, code %s",
                 self.remote_client.address,
-                error
+                error,
             )
             return
 
