@@ -85,4 +85,29 @@ jobs:
 
       - name: Run Pytest
         run: |
-          pytest
+          pytest tests/test_roomba.py
+          pytest tests/test_discovery.py
+
+
+  pytest-not_working_on_3_9:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install -r requirements_all.txt
+
+      - name: Run Pytest
+        run: |
+          pytest tests/test_roomba_integration.py
