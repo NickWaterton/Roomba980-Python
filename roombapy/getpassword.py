@@ -1,3 +1,4 @@
+"""The class helps you to get password for your Roomba."""
 import logging
 import socket
 import ssl
@@ -5,6 +6,8 @@ import struct
 
 
 class RoombaPassword:
+    """Main class to get a password."""
+
     roomba_ip = None
     roomba_port = 8883
     message = None
@@ -12,6 +15,7 @@ class RoombaPassword:
     log = None
 
     def __init__(self, roomba_ip):
+        """Init default values."""
         self.roomba_ip = roomba_ip
         self.message = bytes.fromhex("f005efcc3b2900")
         self.server_socket = _get_socket()
@@ -25,6 +29,7 @@ class RoombaPassword:
     """
 
     def get_password(self):
+        """Get password for roomba."""
         self._connect()
         self._send_message()
         response = self._get_response()
