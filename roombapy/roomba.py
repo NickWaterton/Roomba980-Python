@@ -50,6 +50,7 @@ class RoombaInfo:
     def __init__(
         self, hostname, robot_name, ip, mac, firmware, sku, capabilities
     ):
+        """Create object with information about roomba."""
         self.hostname = hostname
         self.firmware = firmware
         self.ip = ip
@@ -60,6 +61,7 @@ class RoombaInfo:
         self.blid = hostname.split("-")[1]
 
     def __str__(self) -> str:
+        """Nice output to console."""
         return ", ".join(
             [
                 "{key}={value}".format(key=key, value=self.__dict__.get(key))
@@ -68,9 +70,11 @@ class RoombaInfo:
         )
 
     def __hash__(self) -> int:
+        """Hashcode."""
         return hash(self.mac)
 
     def __eq__(self, o: object) -> bool:
+        """Equals."""
         return isinstance(o, RoombaInfo) and self.mac == o.mac
 
 
@@ -93,9 +97,7 @@ class Roomba:
     def __init__(
         self, address=None, blid=None, password=None, continuous=True, delay=1
     ):
-        """
-        Roomba client initialization
-        """
+        """Roomba client initialization."""
         self.log = logging.getLogger(__name__)
         self.address = address
         self.continuous = continuous

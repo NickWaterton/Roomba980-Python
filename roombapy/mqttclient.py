@@ -17,6 +17,7 @@ class RoombaMQTTClient:
     on_disconnect = None
 
     def __init__(self, address, blid, password, port=8883):
+        """Create mqtt client."""
         self.address = address
         self.blid = blid
         self.password = password
