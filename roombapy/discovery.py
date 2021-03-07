@@ -2,7 +2,7 @@ import json
 import logging
 import socket
 
-from roombapy.roomba import RoombaInfo
+from roombapy.roomba_info import RoombaInfo
 
 
 class RoombaDiscovery:
