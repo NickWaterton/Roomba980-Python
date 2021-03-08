@@ -73,6 +73,7 @@ jobs:
 
       - name: isort
         run: |
+          . venv/bin/activate
           pre-commit run --hook-stage manual isort --all-files
 
   flake8:
@@ -105,6 +106,7 @@ jobs:
 
       - name: flake8
         run: |
+          . venv/bin/activate
           pre-commit run --hook-stage manual flake8 --all-files
 
   pytest:

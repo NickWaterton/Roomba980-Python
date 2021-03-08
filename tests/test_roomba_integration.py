@@ -2,9 +2,11 @@ import asyncio
 import os
 
 import pytest
-from hbmqtt.broker import Broker
 
 from tests import abstract_test_roomba
+
+# from hbmqtt.broker import Broker
+
 
 BROKER_CONFIG = {
     "listeners": {
@@ -79,4 +81,5 @@ class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
 
     @pytest.fixture
     def broker(self, event_loop):
-        return Broker(BROKER_CONFIG, loop=event_loop)
+        # return Broker(BROKER_CONFIG, loop=event_loop)
+        pass
