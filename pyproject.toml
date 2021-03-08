@@ -20,7 +20,7 @@ roomba-discovery = "roombapy.entry_points:discovery"
 roomba-password = "roombapy.entry_points:password"
 
 [tool.poetry.dependencies]
-python = ">=3.7"
+python = ">=3.7,<4.0"
 paho-mqtt = "^1.5.1"
 
 [tool.poetry.dev-dependencies]
