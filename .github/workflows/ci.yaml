@@ -26,7 +26,7 @@ jobs:
         id: cache-venv
         uses: actions/cache@v2.1.4
         with:
-          path: venv
+          path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-venv-
@@ -34,14 +34,11 @@ jobs:
       - name: Create venv and install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
-          . venv/bin/activate
           poetry install
 
       - name: Black
         run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual black --all-files
+          poetry run black .
 
   isort:
     runs-on: ubuntu-latest
@@ -67,14 +64,11 @@ jobs:
       - name: Create venv and install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
-          . venv/bin/activate
           poetry install
 
       - name: isort
         run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual isort --all-files
+          poetry run isort .
 
   flake8:
     runs-on: ubuntu-latest
@@ -100,14 +94,11 @@ jobs:
       - name: Create venv and install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
-          . venv/bin/activate
           poetry install
 
       - name: flake8
         run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual flake8 --all-files
+          poetry run flake8 .
 
   pytest:
     runs-on: ubuntu-latest
@@ -138,11 +129,8 @@ jobs:
       - name: Create venv and install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
-          . venv/bin/activate
           poetry install
 
       - name: Run Pytest
         run: |
-          . venv/bin/activate
           pytest
