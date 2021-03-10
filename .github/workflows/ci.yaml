@@ -136,4 +136,4 @@ jobs:
 
       - name: Run Pytest
         run: |
-          pytest
+          poetry run pytest
