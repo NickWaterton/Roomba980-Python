@@ -41,7 +41,7 @@ jobs:
 
       - name: Black
         run: |
-          poetry run black .
+          poetry run black --config pyproject.toml .
 
   isort:
     runs-on: ubuntu-latest

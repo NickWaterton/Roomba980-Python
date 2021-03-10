@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Python 2.7/Python 3.5/3.6 (thanks to pschmitt for adding Python 3 compatibility).
+Python 3.* (thanks to pschmitt for adding Python 3 compatibility).
 
 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt
 server.
@@ -11,9 +11,9 @@ Nick Waterton 4th July   2017  V 1.1.1: Fixed MQTT protocol version, and map
 paths, fixed paho-mqtt tls changes
 Nick Waterton 5th July   2017  V 1.1.2: Minor fixes, CV version 3 .2 support
 Nick Waterton 7th July   2017  V1.2.0: Added -o option "roomOutline" allows
-enabling/disabling of room outline drawing, added auto creation of css/html files
-Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines
-if you don't have OpenCV
+enabling/disabling of room outline drawing, added auto creation of css/html
+files Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room
+outlines if you don't have OpenCV
 """
 
 import json
@@ -232,7 +232,6 @@ class Roomba:
         self.log.info("Disconnected from Roomba %s", self.address)
 
     def on_message(self, mosq, obj, msg):
-        # print("on_message", msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
         if self.exclude != "":
             if self.exclude in msg.topic:
                 return
@@ -355,9 +354,9 @@ class Roomba:
         """
         Decode json data dict and publish as individual topics.
 
-        Publish to brokerFeedback/topic the keys are concatinated with _ to make one unique
-        topic name strings are expressely converted to strings to avoid unicode
-        representations
+        Publish to brokerFeedback/topic the keys are concatinated with _
+        to make one unique topic name strings are expressely converted
+        to strings to avoid unicode representations
         """
         for key, value in state.items():
             if isinstance(value, dict):

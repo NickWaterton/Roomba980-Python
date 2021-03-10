@@ -1,25 +1,22 @@
 [flake8]
 max-line-length = 80
+#max-complexity = 10
 doctests = True
-# To work with Black
-# E501: line too long
 # W503: Line break occurred before a binary operator
-# E203: Whitespace before ':'
-# D202 No blank lines allowed after function docstring
-# W504 line break after binary operator
 # D100 - D103 documentation info, should be removed after fixes
 ignore =
-    E501,
     W503,
-    E203,
-    D202,
-    W504,
     D100,
     D101,
     D102,
     D103
 
 noqa-require-code = True
+
+exclude =
+    .venv
+    .git,
+    __pycache__
 
 per-file-ignores =
     __init__.py:F401
