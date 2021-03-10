@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  venv-path: '.venv'
+
 on:
   push:
     branches:
@@ -26,7 +29,7 @@ jobs:
         id: cache-venv
         uses: actions/cache@v2.1.4
         with:
-          path: .venv
+          path: ${{env.venv-path}}
           key: ${{ runner.os }}-venv-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-venv-
@@ -56,7 +59,7 @@ jobs:
         id: cache-venv
         uses: actions/cache@v2.1.4
         with:
-          path: venv
+          path: ${{env.venv-path}}
           key: ${{ runner.os }}-venv-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-venv-
@@ -86,7 +89,7 @@ jobs:
         id: cache-venv
         uses: actions/cache@v2.1.4
         with:
-          path: venv
+          path: ${{env.venv-path}}
           key: ${{ runner.os }}-venv-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-venv-
@@ -121,7 +124,7 @@ jobs:
         id: cache-venv
         uses: actions/cache@v2.1.4
         with:
-          path: venv
+          path: ${{env.venv-path}}
           key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-venv-
