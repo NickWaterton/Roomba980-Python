@@ -34,7 +34,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-venv-
 
-      - name: Create venv and install dependencies
+      - name: Install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           poetry install
@@ -64,7 +64,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-venv-
 
-      - name: Create venv and install dependencies
+      - name: Install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           poetry install
@@ -94,7 +94,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-venv-
 
-      - name: Create venv and install dependencies
+      - name: Install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           poetry install
@@ -129,7 +129,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-venv-
 
-      - name: Create venv and install dependencies
+      - name: Install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           poetry install
