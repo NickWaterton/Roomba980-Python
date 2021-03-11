@@ -1,0 +1,22 @@
+[flake8]
+max-line-length = 80
+#max-complexity = 10
+doctests = True
+# W503: Line break occurred before a binary operator
+# D100 - D103 documentation info, should be removed after fixes
+ignore =
+    W503,
+    D100,
+    D101,
+    D102,
+    D103
+
+noqa-require-code = True
+
+exclude =
+    .venv
+    .git,
+    __pycache__
+
+per-file-ignores =
+    __init__.py:F401

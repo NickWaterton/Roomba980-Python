@@ -2,9 +2,12 @@ import asyncio
 import os
 
 import pytest
-from hbmqtt.broker import Broker
 
 from tests import abstract_test_roomba
+
+# FIXME
+# from hbmqtt.broker import Broker
+
 
 BROKER_CONFIG = {
     "listeners": {
@@ -32,6 +35,7 @@ BROKER_CONFIG = {
 }
 
 
+@pytest.mark.skip(reason="required hbmqtt not working with python 3.9")
 class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
     @pytest.mark.asyncio
     async def test_roomba_connect(self, broker, event_loop):
@@ -78,4 +82,6 @@ class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
 
     @pytest.fixture
     def broker(self, event_loop):
-        return Broker(BROKER_CONFIG, loop=event_loop)
+        # FIXME
+        # return Broker(BROKER_CONFIG, loop=event_loop)
+        pass
