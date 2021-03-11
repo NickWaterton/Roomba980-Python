@@ -1,8 +1,8 @@
 import sys
 
+from roombapy import RoombaFactory
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
-from roombapy.roomba import Roomba
 
 
 def discovery():
@@ -44,7 +44,7 @@ def connect():
     roomba_info = roomba_discovery.find(roomba_ip)
     _validate_roomba_info(roomba_info)
 
-    roomba = Roomba(roomba_info.ip, roomba_info.blid, roomba_password)
+    roomba = RoombaFactory.create_roomba(roomba_info.ip, roomba_info.blid, roomba_password)
     roomba.register_on_message_callback(lambda msg: print(msg))
     roomba.connect()
 
