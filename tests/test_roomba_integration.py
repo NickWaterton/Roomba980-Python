@@ -65,7 +65,7 @@ class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
         assert not is_connected
 
     async def roomba_connect(self, roomba, loop):
-        await loop.run_in_executor(None, roomba.tr)
+        await loop.run_in_executor(None, roomba.connect)
         await asyncio.sleep(1, loop=loop)
         return roomba.roomba_connected
 
