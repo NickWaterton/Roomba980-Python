@@ -103,8 +103,7 @@ class Roomba:
             return
 
         if self.continuous:
-            if not self._connect():
-                raise Exception("failed to connect!")
+            self._connect()
         else:
             self._thread.daemon = True
             self._thread.start()
@@ -112,21 +111,14 @@ class Roomba:
         self.time = time.time()  # save connection time
 
     def _connect(self):
-        attempt = 1
-        while attempt <= MAX_CONNECTION_RETRIES:
-            try:
-                self.remote_client.connect()
-                return True
-            except Exception:
-                self.log.debug("Can't connect retrying")
-            attempt += 1
-
-        self.log.error("Unable to connect to %s", self.remote_client.address)
-        raise RoombaConnectionError(
-            "Unable to connect to Roomba at {}".format(
-                self.remote_client.address
+        is_connected = self.remote_client.connect()
+        if not is_connected:
+            raise RoombaConnectionError(
+                "Unable to connect to Roomba at {}".format(
+                    self.remote_client.address
+                )
             )
-        )
+        return is_connected
 
     def disconnect(self):
         if self.continuous:
@@ -141,9 +133,7 @@ class Roomba:
         self.periodic_connection_running = True
         while not self.stop_connection:
             try:
-                if self._connect():
-                    time.sleep(self.periodic_connection_duration)
-                    self.remote_client.disconnect()
+                self._connect()
             except RoombaConnectionError as error:
                 self.periodic_connection_running = False
                 self.on_disconnect(error)
@@ -284,9 +274,9 @@ class Roomba:
             # order), else return as is...
             json_data = json.loads(
                 payload.decode("utf-8")
-                .replace(":nan", ":NaN")
-                .replace(":inf", ":Infinity")
-                .replace(":-inf", ":-Infinity"),
+                    .replace(":nan", ":NaN")
+                    .replace(":inf", ":Infinity")
+                    .replace(":-inf", ":-Infinity"),
                 object_pairs_hook=OrderedDict,
             )
             # if it's not a dictionary, probably just a number
@@ -400,9 +390,9 @@ class Roomba:
                 == "none"
                 and self.cleanMissionStatus_phase == "charge"
                 and (
-                    self.current_state == ROOMBA_STATES["pause"]
-                    or self.current_state == ROOMBA_STATES["recharge"]
-                )
+                self.current_state == ROOMBA_STATES["pause"]
+                or self.current_state == ROOMBA_STATES["recharge"]
+            )
             ):
                 self.current_state = ROOMBA_STATES["cancelled"]
         except KeyError:

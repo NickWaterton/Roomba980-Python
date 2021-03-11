@@ -5,6 +5,8 @@ import paho.mqtt.client as mqtt
 
 from roombapy.const import MQTT_ERROR_MESSAGES
 
+MAX_CONNECTION_RETRIES = 3
+
 
 class RoombaRemoteClient:
     address = None
@@ -41,19 +43,18 @@ class RoombaRemoteClient:
         self.on_disconnect = on_disconnect
 
     def connect(self):
-        self.log.debug("Connecting to %s", self.address)
-        try:
-            if not self.was_connected:
-                self.mqtt_client.connect(self.address, self.port)
-                self.was_connected = True
-            else:
-                self.mqtt_client.loop_stop()
-                self.mqtt_client.reconnect()
+        attempt = 1
+        while attempt <= MAX_CONNECTION_RETRIES:
+            self.log.info("Connecting to %s, attempt %s of %s", self.address, attempt, MAX_CONNECTION_RETRIES)
+            try:
+                self._open_mqtt_connection()
+                return True
+            except Exception as e:
+                self.log.error("Can't connect to %s, error: %s", self.address, e)
+            attempt += 1
 
-            self.mqtt_client.loop_start()
-        except Exception as e:
-            self.log.error("Can't connect to %s, error: %s", self.address, e)
-            raise e
+        self.log.error("Unable to connect to %s", self.address)
+        return False
 
     def disconnect(self):
         self.mqtt_client.disconnect()
@@ -63,6 +64,15 @@ class RoombaRemoteClient:
 
     def publish(self, topic, payload):
         self.mqtt_client.publish(topic, payload)
+
+    def _open_mqtt_connection(self):
+        if not self.was_connected:
+            self.mqtt_client.connect(self.address, self.port)
+            self.was_connected = True
+        else:
+            self.mqtt_client.loop_stop()
+            self.mqtt_client.reconnect()
+        self.mqtt_client.loop_start()
 
     def _get_mqtt_client(self):
         mqtt_client = mqtt.Client(client_id=self.blid)
