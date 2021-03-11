@@ -274,9 +274,9 @@ class Roomba:
             # order), else return as is...
             json_data = json.loads(
                 payload.decode("utf-8")
-                    .replace(":nan", ":NaN")
-                    .replace(":inf", ":Infinity")
-                    .replace(":-inf", ":-Infinity"),
+                .replace(":nan", ":NaN")
+                .replace(":inf", ":Infinity")
+                .replace(":-inf", ":-Infinity"),
                 object_pairs_hook=OrderedDict,
             )
             # if it's not a dictionary, probably just a number
@@ -390,9 +390,9 @@ class Roomba:
                 == "none"
                 and self.cleanMissionStatus_phase == "charge"
                 and (
-                self.current_state == ROOMBA_STATES["pause"]
-                or self.current_state == ROOMBA_STATES["recharge"]
-            )
+                    self.current_state == ROOMBA_STATES["pause"]
+                    or self.current_state == ROOMBA_STATES["recharge"]
+                )
             ):
                 self.current_state = ROOMBA_STATES["cancelled"]
         except KeyError:

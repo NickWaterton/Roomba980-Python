@@ -45,12 +45,19 @@ class RoombaRemoteClient:
     def connect(self):
         attempt = 1
         while attempt <= MAX_CONNECTION_RETRIES:
-            self.log.info("Connecting to %s, attempt %s of %s", self.address, attempt, MAX_CONNECTION_RETRIES)
+            self.log.info(
+                "Connecting to %s, attempt %s of %s",
+                self.address,
+                attempt,
+                MAX_CONNECTION_RETRIES,
+            )
             try:
                 self._open_mqtt_connection()
                 return True
             except Exception as e:
-                self.log.error("Can't connect to %s, error: %s", self.address, e)
+                self.log.error(
+                    "Can't connect to %s, error: %s", self.address, e
+                )
             attempt += 1
 
         self.log.error("Unable to connect to %s", self.address)
