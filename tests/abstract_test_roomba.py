@@ -1,4 +1,4 @@
-from roombapy.roomba import Roomba
+from roombapy import RoombaFactory
 
 ROOMBA_CONFIG = {
     "host": "127.0.0.1",
@@ -19,7 +19,7 @@ class AbstractTestRoomba:
         continuous=ROOMBA_CONFIG["continuous"],
         delay=ROOMBA_CONFIG["delay"],
     ):
-        return Roomba(
+        return RoombaFactory.create_roomba(
             address=address,
             blid=blid,
             password=password,
