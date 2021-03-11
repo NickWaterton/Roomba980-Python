@@ -5,6 +5,7 @@ import pytest
 
 from tests import abstract_test_roomba
 
+# FIXME
 # from hbmqtt.broker import Broker
 
 
@@ -81,5 +82,6 @@ class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
 
     @pytest.fixture
     def broker(self, event_loop):
+        # FIXME
         # return Broker(BROKER_CONFIG, loop=event_loop)
         pass

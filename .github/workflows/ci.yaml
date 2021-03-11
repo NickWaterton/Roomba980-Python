@@ -41,7 +41,7 @@ jobs:
 
       - name: Black
         run: |
-          poetry run black --config pyproject.toml .
+          poetry run black --config pyproject.toml --check --diff --verbose .
 
   isort:
     runs-on: ubuntu-latest
@@ -71,7 +71,7 @@ jobs:
 
       - name: isort
         run: |
-          poetry run isort .
+          poetry run isort --check --diff --verbose .
 
   flake8:
     runs-on: ubuntu-latest
@@ -101,7 +101,7 @@ jobs:
 
       - name: flake8
         run: |
-          poetry run flake8 .
+          poetry run flake8 --config .flake8 --verbose --count .
 
   pytest:
     runs-on: ubuntu-latest
