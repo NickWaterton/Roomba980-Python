@@ -15,6 +15,7 @@ class RoombaDiscovery:
     log = None
 
     def __init__(self):
+        """Init discovery."""
         self.server_socket = _get_socket()
         self.log = logging.getLogger(__name__)
 

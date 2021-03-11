@@ -1,35 +1,107 @@
 name: CI
 
-on: [push, pull_request]
+env:
+  venv-path: '.venv'
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+
+  workflow_dispatch:
 
 jobs:
-  flake8:
+  black:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
-      fail-fast: false
-
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.9
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.2
+
+      - name: Create venv cache
+        id: cache-venv
+        uses: actions/cache@v2.1.4
+        with:
+          path: ${{env.venv-path}}
+          key: ${{ runner.os }}-venv-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
 
       - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-          if [[ -f requirements.txt ]]; then pip install -r requirements.txt; fi
+          poetry install
 
-      - name: Lint with flake8
+      - name: Black
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. Set line length to 80 chars max.
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=80 --statistics
+          poetry run black --config pyproject.toml --check --diff --verbose .
+
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.2
+
+      - name: Create venv cache
+        id: cache-venv
+        uses: actions/cache@v2.1.4
+        with:
+          path: ${{env.venv-path}}
+          key: ${{ runner.os }}-venv-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+
+      - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          poetry install
+
+      - name: isort
+        run: |
+          poetry run isort --check --diff --verbose .
+
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.2
+
+      - name: Create venv cache
+        id: cache-venv
+        uses: actions/cache@v2.1.4
+        with:
+          path: ${{env.venv-path}}
+          key: ${{ runner.os }}-venv-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+
+      - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          poetry install
+
+      - name: flake8
+        run: |
+          poetry run flake8 --config .flake8 --verbose --count .
 
   pytest:
     runs-on: ubuntu-latest
@@ -39,57 +111,29 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
-
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.2
+
+      - name: Create venv cache
+        id: cache-venv
+        uses: actions/cache@v2.1.4
+        with:
+          path: ${{env.venv-path}}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version }}-venv-
 
       - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-          if [[ -f requirements_test.txt ]]; then pip install -r requirements_test.txt; fi
+          poetry install
 
       - name: Run Pytest
         run: |
-          pytest
-
-  isort:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install isort
-
-      - name: isort
-        run: |
-          isort --check --diff --verbose .
-
-  black:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install black
-
-      - name: Black
-        run: |
-          black --config pyproject.toml --check --diff --verbose .
+          poetry run pytest

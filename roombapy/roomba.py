@@ -2,18 +2,18 @@
 # -*- coding: utf-8 -*-
 
 """
-Python 2.7/Python 3.5/3.6 (thanks to pschmitt for adding Python 3 compatibility)
-Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt
-server
+Python 3.* (thanks to pschmitt for adding Python 3 compatibility).
 
+Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt
+server.
 Nick Waterton 24th April 2017: V 1.0: Initial Release
 Nick Waterton 4th July   2017  V 1.1.1: Fixed MQTT protocol version, and map
 paths, fixed paho-mqtt tls changes
 Nick Waterton 5th July   2017  V 1.1.2: Minor fixes, CV version 3 .2 support
 Nick Waterton 7th July   2017  V1.2.0: Added -o option "roomOutline" allows
-enabling/disabling of room outline drawing, added auto creation of css/html files
-Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room outlines
-if you don't have OpenCV
+enabling/disabling of room outline drawing, added auto creation of css/html
+files Nick Waterton 11th July  2017  V1.2.1: Quick (untested) fix for room
+outlines if you don't have OpenCV
 """
 
 import json
@@ -31,6 +31,8 @@ MAX_CONNECTION_RETRIES = 3
 
 
 class RoombaConnectionError(Exception):
+    """Roomba connection exception."""
+
     pass
 
 
@@ -48,6 +50,7 @@ class RoombaInfo:
     def __init__(
         self, hostname, robot_name, ip, mac, firmware, sku, capabilities
     ):
+        """Create object with information about roomba."""
         self.hostname = hostname
         self.firmware = firmware
         self.ip = ip
@@ -58,6 +61,7 @@ class RoombaInfo:
         self.blid = hostname.split("-")[1]
 
     def __str__(self) -> str:
+        """Nice output to console."""
         return ", ".join(
             [
                 "{key}={value}".format(key=key, value=self.__dict__.get(key))
@@ -66,15 +70,18 @@ class RoombaInfo:
         )
 
     def __hash__(self) -> int:
+        """Hashcode."""
         return hash(self.mac)
 
     def __eq__(self, o: object) -> bool:
+        """Equals."""
         return isinstance(o, RoombaInfo) and self.mac == o.mac
 
 
 class Roomba:
     """
-    This is a Class for Roomba 900 series WiFi connected Vacuum cleaners
+    This is a Class for Roomba 900 series WiFi connected Vacuum cleaners.
+
     Requires firmware version 2.0 and above (not V1.0). Tested with Roomba 980
     username (blid) and password are required, and can be found using the
     password() class above (or can be auto discovered)
@@ -90,9 +97,7 @@ class Roomba:
     def __init__(
         self, address=None, blid=None, password=None, continuous=True, delay=1
     ):
-        """
-        Roomba client initialization
-        """
+        """Roomba client initialization."""
         self.log = logging.getLogger(__name__)
         self.address = address
         self.continuous = continuous
@@ -227,7 +232,6 @@ class Roomba:
         self.log.info("Disconnected from Roomba %s", self.address)
 
     def on_message(self, mosq, obj, msg):
-        # print("on_message", msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
         if self.exclude != "":
             if self.exclude in msg.topic:
                 return
@@ -293,7 +297,9 @@ class Roomba:
 
     def dict_merge(self, dct, merge_dct):
         """
-        Recursive dict merge. Inspired by :meth:``dict.update()``, instead
+        Recursive dict merge.
+
+        Inspired by :meth:``dict.update()``, instead
         of updating only top-level keys, dict_merge recurses down into dicts
         nested to an arbitrary depth, updating keys. The ``merge_dct`` is
         merged into ``dct``.
@@ -313,8 +319,9 @@ class Roomba:
 
     def decode_payload(self, topic, payload):
         """
-        Format json for pretty printing, return string sutiable for logging,
-        and a dict of the json data
+        Format json for pretty printing.
+
+        Returns string sutiable for logging, and a dict of the json data
         """
         indent = self.master_indent + 31  # number of spaces to indent json data
 
@@ -345,10 +352,11 @@ class Roomba:
 
     def decode_topics(self, state, prefix=None):
         """
-        decode json data dict, and publish as individual topics to
-        brokerFeedback/topic the keys are concatinated with _ to make one unique
-        topic name strings are expressely converted to strings to avoid unicode
-        representations
+        Decode json data dict and publish as individual topics.
+
+        Publish to brokerFeedback/topic the keys are concatinated with _
+        to make one unique topic name strings are expressely converted
+        to strings to avoid unicode representations
         """
         for key, value in state.items():
             if isinstance(value, dict):
@@ -402,8 +410,9 @@ class Roomba:
 
     def update_state_machine(self, new_state=None):
         """
-        Roomba progresses through states (phases), current identified states
-        are:
+        Roomba progresses through states (phases).
+
+        Current identified states are:
         ""              : program started up, no state yet
         "run"           : running on a Cleaning Mission
         "hmUsrDock"     : returning to Dock
