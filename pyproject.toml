@@ -22,6 +22,7 @@ roomba-password = "roombapy.entry_points:password"
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
 paho-mqtt = "^1.5.1"
+amqtt = "0.10.0a1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"

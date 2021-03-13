@@ -35,7 +35,6 @@ BROKER_CONFIG = {
 }
 
 
-@pytest.mark.skip(reason="required hbmqtt not working with python 3.9")
 class TestRoombaIntegration(abstract_test_roomba.AbstractTestRoomba):
     @pytest.mark.asyncio
     async def test_roomba_connect(self, broker, event_loop):
