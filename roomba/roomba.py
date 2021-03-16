@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Python 3.6 Program to connect to Roomba 980 vacuum cleaner, dcode json, and forward to mqtt
+Python 3.6 Program to connect to Roomba vacuum cleaners, dcode json, and forward to mqtt
 server
 
 Nick Waterton 24th April 2017: V 1.0: Initial Release

@@ -52,7 +52,10 @@ Tested with Python 3.6/Ubuntu 18.04
 * Simulation mode topic for easier debugging
 
 ## Live Maps
-![iRobot Roomba cleaning map using python980 lib](/roomba/res/map.png)
+Live tracking of Roomba location and track, updated in real time:
+![iRobot Roomba cleaning map using roomba lib](/roomba/res/map.png)
+This is a comparison of the map (left) vs the Rooba app generated map (right)
+![iRobot Roomba cleaning map comparison](/roomba/res/side_by_side_map.png)
 ### OpenCV
 If you have OpenCV installed, the library will use it to render the final map (on completion/error), it uses PIL for Live Maps, so the final map looks nicer. **This uses a lot of processing power/memory**, I don't know what happens if you try this on a RPi or other limited platform!
 Also, if you enable debugging mode (-D), intermediate maps (edges.png, final_map.png and so on) are drawn every time a new co-ordinate is reported (every second or so when running). This consumes a lot of resources **You have been warned!**.
