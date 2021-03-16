@@ -13,6 +13,8 @@ var pathLayer;
 var robotBodyLayer;
 var textLayer;
 
+var clearnew;
+
 var lastPhase = '';
 var mapping = true;
 
@@ -23,6 +25,8 @@ var Roombaimg = new Image();
 Roombaimg.src = '/res/roomba.png'
 
 var outline = new Image();
+var floorplan = new Image();
+var floorplan_data = null
 var name = 'none';
 
 var xOffset = 0;    //dock location
@@ -31,11 +35,22 @@ var sizeX = 0;
 var sizeY = 0;
 var roombaangle = 0;
 var rotation = 0;
-var updateEvery = 5000;
+var updateEvery = 3000;
 var lineWidth = 20;
 var maxDim  = 0;
 var gXoff = 0;
 var gYoff = 0;
+var prevnMssn = null;
+
+//floorplan
+var FPfilename = null;
+var FPsizeX = 1.0;
+var FPsizeY = 1.0;
+var FPzoom = 0;
+var FPxOffset = 0;
+var FPyOffset = 0;
+var FProt = 0;
+var FPtrans = 0.2;
 
 var canvasStyle = document.styleSheets[0].cssRules.item(2).style
 var maxHeight =  parseInt(canvasStyle.maxHeight, 10);
@@ -55,6 +70,38 @@ function getMapSize () {
   });
 }
 
+function getFloorPlanSize () {
+  $.getJSON('/api/local/map/floorplansize', function( data ) {
+    if (data) {
+      FPfilename = data.fp_file;
+      FPsizeX = data.x;
+      FPsizeY = data.y;
+      if (data.x == data.y) {
+        FPzoom = data.x
+      }
+      else {
+        FPzoom = 0;
+      }
+      FPxOffset = data.off_x;
+      FPyOffset = data.off_y;
+      FProt = data.angle;
+      FPtrans = data.trans;
+      UpdateFPvalues();
+    } else {
+      var elem = document.getElementById('show_fpsize');
+      var elem1 = document.getElementById('label_fpsize');
+      if (elem !== null) {
+        //remove floorplan checkbox if no floorplan data
+        elem.parentNode.removeChild(elem);
+      }
+      if (elem1 !== null) {
+        //remove floorplan checkbox label no floorplan data
+        elem1.parentNode.removeChild(elem1);
+      }
+    }
+  });
+}
+
 function getRoombaName () {
   $.getJSON('/api/local/info/name', function( data ) {
     name = data.name;
@@ -68,7 +115,13 @@ function startApp () {
   robotBodyLayer = document.getElementById('robot_body_layer');
   textLayer = document.getElementById('text_layer');
   
+  clearnew = document.getElementsByName("clearnew");
+  
+  toggleMapsize();
+  toggleFPsize();
+  
   Updatevalues();
+  getFloorPlanSize();
   getDimentions();
   getRoombaName();
   
@@ -88,6 +141,7 @@ function startApp () {
   textLayerContext = textLayer.getContext('2d');
   
   UpdateCanvas();
+  getFloorplan();
   clearMap();
   startMissionLoop();
 }
@@ -101,13 +155,51 @@ function getDimentions () {
 function getMapOutline () {
   $.get('/api/local/map/outline', function( data ) {
     var pngimg = data;
-    console.log('got png image, length: %d',pngimg.length);
+    console.log('got outline image, length: %d',pngimg.length);
     //console.log(pngimg)
     if (pngimg) {
       outline.src = "data:image/png;base64," + pngimg;
       textLayerContext.drawImage(outline, 0, (textLayer.height/2)-(outline.naturalHeight/2));
+    } else {
+      var elem = document.getElementById('clearoutline');
+      if (elem !== null) {
+        //remove clearoutline button if null
+        elem.parentNode.removeChild(elem);
+      }
     }
   });
+}
+
+function getFloorplan () {
+  $.get('/api/local/map/floorplan', function( data ) {
+    floorplan_data = data;
+    console.log('got floorplan image, length: %d',floorplan_data.length);
+    //console.log(floorplan_data)
+    if (floorplan_data) {
+      floorplan.src = "data:image/png;base64," + floorplan_data;
+      clearOutline();
+    } 
+  });
+}
+
+function drawFloorplan () {
+  if (floorplan_data) {
+    textLayerContext.drawImage(floorplan, 0, (textLayer.height/2)-(floorplan.naturalHeight/2));
+  }
+}
+
+function UpdateFPvalues () {
+  $('#fpw').val(FPsizeX);
+  $('#fph').val(FPsizeY);
+  $('#fpzoom').val(FPzoom);
+
+  $('#fpoffsetx').val(FPxOffset);
+  $('#fpoffsety').val(FPyOffset);
+  
+  $('#fprot').val(FProt);
+  $('#fptrans').val(FPtrans);
+  
+  console.log('updated FP values')
 }
 
 function Updatevalues () {
@@ -126,7 +218,7 @@ function Updatevalues () {
   $('#maxheight').val(maxHeight);
   
   $('#bin').html('no bin');
-  console.log('updated values')
+  
 }
 
 function UpdateLineWidth () {
@@ -158,17 +250,26 @@ function messageHandler (msg) {
     // firmware version 2/3
     msg.ok = msg.cleanMissionStatus;
     msg.ok.pos = msg.pose;
+    msg.ok.flags = msg.flags;
     msg.ok.batPct = msg.batPct;
     if (msg.bin) {
       $('#bin').html(msg.bin.present);
     }
-    $('#nMssn').html(msg.ok.nMssn);
+    if (prevnMssn === null) {
+      prevnMssn = msg.ok.nMssn;
+    }
+  }
+  if (prevnMssn != msg.ok.nMssn) {
+    //clear map on new mission if checkbox set
+    ClearMapOnNew();
+    prevnMssn = msg.ok.nMssn;
   }
   var d = new Date();
   msg.ok.time = new Date().toLocaleString().split(' ')[1];
   $('#mapStatus').html('drawing...');
   $('#last').html(msg.ok.time);
   $('#mission').html(msg.ok.mssnM);
+  $('#nMssn').html(msg.ok.nMssn);
   $('#cycle').html(msg.ok.cycle);
   $('#phase').html(msg.ok.phase);
   $('#flags').html(msg.ok.flags);
@@ -178,27 +279,28 @@ function messageHandler (msg) {
   $('#expireM').html(msg.ok.expireM);
   $('#rechrgM').html(msg.ok.rechrgM);
   $('#notReady').html(msg.ok.notReady);
-  $('#theta').html(msg.ok.pos.theta);
-  $('#x').html(msg.ok.pos.point.x);
-  $('#y').html(msg.ok.pos.point.y);
 
-  drawStep(
-    msg.ok.pos.point.x,
-    msg.ok.pos.point.y,
-    msg.ok.pos.theta,
-    msg.ok.cycle,
-    msg.ok.phase
-  );
+  if (msg.ok.phase === 'charge') {
+    //if we are charging, assume 0,0 location (dock)
+    msg.ok.pos = {"theta": 180,"point": {"x": 0,"y": 0}};
+  }
+  
+  if (msg.ok.pos) {
+    $('#theta').html(msg.ok.pos.theta);
+    $('#x').html(msg.ok.pos.point.x);
+    $('#y').html(msg.ok.pos.point.y);
+
+    drawStep(
+      msg.ok.pos.point.x,
+      msg.ok.pos.point.y,
+      msg.ok.pos.theta,
+      msg.ok.cycle,
+      msg.ok.phase
+    );
+  }
 }
 
 function drawStep (x, y, theta, cycle, phase) {
-  if (phase === 'charge') {
-    // hack (getMission() dont send x,y if phase is diferent as run)
-    x = 0;
-    y = 0;
-    theta = 180;
-  }
-  
   //offset is from the middle of the canvas
   var xoff = (pathLayer.width/2+xOffset);
   var yoff = (pathLayer.height/2+yOffset);
@@ -225,10 +327,9 @@ function drawStep (x, y, theta, cycle, phase) {
     textLayerContext.fillText(phase, x, y);
     getMapOutline();
     lastPhase = phase;
-  } else {
-    pathLayerContext.lineTo(x, y);
-    pathLayerContext.stroke();
-  }
+  } 
+  pathLayerContext.lineTo(x, y);
+  pathLayerContext.stroke();
 }
 
 function drawDock () {
@@ -264,6 +365,19 @@ function drawRobotBody (x, y, theta) {
   */
 }
 
+function clearOutline () {
+  $.get('/api/local/map/clear_outline');
+  lastPhase = '';
+  clearContext(textLayerContext);
+  drawOutline();
+}
+
+function ClearMapOnNew () {
+  if (clearnew.checked) {
+    clearMap();  
+  }
+}
+
 function clearMap () {
   lastPhase = '';
   clearContext(pathLayerContext);
@@ -272,6 +386,7 @@ function clearMap () {
   drawOutline();
   pathLayerContext.beginPath();
 }
+
 function clearContext (ctx) {
   console.log('clear context');
   //clear a bigger area than you think, as rotated canvasses
@@ -310,6 +425,7 @@ function drawRotatedImage(ctx, img, x, y, deg) {
 function drawOutline () {
   //draws the rectangular bounds of the map
   console.log('DrawOutline sizeX: %d, sizeY: %d, gXoff: %d, gYoff: %d', sizeX, sizeY, gXoff, gYoff);
+  drawFloorplan();
   textLayerContext.beginPath();
   textLayerContext.lineWidth = 5;
   textLayerContext.strokeStyle="#FF0000";
@@ -328,8 +444,38 @@ function toggleMapping () {
   if (mapping) startMissionLoop();
 }
 
+function toggleFPsize () {
+  var show_fpsize = document.getElementById('show_fpsize');
+  var fpsize = document.getElementById('floorplan');
+  if (show_fpsize.checked) {
+      fpsize.style.display = "inline";
+  } else {
+      fpsize.style.display = "none";
+  }
+}
+
+function toggleMapsize () {
+  var show_mapsize = document.getElementById('show_mapsize');
+  var mapsize = document.getElementById('mapsize');
+  if (show_mapsize.checked) {
+      mapsize.style.display = "inline";
+  } else {
+      mapsize.style.display = "none";
+  }
+}
+
 function getValue (name, actual) {
   var newValue = parseInt($(name).val(), 10);
+  if (isNaN(newValue)) {
+    alert('Invalid ' + name);
+    $(name).val(actual);
+    return actual;
+  }
+  return newValue;
+}
+
+function getFloat (name, actual) {
+  var newValue = parseFloat($(name).val(), 10);
   if (isNaN(newValue)) {
     alert('Invalid ' + name);
     $(name).val(actual);
@@ -476,13 +622,32 @@ function UpdateCanvas () {
 }
 
 function saveValues () {
-  var values = `mapsize = '(${$('#sizew').val()},
-                            ${$('#sizeh').val()},
-                            ${$('#offsetx').val()},
-                            ${$('#offsety').val()},
-                            ${$('#rotation').val()},
-                            ${$('#roombaangle').val()})'`;
-  $.post('/map/values', values, function (data) {
+  var values = `mapsize = (${$('#sizew').val()},
+                           ${$('#sizeh').val()},
+                           ${$('#offsetx').val()},
+                           ${$('#offsety').val()},
+                           ${$('#rotation').val()},
+                           ${$('#roombaangle').val()})`;
+  $.post('/map/display_values', values, function (data) {
+    $('#apiresponse').html(data);
+  });
+}
+
+function saveFPValues () {
+  var zoom;
+  if (FPsizeX == FPsizeY) {
+    zoom = `${$('#fpzoom').val()}`;
+  } else {
+    zoom = `(${$('#fpw').val()},${$('#fph').val()})`;
+  }
+
+  var values = `floorplan = ('${FPfilename}',
+                             ${$('#fpoffsetx').val()},
+                             ${$('#fpoffsety').val()},
+                             ${zoom},
+                             ${$('#fprot').val()},
+                             ${$('#fptrans').val()})`;  
+  $.post('/map/display_values', values, function (data) {
     $('#apiresponse').html(data);
   });
 }
@@ -490,6 +655,39 @@ function saveValues () {
 $('.metrics').on('change', function () {
   UpdateCanvas();
 });
+
+$('.fpmasterzoom').on('change', function () {
+  FPzoom = getFloat('#fpzoom', FPzoom);
+  FPsizeX = FPsizeY = FPzoom;
+  $('#fpw').val(FPzoom);
+  $('#fph').val(FPzoom);
+  console.log('updated floorplan X,Y Zoom: %s', FPzoom);
+  postFPvalues();
+});
+
+$('.fpmetrics').on('change', function () {
+  FPsizeX = getFloat('#fpw', FPsizeX);
+  FPsizeY = getFloat('#fph', FPsizeY);  
+  postFPvalues();
+});
+
+function postFPvalues () {
+  var values = {}
+  values.filename  = FPfilename;
+  values.fpoffsetx = $('#fpoffsetx').val();
+  values.fpoffsety = $('#fpoffsety').val();
+  values.fpw       = $('#fpw').val();
+  values.fph       = $('#fph').val();
+  values.fprot     = $('#fprot').val();
+  values.fptrans   = $('#fptrans').val();
+
+  console.log('updating floorplan values: %s', values);
+  $.post('/map/set_fp_values', values, function (data) {
+    $('#apiresponse').html(JSON.stringify(data));
+  });
+  getFloorplan();
+  clearMap();
+}
 
 $('.action').on('click', function () {
   var me = $(this);

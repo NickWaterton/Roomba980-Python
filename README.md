@@ -5,7 +5,7 @@ Unofficial iRobot Roomba python library (SDK).
 
 Thanks to https://github.com/koalazak/dorita980 where much of the inner workings were derived from.
 
-**NEW V2.0a 5/2/2021** All new re-write.  
+**NEW V2.0c 16/3/2021** All new re-write.  
 **NOTE: This is an ALPHA Release - it will have bugs in it - please report them to me**
 
 ## New Features
@@ -19,6 +19,7 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 * supports self emptying base
 * New web interface for experimenting with real-time mapping
 * support V2.XX and 3.XX firmware
+* Supports Floor Plans for overlay on map
 
 ## Important!
 Only local connections are supported. The project was written to allow Openhab2 control, so if you integrate Roomba into Openhab2, you can control it from anywhere.
@@ -44,6 +45,7 @@ Tested with Python 3.6/Ubuntu 18.04
 * Multiple Roombas/Mops supported
 * Live Maps
 * Maps show locations of errors, bin full, cancelled runs
+* Supports Floor Plans for overlay on map
 * designed for openhab2 compatibility
 * HA compatibility
 * Built in Web Server for interactive control/Mapping
@@ -105,8 +107,8 @@ usage: roomba.py [-h] [-f CONFIGFILE] [-n ROOMBA_NAME] [-t TOPIC]
                  [-b BROKER] [-p PORT] [-U USER] [-P BROKER_PASSWORD]
                  [-R ROOMBA_IP] [-u BLID] [-w PASSWORD] [-wp WEBPORT]
                  [-i INDENT] [-l LOG] [-e] [-D] [-r] [-j] [-m] [-M MAPPATH]
-                 [-sq MAX_SQFT] [-s MAPSIZE] [-I ICONPATH] [-o] [-x EXCLUDE]
-                 [--cert CERT] [--version]
+                 [-sq MAX_SQFT] [-s MAPSIZE] [-fp FLOORPLAN] [-I ICONPATH]
+                 [-o] [-x EXCLUDE] [--version]
 
 Forward MQTT data from Roomba to local MQTT broker
 
@@ -143,13 +145,13 @@ optional arguments:
                         Optional web server port number (default: None)
   -i INDENT, --indent INDENT
                         Default indentation=auto
-  -l LOG, --log LOG     path/name of log file (default: ./Roomba.log)
+  -l LOG, --log LOG     path/name of log file (default: ./roomba.log)
   -e, --echo            Echo to Console (default: True)
   -D, --debug           debug mode
   -r, --raw             Output raw data to mqtt, no decoding of json data
                         (default: False)
   -j, --pretty_print    pretty print json in logs (default: False)
-  -m, --drawmap         Draw Roomba cleaning map (default: False)
+  -m, --drawmap         Draw Roomba cleaning map (default: True)
   -M MAPPATH, --mappath MAPPATH
                         Location to store maps to (default: .)
   -sq MAX_SQFT, --max_sqft MAX_SQFT
@@ -160,15 +162,22 @@ optional arguments:
                         of the map, 0 is the rotation of the map, 0 is the
                         rotation of the roomba. Use single quotes around the
                         string. (default: "(800,1500,0,0,0,0)")
+  -fp FLOORPLAN, --floorplan FLOORPLAN
+                        Floorplan for Map. eg
+                        ("res/first_floor.jpg",0,0,(1.0,1.0),0,
+                        0.2)"res/first_floor.jpg" is the file name, 0,0 is the
+                        x,y offset, (1.0, 1.0) is the (x,y) scale (or a single
+                        number eg 1.0 for both), 0 is the rotation of the
+                        floorplan, 0.2 is the transparencyUse single quotes
+                        around the string. (default: None)
   -I ICONPATH, --iconpath ICONPATH
                         location of icons. (default:
                         "/home/nick/Scripts/Roomba980-Python/roomba/res")
   -o, --room_outline    Draw room outline (default: True)
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude topics that have this in them (default: "")
-  --cert CERT           Set the certificate to use for MQTT communication with
-                        the Roomba (depreciated)
   --version             Display version of this program
+
 ```
 ## quick start
 With the roomba on the dock and charged (and connected to wifi), stand by the roomba and run
@@ -306,14 +315,21 @@ set_mqtt_client(mqttc=None, brokerFeedback="")
 set_options(raw=False, indent=0, pretty_print=False, max_sqft=0)
 set_cleanSchedule(schedule)
 get_property(property, cap=False)
-enable_map( enable=False, mapSize="(800,1500,0,0,0,0)", mapPath="./", iconPath="./",
-            home_icon_file="home.png",
-            roomba_icon_file="roomba.png",
-            roomba_error_file="roombaerror.png",
-            roomba_cancelled_file="roombacancelled.png",
-            roomba_battery_file="roomba-charge.png",
-            bin_full_file="binfull.png",
-            roomba_size=(50,50), draw_edges = 15, auto_rotate=False)
+enable_map(enable=False, mapSize="(800,1500,0,0,0,0)",
+           mapPath=".", iconPath = "./", roomOutline=True,
+           enableMapWithText=True,
+           fillColor="lawngreen", 
+           outlineColor=(64,64,64,255),
+           outlineWidth=1,
+           home_icon_file="home.png",
+           roomba_icon_file="roomba.png",
+           roomba_error_file="roombaerror.png",
+           roomba_cancelled_file="roombacancelled.png",
+           roomba_battery_file="roomba-charge.png",
+           bin_full_file="binfull.png",
+           tank_low_file="tanklow.png",
+           floorplan = None,
+           roomba_size=(50,50), draw_edges = 30, auto_rotate=False)
 ```
 #### Async methods
 ```python

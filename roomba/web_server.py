@@ -12,7 +12,7 @@ import logging
 
 class webserver():
 
-    VERSION = __version__ = "2.0a"
+    VERSION = __version__ = "2.0c"
     
     api_get =   {'time'                     : 'utctime',
                  'bbrun'                    : 'bbrun',
@@ -35,7 +35,7 @@ class webserver():
                  'week'                     : ['cleanSchedule'],
                  'preferences'              : ['cleanMissionStatus', 'cleanSchedule', 'name', 'vacHigh', 'signal'],
                  'state'                    : 'state',
-                 'mission'                  : ['cleanMissionStatus', 'pose', 'bin', 'batPct'],
+                 'mission'                  : ['cleanMissionStatus', 'pose', 'bin', 'batPct', 'flags'],
                  'missionbasic'             : ['cleanMissionStatus', 'bin', 'batPct'],
                  'wirelessconfig'           : ['wlcfg', 'netinfo'],
                  'wireless'                 : ['wifistat', 'netinfo'],
@@ -94,9 +94,8 @@ class webserver():
         @routes.get('/api/local/map/{info}')
         async def map_info(request):
             item = request.match_info['info']
-            value = None
             if item == 'enabled':
-                value = self.roomba.drawmap
+                return web.json_response(self.roomba.drawmap)
             elif item == 'mapsize':
                 if self.roomba.mapSize:
                     value = {'x': self.roomba.mapSize[0],
@@ -105,7 +104,7 @@ class webserver():
                              'off_y': self.roomba.mapSize[3],
                              'angle': self.roomba.mapSize[4],
                              'roomba_angle': self.roomba.mapSize[5],
-                             'update': 5000}
+                             'update': 3000}
                 else:
                     value = {'x': 2000,
                              'y': 2000,
@@ -113,17 +112,35 @@ class webserver():
                              'off_y': 0,
                              'angle': 0,
                              'roomba_angle': 0,
-                             'update': 5000}
-            elif item == 'outline':
-                img = self.roomba.img_to_png('room.png')
-                if img:
-                    b64img = base64.b64encode(img)
-                    self.log.info('got: bytes len {}'.format(len(b64img)))
-                    return web.Response(body=b64img)
-            if value:
+                             'update': 3000}
                 return web.json_response(value)
-            if not self.roomba.drawmap:
-                raise web.HTTPBadRequest(reason='Roomba mapping not Enabled')
+            elif item == 'floorplansize':
+                if self.roomba.floorplan_size:
+                    scale = self.roomba.floorplan_size[3]
+                    if isinstance(scale, (int, float)):
+                        scale=(float(scale), float(scale))
+                    value = {'fp_file': self.roomba.floorplan_size[0],
+                             'x': scale[0],
+                             'y': scale[1],
+                             'off_x': self.roomba.floorplan_size[1],
+                             'off_y': self.roomba.floorplan_size[2],
+                             'angle': self.roomba.floorplan_size[4],
+                             'trans': self.roomba.floorplan_size[5]}
+                else:
+                    value = None
+                return web.json_response(value)
+            elif item == 'clear_outline':
+                self.roomba.clear_outline()
+                return web.Response(text="ok")
+            elif item == 'outline':
+                if not self.roomba.roomOutline:
+                    img = None
+                else:
+                    img = self.roomba.img_to_png(self.roomba.room_outline)
+                return web.Response(body=self.b64_encode(img))
+            elif item == 'floorplan':
+                img = self.roomba.img_to_png(self.roomba.floorplan)
+                return web.Response(body=self.b64_encode(img))
             raise web.HTTPBadRequest(reason='bad api call {}'.format(str(request.rel_url)))
         
         @routes.get('/api/local/info/{info}')
@@ -179,13 +196,34 @@ class webserver():
                 return web.Response(text="sent: {}".format(value))
             raise web.HTTPBadRequest(reason='bad api call {}'.format(str(request.rel_url)))
             
-        @routes.post('/map/values')
+        @routes.post('/map/{command}')
         async def map_values(request):
+            command = request.match_info['command']
             value = {}
             if request.can_read_body:
                 value = await request.text()
                 self.log.info('received: {}'.format(value))
-            return web.Response(text="copy this to config.ini: {}".format(value))
+            if command == 'display_values':
+                return web.Response(text="copy this to config.ini: {}".format(value))
+            elif command == 'set_fp_values':
+                post = await request.post()
+                for key in iter(post):
+                    self.log.info('received key: {} : value: {}'.format(key, post.get(key, None)))
+                self.roomba.floorplan_size = (post.get('filename'),
+                                              int(post.get('fpoffsetx')),
+                                              int(post.get('fpoffsety')),
+                                              (float(post.get('fpw')),float(post.get('fph'))),
+                                              int(post.get('fprot')),
+                                              float(post.get('fptrans')))
+                                              
+                self.roomba.load_floorplan(self.roomba.floorplan_size[0],
+                                           new_center=(self.roomba.floorplan_size[1], self.roomba.floorplan_size[2]),
+                                           scale=self.roomba.floorplan_size[3],
+                                           angle=self.roomba.floorplan_size[4],
+                                           transparency=self.roomba.floorplan_size[5])
+
+                return web.Response(text="set fp values to: {}".format(value))
+            raise web.HTTPBadRequest(reason='bad api call {}'.format(str(request.rel_url)))
 
         self.app = web.Application()
         self.app.add_routes(routes)
@@ -209,6 +247,14 @@ class webserver():
         key = '/'.join([setting, value])
         return self.api_post.get(key, {})
         
+    def b64_encode(self, img):
+        b64img = None
+        if img is not None:
+            b64img = base64.b64encode(img)
+            self.log.info('got: bytes len {}'.format(len(b64img)))
+        return b64img
+        
+        
     class dummy_roomba():
         '''
         dummy roomba class for testing
@@ -220,19 +266,25 @@ class webserver():
             self.log.info('Simulating Roomba')
             self.response = 'Simulated Roomba'
             self.drawmap = False
+            self.roomOutline = False
             self.room_outline = None
+            self.floorplan = None
+            self.floorplan_size = None
             self.mapSize = None
             
         def img_to_png(self, name):
-            return b''
+            return None
+            
+        def clear_outline(self):
+            return None
         
         async def get_settings(self, *args):
             return self.response
             
-        async def async_send_command(self, *arga):
+        async def async_send_command(self, *args):
             return None
             
-        def get_property(self, *atgs):
+        def get_property(self, *args):
             return self.response
             
         async def async_set_preference(self, *args):

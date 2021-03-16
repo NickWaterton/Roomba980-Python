@@ -4,8 +4,9 @@
 # hacky fixes NW 30th Nov 2019
 # Pillow fix for V 7 __version__ replaced with __version__
 # Jan 8th 2021 NW Complete re-write
+# Mar 11th 2021 NW V 2.0c added floorplan option, removed certificate option
 
-__version__ = "2.0a"
+__version__ = "2.0c"
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -199,6 +200,19 @@ def parse_args():
              'Use single quotes around the string. (default: '
              '"%(default)s")')
     parser.add_argument(
+        '-fp', '--floorplan',
+        action='store',
+        type=str,
+        default=None,
+        help='Floorplan for Map. eg ("res/first_floor.jpg",0,0,(1.0,1.0),0, 0.2)'
+             '"res/first_floor.jpg" is the file name, '
+             '0,0 is the x,y offset, '
+             '(1.0, 1.0) is the (x,y) scale (or a single number eg 1.0 for both), '
+             '0 is the rotation of the floorplan, '
+             '0.2 is the transparency'
+             'Use single quotes around the string. (default: '
+             '%(default)s)')
+    parser.add_argument(
         '-I', '--iconpath',
         action='store',
         type=str,
@@ -212,12 +226,6 @@ def parse_args():
     parser.add_argument(
         '-x', '--exclude',
         action='store',type=str, default="", help='Exclude topics that have this in them (default: "%(default)s")')
-    parser.add_argument(
-        '--cert',
-        action='store',
-        type=str,
-        default='/etc/ssl/certs/ca-certificates.crt',
-        help='Set the certificate to use for MQTT communication with the Roomba (depreciated)')
     parser.add_argument(
         '--version',
         action='version',
@@ -390,7 +398,7 @@ def main():
             elif value is None or isinstance(value, str):
                 options[opt] = config_value
             else:
-                options[opt] = literal_eval(config_value)
+                options[opt] = literal_eval(str(config_value))
                 
         # minnimum required to connect on Linux Debian system
         # myroomba = Roomba(address, blid, roombaPassword)
@@ -421,7 +429,8 @@ def main():
                                 mapSize=arg.mapsize,
                                 mapPath=arg.mappath,
                                 iconPath=arg.iconpath,
-                                roomOutline=arg.room_outline)
+                                roomOutline=arg.room_outline,
+                                floorplan=arg.floorplan)
                                 
         if arg.broker is not None:
             # if you want to publish Roomba data to your own mqtt broker

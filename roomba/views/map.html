@@ -21,16 +21,33 @@
   <button type="button" class='btn btn-info action' data-action='/api/local/info/sys'>Test Sys</button>
   <a type="button" class='btn btn-warning' id='download' onclick='downloadCanvas();'>Download Image</a>
   <button type="button" class='btn btn-danger' onclick='clearMap();'>Clear map</button>
+  <button type="button" class='btn btn-danger' id='clearoutline' onclick='clearOutline();'>Clear outline</button>
   <button type="button" class='btn btn-danger' onclick='toggleMapping();'>Start/Stop mapping</button> <span class='' id='mapStatus'></span>
   <div>
     Update every: <input type='text' id='updateevery' size='5' value='5000'/>ms.
     Line Width <input type='text' id='linewidth' size='2' value='20'/>
     Zoom: 50% <input type='range' min='50' max='200' value='85' class='metrics' id='maxheight' style="display: inline-block; width: 20%;"/> 200% <button type="button" onclick='resetMaxHeight();'>Reset</button>
+    <input type='checkbox' checked value='true' name='clearnew' id='clearnew'/>
+    <label for="clearnew">Clear on New</label>
+    <input type='checkbox' checked value='true' name='show_mapsize' id='show_mapsize' onclick='toggleMapsize();'/>
+    <label for="show_mapsize">Map Size</label>
+    <input type='checkbox' value='true' name='show_fpsize' id='show_fpsize' onclick='toggleFPsize();'/>
+    <label for="show_fpsize" id='label_fpsize'>FP Size</label>
     <br/>
+    <div id='mapsize'>
     Map size: w:<input type='text' class='metrics' id='sizew' size='5' value='0'/> h:<input class='metrics' type='text' id='sizeh' size='5' value='0'/>
     Dock: x:<input type='text' class='metrics' id='offsetx' size='5' value='0'/> y:<input class='metrics' type='text' id='offsety' size='5' value='0'/>
     rot:<input class='metrics' type='text' id='rotation' size='4' value='0'/> R rot:<input class='metrics' type='text' id='roombaangle' size='4' value='0'/>
     <button type="button" onclick='saveValues();'>Save values</button>
+    <br/>
+    </div>
+    <div id='floorplan' style="display: none;">
+    FloorPlan: w:<input type='text' class='fpmetrics' id='fpw' size='5' value='0'/> h:<input class='fpmetrics' type='text' id='fph' size='5' value='0'/>
+    zoom: <input type='text' class='fpmasterzoom' id='fpzoom' size='5' value='0'/>
+    offset: x:<input type='text' class='fpmetrics' id='fpoffsetx' size='5' value='0'/> y:<input class='fpmetrics' type='text' id='fpoffsety' size='5' value='0'/>
+    rot:<input class='fpmetrics' type='text' id='fprot' size='4' value='0'/> Trans:<input class='fpmetrics' type='text' id='fptrans' size='4' value='0'/>
+    <button type="button" onclick='saveFPValues();'>Save values</button>
+    </div>
   </div>
 
   <div>
