@@ -54,6 +54,7 @@ Tested with Python 3.6/Ubuntu 18.04
 ## Live Maps
 Live tracking of Roomba location and track, updated in real time:
 ![iRobot Roomba cleaning map using roomba lib](/roomba/res/map.png)
+
 This is a comparison of the map (left) vs the Rooba app generated map (right)
 ![iRobot Roomba cleaning map comparison](/roomba/res/side_by_side_map.png)
 ### OpenCV
