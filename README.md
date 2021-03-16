@@ -56,7 +56,7 @@ Live tracking of Roomba location and track, updated in real time:
 ![iRobot Roomba cleaning map using roomba lib](/roomba/res/map.png)
 
 This is a comparison of the actual Roomba track (left) vs the Rooba app generated map (right):
-![iRobot Roomba cleaning map comparison](/roomba/res/side_by_side_map1.png)
+![iRobot Roomba cleaning map comparison](/roomba/res/side_by_side_map.png)
 
 **NOTE:** Later Roombas only update their position every 5 seconds - they can move a long way in this time, so apparent "gaps" in the floor coverage may not be real.
 ### OpenCV
