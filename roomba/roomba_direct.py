@@ -464,6 +464,7 @@ def main():
         log.info("System exit Received - Exiting program")
         for myroomba in roomba_list:
                 myroomba.disconnect()
+        log.info('Program Exited')
         
     finally:
         pass

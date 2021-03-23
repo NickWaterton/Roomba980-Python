@@ -580,24 +580,21 @@ class Roomba(object):
 
     def disconnect(self):
         try:
-            self.loop.run_until_complete(asyncio.shield(self._diconnect()))
-        except asyncio.CancelledError:
-            pass
+            self.loop.run_until_complete(self._disconnect())
         except RuntimeError:
-            self.loop.create_task(asyncio.shield(self._diconnect()))
+            self.loop.create_task(self._disconnect())
     
-    async def _diconnect(self):
+    async def _disconnect(self):
         #if self.ws:
         #    await self.ws.cancel()
-        for task in asyncio.Task.all_tasks():
-            if not task.done():
-                task.cancel()
-                self.log.debug('waiting for task: {} to end'.format(task))
-                await asyncio.wait_for(task, 5)
-
+        tasks = [t for t in asyncio.Task.all_tasks() if t is not asyncio.Task.current_task()]
+        [task.cancel() for task in tasks]
+        self.log.info("Cancelling {} outstanding tasks".format(len(tasks)))
+        await asyncio.gather(*tasks, return_exceptions=True)
         self.client.disconnect()
         if self.local_mqtt:
             self.mqttc.loop_stop()
+        self.log.info('{} disconnected'.format(self.roombaName))
         
     def connected(self, state):
         self.roomba_connected = state
@@ -614,7 +611,7 @@ class Roomba(object):
                            "correct for Roomba {}".format(self.roombaName))
             self.connected(False)
             self.client.disconnect()
-        self.loop.call_soon_threadsafe(self.is_connected.set)
+        self.loop.call_soon_threadsafe(self.is_connected.set())
 
     def on_message(self, mosq, obj, msg):
         #print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
@@ -679,7 +676,7 @@ class Roomba(object):
         self.log.debug("Subscribed: {} {}".format(str(mid), str(granted_qos)))
 
     def on_disconnect(self, mosq, obj, rc):
-        self.loop.call_soon_threadsafe(self.is_connected.clear)
+        self.loop.call_soon_threadsafe(self.is_connected.clear())
         self.connected(False)
         if rc != 0:
             self.log.warning("Unexpected Disconnect! - reconnecting")
