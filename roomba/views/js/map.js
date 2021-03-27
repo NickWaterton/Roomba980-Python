@@ -184,7 +184,7 @@ function getFloorplan () {
 
 function drawFloorplan () {
   if (floorplan_data) {
-    textLayerContext.drawImage(floorplan, 0, (textLayer.height/2)-(floorplan.naturalHeight/2));
+    textLayerContext.drawImage(floorplan, (textLayer.width/2)-(floorplan.naturalWidth/2), (textLayer.height/2)-(floorplan.naturalHeight/2));
   }
 }
 

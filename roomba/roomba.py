@@ -26,6 +26,7 @@ Nick Waterton 26th Februaury 2021 v 2.0.0b changed battery low and bin full hand
 Nick Waterton 3rd march 2021 v 2.0.0c changed battery low when docked, added callback handling and flags, added tank level,
                                       changed bin full handling, recovery from error condition mapping and added floormaps
                                       updated error list
+Nick Waterton 27th March 2021 V2.0.0d Fixed floorplan offset on webpage in map.js.
 '''
 
 __version__ = "2.0.0c"
