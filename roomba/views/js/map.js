@@ -35,6 +35,8 @@ var sizeX = 0;
 var sizeY = 0;
 var roombaangle = 0;
 var rotation = 0;
+var invert_x = 0;
+var invert_y = 0;
 var updateEvery = 3000;
 var lineWidth = 20;
 var maxDim  = 0;
@@ -65,6 +67,12 @@ function getMapSize () {
     rotation = data.angle;
     roombaangle = data.roomba_angle;
     updateEvery = data.update;
+    if (data.invert_x) {
+      invert_x = data.invert_x;
+    }
+    if (data.invert_y) {
+      invert_y = data.invert_y;
+    }
   }).always(function() {
     startApp(); 
   });
@@ -211,6 +219,9 @@ function Updatevalues () {
   
   $('#rotation').val(rotation);
   $('#roombaangle').val(roombaangle);
+  
+  $('#invert_x').val(invert_x);
+  $('#invert_y').val(invert_y);
 
   $('#updateevery').val(updateEvery);
   $('#linewidth').val(lineWidth);
@@ -308,9 +319,17 @@ function drawStep (x, y, theta, cycle, phase) {
   y = parseInt(y, 10);
   var oldX = x;
 
-  //x and y are reversed in pose... so rotate
+  //x and y are reversed in pose... so swap
   x = y;
   y = oldX;
+  if(invert_x == 1) {
+    x = -x;
+  }
+  if(invert_y ==1) {
+    y = -y;
+  }
+  
+  
   x+=xoff;
   y+=yoff;
   
@@ -333,7 +352,7 @@ function drawStep (x, y, theta, cycle, phase) {
 }
 
 function drawDock () {
-  drawRotatedImage(robotBodyLayerContext, Dockimg, (pathLayer.width/2+xOffset), (pathLayer.height/2+yOffset), roombaangle-rotation);
+  drawRotatedImage(robotBodyLayerContext, Dockimg, (pathLayer.width/2+xOffset), (pathLayer.height/2+yOffset), (rotation+180)%360);
 }
 
 function drawRobotBody (x, y, theta) {
@@ -514,6 +533,9 @@ function resizeCanvas(ctx, w, h) {
 function rotateCanvas (ctx, absrot){
   rotation = rotation || 0;
   var rotdeg = (absrot-rotation);
+  if (sizeY > sizeX) {
+    rotdeg = 180-rotdeg
+  }
   console.log('Abs Angle: %d, Rotate: %d deg', absrot, rotdeg);
   var radians=(rotdeg*Math.PI)/180;
   var absradians=(absrot*Math.PI)/180;
@@ -549,6 +571,8 @@ function UpdateCanvas () {
   var x;
   var y;
   var deg;
+  invert_x = getValue('#invert_x', invert_x);
+  invert_y = getValue('#invert_y', invert_y);
 
   if (sizeX !== w) {
     console.log('redrawing x');
@@ -627,7 +651,10 @@ function saveValues () {
                            ${$('#offsetx').val()},
                            ${$('#offsety').val()},
                            ${$('#rotation').val()},
-                           ${$('#roombaangle').val()})`;
+                           ${$('#roombaangle').val()},
+                           ${$('#invert_x').val()},
+                           ${$('#invert_y').val()}
+                           )`;
   $.post('/map/display_values', values, function (data) {
     $('#apiresponse').html(data);
   });

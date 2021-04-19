@@ -27,9 +27,11 @@ Nick Waterton 3rd march 2021 v 2.0.0c changed battery low when docked, added cal
                                       changed bin full handling, recovery from error condition mapping and added floormaps
                                       updated error list
 Nick Waterton 27th March 2021 V2.0.0d Fixed floorplan offset on webpage in map.js.
+Nick Waterton 28th March 2021 V2.0.0e Added invery x, y option
+Nick Waterton 19th April 2021 V2.0.0f: added set_ciphers('DEFAULT@SECLEVEL=1') to ssl context to work arounf dh_key_too_small error (requred for ubuntu 20.04).
 '''
 
-__version__ = "2.0.0c"
+__version__ = "2.0.0f"
 
 import asyncio
 from ast import literal_eval
@@ -270,7 +272,7 @@ class Roomba(object):
     be decoded and published on the designated mqtt client topic.
     '''
 
-    VERSION = __version__ = "2.0c"
+    VERSION = __version__ = "2.0f"
 
     states = {"charge"          : "Charging",
               "new"             : "New Mission",
@@ -416,6 +418,7 @@ class Roomba(object):
         self.fnt = None
         self.home_pos = None
         self.angle = 0
+        self.invert_x = self.invert_y = None    #mirror x,y
         self.current_state = None
         self.simulation = False
         self.simulation_reset = False
@@ -510,6 +513,7 @@ class Roomba(object):
             try:
                 #self.client._ssl_context = None
                 context = ssl.SSLContext()
+                context.set_ciphers('DEFAULT@SECLEVEL=1')
                 self.client.tls_set_context(context)
             except Exception as e:
                 self.log.exception("Error setting TLS: {}".format(e))
@@ -1034,6 +1038,10 @@ class Roomba(object):
                 self.roombas_config[self.address]['mapsize'] = self.mapSize
             self.angle = self.mapSize[4]
             self.roomba_angle = self.mapSize[5]
+            if len(self.mapSize) >=7:
+                self.invert_x = self.mapSize[6]
+            if len(self.mapSize) >=8:
+                self.invert_y = self.mapSize[7]
             self.mapPath = mapPath
             # get a font
             if self.fnt is None:
@@ -1248,7 +1256,9 @@ class Roomba(object):
     def co_ords(self):
         co_ords = self.pose
         if isinstance(co_ords, dict):
-            return {'x': co_ords['point']['y'], 'y': co_ords['point']['x'], 'theta':co_ords['theta']}
+            return {'x': -co_ords['point']['y'] if self.invert_x else co_ords['point']['y'],
+                    'y': -co_ords['point']['x'] if self.invert_y else co_ords['point']['x'],
+                    'theta':co_ords['theta']}
         return self.zero_coords()
         
     @property

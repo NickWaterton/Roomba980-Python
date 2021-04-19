@@ -12,7 +12,7 @@ import logging
 
 class webserver():
 
-    VERSION = __version__ = "2.0c"
+    VERSION = __version__ = "2.0e"
     
     api_get =   {'time'                     : 'utctime',
                  'bbrun'                    : 'bbrun',
@@ -105,6 +105,10 @@ class webserver():
                              'angle': self.roomba.mapSize[4],
                              'roomba_angle': self.roomba.mapSize[5],
                              'update': 3000}
+                    if len(self.roomba.mapSize) >= 7:
+                        value['invert_x'] = self.roomba.mapSize[6]
+                    if len(self.roomba.mapSize) >= 8:
+                        value['invert_y'] = self.roomba.mapSize[7]
                 else:
                     value = {'x': 2000,
                              'y': 2000,
@@ -112,6 +116,8 @@ class webserver():
                              'off_y': 0,
                              'angle': 0,
                              'roomba_angle': 0,
+                             'invert_x': 0,
+                             'invert_y': 0,
                              'update': 3000}
                 return web.json_response(value)
             elif item == 'floorplansize':
