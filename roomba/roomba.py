@@ -29,9 +29,10 @@ Nick Waterton 3rd march 2021 v 2.0.0c changed battery low when docked, added cal
 Nick Waterton 27th March 2021 V2.0.0d Fixed floorplan offset on webpage in map.js.
 Nick Waterton 28th March 2021 V2.0.0e Added invery x, y option
 Nick Waterton 19th April 2021 V2.0.0f: added set_ciphers('DEFAULT@SECLEVEL=1') to ssl context to work arounf dh_key_too_small error (requred for ubuntu 20.04).
+Nick Waterton 3rd May 2021 V2.0.0g: More python 3.8 fixes.
 '''
 
-__version__ = "2.0.0f"
+__version__ = "2.0.0g"
 
 import asyncio
 from ast import literal_eval
@@ -272,7 +273,7 @@ class Roomba(object):
     be decoded and published on the designated mqtt client topic.
     '''
 
-    VERSION = __version__ = "2.0f"
+    VERSION = __version__ = "2.0g"
 
     states = {"charge"          : "Charging",
               "new"             : "New Mission",
@@ -513,6 +514,9 @@ class Roomba(object):
             try:
                 #self.client._ssl_context = None
                 context = ssl.SSLContext()
+                # Either of the following context settings works - choose one
+                # Needed for 980 and earlier robots as their security level is 1.
+                # context.set_ciphers('HIGH:!DH:!aNULL')
                 context.set_ciphers('DEFAULT@SECLEVEL=1')
                 self.client.tls_set_context(context)
             except Exception as e:
@@ -604,7 +608,7 @@ class Roomba(object):
     def connected(self, state):
         self.roomba_connected = state
         self.publish('status', 'Online' if self.roomba_connected else 'Offline at {}'.format(time.ctime()))
-
+        
     def on_connect(self, client, userdata, flags, rc):
         self.log.info("Roomba Connected")
         if rc == 0:
@@ -616,7 +620,7 @@ class Roomba(object):
                            "correct for Roomba {}".format(self.roombaName))
             self.connected(False)
             self.client.disconnect()
-        self.loop.call_soon_threadsafe(self.is_connected.set())
+        self.loop.call_soon_threadsafe(self.is_connected.set)
 
     def on_message(self, mosq, obj, msg):
         #print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
@@ -681,7 +685,7 @@ class Roomba(object):
         self.log.debug("Subscribed: {} {}".format(str(mid), str(granted_qos)))
 
     def on_disconnect(self, mosq, obj, rc):
-        self.loop.call_soon_threadsafe(self.is_connected.clear())
+        self.loop.call_soon_threadsafe(self.is_connected.clear)
         self.connected(False)
         if rc != 0:
             self.log.warning("Unexpected Disconnect! - reconnecting")
@@ -1843,6 +1847,7 @@ class Roomba(object):
             shape = [(10, 10), (self.base.size[0] - 20, self.base.size[1] - 20)]
             box = ImageDraw.Draw(roomba_sprite)
             box.rectangle(shape, fill=None, outline =(255,0,0,255))
+            x_y = (roomba_pos[0], roomba_pos[1])
             self.draw_text(roomba_sprite, str(x_y), self.fnt, x_y, (255,0,0,255))
             self.draw_text(roomba_sprite, str(self.dock_position), self.fnt, self.dock_position, (0,0,255,255))
             
