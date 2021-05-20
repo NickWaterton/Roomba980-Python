@@ -30,9 +30,11 @@ Nick Waterton 27th March 2021 V2.0.0d Fixed floorplan offset on webpage in map.j
 Nick Waterton 28th March 2021 V2.0.0e Added invery x, y option
 Nick Waterton 19th April 2021 V2.0.0f: added set_ciphers('DEFAULT@SECLEVEL=1') to ssl context to work arounf dh_key_too_small error (requred for ubuntu 20.04).
 Nick Waterton 3rd May 2021 V2.0.0g: More python 3.8 fixes.
+Nick Waterton 7th May 2021 V2.0.0h: added "ignore_run" after mission complete as still geting bogus run states
+Nick Waterton 17th May 2021 V2.0.0i: mission state machine rework due to bogus states still being reported. increased max_distance to 500
 '''
 
-__version__ = "2.0.0g"
+__version__ = "2.0.0i"
 
 import asyncio
 from ast import literal_eval
@@ -273,7 +275,7 @@ class Roomba(object):
     be decoded and published on the designated mqtt client topic.
     '''
 
-    VERSION = __version__ = "2.0g"
+    VERSION = __version__ = "2.0i"
 
     states = {"charge"          : "Charging",
               "new"             : "New Mission",
@@ -423,7 +425,7 @@ class Roomba(object):
         self.current_state = None
         self.simulation = False
         self.simulation_reset = False
-        self.max_distance = 350             #max distance to draw lines
+        self.max_distance = 500             #max distance to draw lines
         self.icons = icons(base_icon=None, angle=self.angle, fnt=self.fnt, size=(32,32), log=self.log)
         self.base = None                    #base map
         self.room_outline_contour = None
@@ -1569,8 +1571,14 @@ class Roomba(object):
         if phase == "charge":
             #self.set_history('pose', self.zero_pose())
             current_mission = None
+            
+        if self.current_state == self.states["new"] and phase != 'run':
+            self.log.info('waiting for run state for New Missions')
+            if time.time() - self.timers['start'] >= 20:
+                self.log.warning('Timeout waiting for run state')
+                self.current_state = self.states[phase]
 
-        if phase == "run" and (self.is_set('ignore_run') or mission == 'none'):
+        elif phase == "run" and (self.is_set('ignore_run') or mission == 'none'):
             self.log.info('Ignoring bogus run state')
             
         elif phase == "charge" and mission == 'none' and self.is_set('ignore_run'):
@@ -1594,6 +1602,7 @@ class Roomba(object):
                     self.current_state = self.states["cancelled"]
                 else:
                     self.current_state = self.states["completed"]
+                self.timer('ignore_run', True, 5)  #still get bogus 'run' states after mission complete.
             
         elif phase == "charge" and self.rechrgM:
             if self.bin_full:
