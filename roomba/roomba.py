@@ -616,6 +616,7 @@ class Roomba(object):
         if rc == 0:
             self.connected(True)
             self.client.subscribe(self.topic)
+            self.client.subscribe("$SYS/#")
         else:
             self.log.error("Connected with result code {}".format(str(rc)))
             self.log.error("Please make sure your blid and password are "

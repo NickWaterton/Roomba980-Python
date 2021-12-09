@@ -29,15 +29,21 @@ class Password(object):
     V 1.2.5 NW 7/10/2019 changed PROTOCOL_TLSv1 to PROTOCOL_TLS to fix i7 software connection problem
     V 1.2.6 NW 12/11/2019 add cipher to ssl to avoid dh_key_too_small issue
     V 2.0 NW 22nd Dec 2020 updated for S and i versions plus braava jet m6, min version of python 3.6
+    V 2.1 NW 9th Dec 2021 Added getting password from aws cloud.
     '''
 
-    VERSION = __version__ = "2.0a"
+    VERSION = __version__ = "2.1"
     
     config_dicts = ['data', 'mapsize', 'pmaps', 'regions']
 
-    def __init__(self, address='255.255.255.255', file=".\config.ini"):
+    def __init__(self, address='255.255.255.255', file=".\config.ini", login=[]):
         self.address = address
         self.file = file
+        self.login = None
+        self.password = None
+        if len(login) >= 2:
+            self.login = login[0]
+            self.password = login[1]
         self.log = logging.getLogger('Roomba.{}'.format(__class__.__name__))
         self.log.info("Using Password version {}".format(self.__version__))
         
@@ -91,12 +97,31 @@ class Password(object):
                 break
         s.close()
         return roomba_dict
+        
+    def add_cloud_data(self, cloud_data, roombas):
+        for k, v in roombas.copy().items():
+            robotid = v.get('robotid', v.get("hostname", "").split('-')[1])
+            for id, data in cloud_data.items():
+                if robotid == id:
+                    roombas[k]["password"] = data.get('password')
+        return roombas
 
     def get_password(self):
         #load roombas from config file
         file_roombas = self.read_config_file()
+        cloud_roombas = {}
         #get roomba info
         roombas = self.receive_udp()
+        if self.login and self.password:
+            self.log.info("Getting Roomba information from iRobot aws cloud...")
+            from getcloudpassword import irobotAuth
+            iRobot = irobotAuth(self.login, self.password)
+            iRobot.login()
+            cloud_roombas = iRobot.get_robots()
+            self.log.info("Got cloud info: {}".format(json.dumps(cloud_roombas, indent=2)))
+            self.log.info("Found {} roombas defined in the cloud".format(len(cloud_roombas)))
+            if len(cloud_roombas) > 0 and len(roombas) > 0:
+                roombas = self.add_cloud_data(cloud_roombas, roombas)
 
         if len(roombas) == 0:
             self.log.warning("No Roombas found on network, try again...")
@@ -105,37 +130,40 @@ class Password(object):
         self.log.info("{} robot(s) already defined in file{}, found {} robot(s) on network".format(len(file_roombas), self.file, len(roombas)))
 
         for addr, parsedMsg in roombas.items():
-            blid=None
+            blid = parsedMsg.get('robotid', parsedMsg.get("hostname", "").split('-')[1])
             robotname = parsedMsg.get('robotname', 'unknown')
-            if int(parsedMsg["ver"]) < 2:
+            if int(parsedMsg.get("ver", "3")) < 2:
                 self.log.info("Roombas at address: {} does not have the correct "
                       "firmware version. Your version info is: {}".format(addr,json.dumps(parsedMsg, indent=2)))
                 continue
             
-            self.log.info("To add/update Your robot details,"
-                          "make sure your robot ({}) at IP {} is on the Home Base and "
-                          "powered on (green lights on). Then press and hold the HOME "
-                          "button on your robot until it plays a series of tones "
-                          "(about 2 seconds). Release the button and your robot will "
-                          "flash WIFI light.".format(robotname, addr))
+            password = parsedMsg.get('password')
+            if password is None:
+                self.log.info("To add/update Your robot details,"
+                              "make sure your robot ({}) at IP {} is on the Home Base and "
+                              "powered on (green lights on). Then press and hold the HOME "
+                              "button on your robot until it plays a series of tones "
+                              "(about 2 seconds). Release the button and your robot will "
+                              "flash WIFI light.".format(robotname, addr))
+            else:
+                self.log.info("Configuring robot ({}) at IP {} from cloud data, blid: {}, password: {}".format(robotname, addr, blid, password))
             char = input("Press <Enter> to continue...\r\ns<Enter> to skip configuring this robot: ")
             if char == 's':
                 self.log.info('Skipping')
                 continue
 
             #self.log.info("Received: %s"  % json.dumps(parsedMsg, indent=2))
-            
-            self.log.info("Roomba ({}) IP address is: {}".format(robotname, addr))
-            blid = parsedMsg["hostname"].split('-')[1]
+
+            if password is None:
+                self.log.info("Roomba ({}) IP address is: {}".format(robotname, addr))
+                data = self.get_password_from_roomba(addr)
                 
-            data = self.get_password_from_roomba(addr)
-            
-            if len(data) <= 7:
-                self.log.error( 'Error getting password for robot {} at ip{}, received {} bytes. '
-                                'Follow the instructions and try again.'.format(robotname, addr, len(data)))
-                continue
-            # Convert password to str
-            password = str(data[7:].decode().rstrip('\x00')) #for i7 - has null termination
+                if len(data) <= 7:
+                    self.log.error( 'Error getting password for robot {} at ip{}, received {} bytes. '
+                                    'Follow the instructions and try again.'.format(robotname, addr, len(data)))
+                    continue
+                # Convert password to str
+                password = str(data[7:].decode().rstrip('\x00')) #for i7 - has null termination
             self.log.info("blid is: {}".format(blid))
             self.log.info('Password=> {} <= Yes, all this string.'.format(password))
             self.log.info('Use these credentials in roomba.py')
@@ -235,22 +263,30 @@ def main():
     
     #-------- Command Line -----------------
     parser = argparse.ArgumentParser(
-        description='Forward MQTT data from Roomba 980 to local MQTT broker')
+        description='Get Robot passwords and update config file')
+    parser.add_argument(
+        'login',
+        nargs='*',
+        action='store',
+        type=str,
+        default=[],
+        help='iRobot Account Login and Password (default: None)')
     parser.add_argument(
         '-f', '--configfile',
         action='store',
         type=str,
         default="./config.ini",
-        help='config file name, default: ./config.ini)')
+        help='config file name, (default: %(default)s)')
     parser.add_argument(
         '-R','--roombaIP',
         action='store',
         type=str,
         default='255.255.255.255',
-        help='ipaddress of Roomba (default: 255.255.255.255)')
+        help='ipaddress of Roomba (default: %(default)s)')
+
     arg = parser.parse_args()
 
-    get_passwd = Password(arg.roombaIP, file=arg.configfile)
+    get_passwd = Password(arg.roombaIP, file=arg.configfile, login=arg.login)
     get_passwd.get_password()
 
 if __name__ == '__main__':

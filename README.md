@@ -4,9 +4,13 @@ Roomba980-Python
 Unofficial iRobot Roomba python library (SDK).
 
 Thanks to https://github.com/koalazak/dorita980 where much of the inner workings were derived from.
+Thanks to Matthew Garrett <mjg59@srcf.ucam.org> for figuring out how to get passwords from iRobots aws cloud.
 
 **NEW V2.0c 16/3/2021** All new re-write.  
-**NOTE: This is an ALPHA Release - it will have bugs in it - please report them to me**
+**NEW 9/12/2021** Updated password.py can now get passwords for robots from the cloud
+**NOTE: This is an BETA Release - it may have bugs in it - please report them to me**
+
+**NOTE: With the latest release of firmware (3.20.7) Robots are no longer reporting tracking information, therefore realtime maps will not work**
 
 ## New Features
 * Now re-written as asyncio application
@@ -20,6 +24,7 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 * New web interface for experimenting with real-time mapping
 * support V2.XX and 3.XX firmware
 * Supports Floor Plans for overlay on map
+* Can now get passwords from the cloud
 
 ## Important!
 Only local connections are supported. The project was written to allow Openhab2 control, so if you integrate Roomba into Openhab2, you can control it from anywhere.
@@ -75,6 +80,7 @@ The following libraries/modules are used. Some are optional:
 * openCV      *optional*
 * numpy       *optional (used by openCV)*
 * aiohttp     *optional (used for optional web server)*
+* requests    *optinal (used for cloud passwords)*
 
 This script/library is intended to forward roomba data/commands to/from a local MQTT server (this is optional though). In this case, you need paho-mqtt installed
 ```bash
@@ -101,7 +107,7 @@ cd Roomba980-Python/roomba
 ```
 Make sure you have the dependancies listed in `Roomba980-Python/requirements.txt` installed. You can do this by running:
 ```bash
-pip install -r ../requirements.txt
+pip3 install -r ../requirements.txt
 ```
 **Note:** This may be `pip3` depending on your configuration.
 
@@ -288,6 +294,19 @@ either with or without the IP address of your roomba.
 ./password.py -R <roomba IP>
 ```
 You can also specify a config file other than the default (-h for options). Results are displayed and saved to the config file.
+**NEW:** iRobot has changed the way passwords are retrieved in the latest firmware (3.20.7) see below for a workaround.
+
+### Getting your username/blid and password from the iRobot cloud
+You need the requests library installed for this to work:
+```bash
+pip3 install requests
+```
+
+To get the blid and password from the cloud run:
+```bash
+./password.py <login> <password>
+```
+Where `<login>` and `<password>` are your iRobot account login and password. Results are displayed and saved to the config file.
 
 ## config.ini
 By default, all settings are stored in the *config.ini* file. You can change this file if you like (but there is really no need).  
