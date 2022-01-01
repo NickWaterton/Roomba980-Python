@@ -28,7 +28,7 @@ class awsRequest:
         self.secret_key = secret_key
         self.session_token = session_token
         self.service = service
-            
+
     def sign(self, key, msg):
         return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
 
@@ -99,11 +99,6 @@ class irobotAuth:
 
         response = r.json()
 
-        data = {"timestamp": int(time.time()),
-                "nonce": "%d_%d" % (int(time.time()), random.randint(0, 2147483647)),
-                "oauth_token": response['sessionInfo']['sessionToken'],
-                "targetEnv": "mobile"}
-
         uid = response['UID']
         uidSig = response['UIDSignature']
         sigTime = response['signatureTimestamp']
@@ -151,7 +146,7 @@ def main():
     LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
     LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
     logging.basicConfig(format=LOG_FORMAT, datefmt=LOG_DATE_FORMAT, level=loglevel)
-    
+
     #-------- Command Line -----------------
     parser = argparse.ArgumentParser(
         description='Get password and map data from iRobot aws cloud service')
