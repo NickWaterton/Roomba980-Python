@@ -98,7 +98,12 @@ class irobotAuth:
         r = requests.post("https://accounts.%s/accounts.login" % self.gigyaBase, data=data)
 
         response = r.json()
-
+        '''
+        data = {"timestamp": int(time.time()),
+                "nonce": "%d_%d" % (int(time.time()), random.randint(0, 2147483647)),
+                "oauth_token": response.get('sessionInfo', {}).get('sessionToken', ''),
+                "targetEnv": "mobile"}
+        '''
         uid = response['UID']
         uidSig = response['UIDSignature']
         sigTime = response['signatureTimestamp']
