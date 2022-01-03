@@ -39,7 +39,7 @@ __version__ = "2.0.0i"
 import asyncio
 from ast import literal_eval
 #from collections import OrderedDict, Mapping
-from collections import Mapping
+from collections.abc import Mapping
 from password import Password
 import datetime
 import json
