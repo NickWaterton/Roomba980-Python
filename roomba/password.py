@@ -151,7 +151,7 @@ class Password(object):
                 char = input("Press <Enter> to continue...\r\ns<Enter> to skip configuring this robot: ")
                 if char == 's':
                     self.log.info('Skipping')
-                continue
+                    continue
 
             #self.log.info("Received: %s"  % json.dumps(parsedMsg, indent=2))
 
