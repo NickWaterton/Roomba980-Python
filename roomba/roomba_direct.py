@@ -379,7 +379,7 @@ def main():
     group = None
     options = vars(arg) #use args as dict
 
-    if arg.blid is None or arg.password is None:
+    if arg.blid is None and arg.password is None:
         get_passwd = Password(arg.roomba_ip,file=arg.configfile)
         roombas = get_passwd.get_roombas()
     else:

@@ -451,7 +451,7 @@ class Roomba(object):
         self.loop.create_task(self.process_command_q())
         self.update = self.loop.create_task(self.periodic_update())
 
-        if not all([self.address, self.blid, self.password]):
+        if not all(field is not None for field in [self.address, self.blid, self.password]):
             if not self.configure_roomba():
                 self.log.critical('Could not configure Roomba')
         else:
@@ -541,7 +541,7 @@ class Roomba(object):
         '''
         Connect to Roomba MQTT server
         '''
-        if not all([self.address, self.blid, self.password]):
+        if not all(field is not None for field in [self.address, self.blid, self.password]):
             self.log.critical("Invalid address, blid, or password! All these "
                               "must be specified!")
             return False
