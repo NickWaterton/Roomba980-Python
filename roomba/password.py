@@ -163,7 +163,10 @@ class Password(object):
                                     'Follow the instructions and try again.'.format(robotname, addr, len(data)))
                     continue
                 # Convert password to str
-                password = str(data[7:].decode().rstrip('\x00')) #for i7 - has null termination
+                password = data[7:]
+                if b'\x00' in password:
+                    password = password[:password.find(b'\x00')] #for i7 - has null termination
+                password = str(password.decode())
             self.log.info("blid is: {}".format(blid))
             self.log.info('Password=> {} <= Yes, all this string.'.format(password))
             self.log.info('Use these credentials in roomba.py')
