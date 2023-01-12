@@ -32,9 +32,12 @@ Nick Waterton 19th April 2021 V2.0.0f: added set_ciphers('DEFAULT@SECLEVEL=1') t
 Nick Waterton 3rd May 2021 V2.0.0g: More python 3.8 fixes.
 Nick Waterton 7th May 2021 V2.0.0h: added "ignore_run" after mission complete as still geting bogus run states
 Nick Waterton 17th May 2021 V2.0.0i: mission state machine rework due to bogus states still being reported. increased max_distance to 500
+Nick Waterton 14th January 2022 V2.0.0j: Added ability to send json commands via mqtt for testing.
+Nick Waterton 17th June 2022 V2.0.0k: Added error 216 "Charging base bag full"
+Nick Waterton 12th jan 2023 V 2.0.1: Python 3.10 compatibility
 '''
 
-__version__ = "2.0.0i"
+__version__ = "2.0.1"
 
 import asyncio
 from ast import literal_eval
@@ -375,6 +378,7 @@ class Roomba(object):
         120: "Battery not initialized",
         122: "Charging system error",
         123: "Battery not initialized",
+        216: "Charging base bag full",
     }
 
     def __init__(self, address=None, blid=None, password=None, topic="#",
@@ -444,7 +448,7 @@ class Roomba(object):
         self.max_sqft = None
         self.cb = None
         
-        self.is_connected = asyncio.Event(loop=self.loop)
+        self.is_connected = asyncio.Event()
         self.q = asyncio.Queue()
         self.command_q = asyncio.Queue()            
         self.loop.create_task(self.process_q())
@@ -760,6 +764,7 @@ class Roomba(object):
             client.subscribe(self.brokerCommand)
             client.subscribe(self.brokerSetting)
             client.subscribe(self.brokerCommand.replace('command','simulate'))
+            client.subscribe(self.brokerCommand.replace('command','json'))
             self.log.info('subscribed to {}, {}'.format(self.brokerCommand, self.brokerSetting))
 
     def broker_on_message(self, mosq, obj, msg):
@@ -772,6 +777,16 @@ class Roomba(object):
             self.log.info("Received SETTING: {}".format(payload))
             cmd = str(payload).split()
             self.set_preference(cmd[0], cmd[1])
+        elif "json" in msg.topic:
+            self.log.info("Received JSON: {}".format(payload))
+            try:
+                topic = msg.topic.split("/")[-1]
+                topic = topic if topic != self.roombaName else "delta"
+                cmd = json.dumps(json.loads(payload))
+                self.client.publish(topic, cmd)
+                self.log.info("Published to Roomba topic: {} json: {}".format(topic, cmd)) 
+            except Exception as e:
+                self.log.error("Error in json: {}".format(e))
         elif 'simulate' in msg.topic:
             self.log.info('received simulate command: {}'.format(payload))
             self.set_simulate(True)
@@ -916,7 +931,7 @@ class Roomba(object):
             val = False
         Command = {"state": {preference: val}}
         myCommand = json.dumps(Command)
-        self.log.info("Publishing Roomba {} Setting :{}s".format(self.roombaName, myCommand))
+        self.log.info("Publishing Roomba {} Setting :{}".format(self.roombaName, myCommand))
         self.client.publish("delta", myCommand)
     
     def _set_cleanSchedule(self, setting):
