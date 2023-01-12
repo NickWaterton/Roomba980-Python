@@ -147,10 +147,11 @@ class Password(object):
                               "flash WIFI light.".format(robotname, addr))
             else:
                 self.log.info("Configuring robot ({}) at IP {} from cloud data, blid: {}, password: {}".format(robotname, addr, blid, password))
-            char = input("Press <Enter> to continue...\r\ns<Enter> to skip configuring this robot: ")
-            if char == 's':
-                self.log.info('Skipping')
-                continue
+            if sys.stdout.isatty():
+                char = input("Press <Enter> to continue...\r\ns<Enter> to skip configuring this robot: ")
+                if char == 's':
+                    self.log.info('Skipping')
+                    continue
 
             #self.log.info("Received: %s"  % json.dumps(parsedMsg, indent=2))
 
