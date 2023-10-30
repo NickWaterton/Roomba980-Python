@@ -191,7 +191,7 @@ class Password(object):
         sock.settimeout(10)
         
         #context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-        context = ssl.SSLContext()
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         #context.set_ciphers('DEFAULT@SECLEVEL=1:HIGH:!DH:!aNULL')
         wrappedSocket = context.wrap_socket(sock)
         
