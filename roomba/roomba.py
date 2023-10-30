@@ -81,6 +81,14 @@ try:
     HAVE_PIL = True
 except ImportError:
     print("PIL module not found, maps are disabled")
+
+try:
+    # ANTIALIAS is deprecated and has been removed in Pillow 10.0.0
+    LANCZOS = Image.LANCZOS
+except AttributeError:
+    LANCZOS = Image.ANTIALIAS
+except NameError:
+    pass
     
 if sys.version_info < (3, 7):
     asyncio.get_running_loop = asyncio.get_event_loop
@@ -154,8 +162,7 @@ class icons():
         try:
             if not size:
                 size = self.size
-            icon = Image.open(filename).convert('RGBA').resize(
-                size,Image.ANTIALIAS)
+            icon = Image.open(filename).convert('RGBA').resize(size, LANCZOS)
             icon = make_transparent(icon)
             icon = icon.rotate(180-self.angle, expand=False)
             self.icons[name] = icon
@@ -206,7 +213,7 @@ class icons():
             size = self.size
             
         if icon_name in ['roomba', 'stuck', 'cancelled']:
-            icon = self.base_icon.copy().resize(size,Image.ANTIALIAS)
+            icon = self.base_icon.copy().resize(size, LANCZOS)
         else:
             icon = Image.new('RGBA', size, transparent)
         draw_icon = ImageDraw.Draw(icon)
