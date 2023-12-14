@@ -105,9 +105,9 @@ Clone this repository:
 git clone https://github.com/NickWaterton/Roomba980-Python.git
 cd Roomba980-Python/roomba
 ```
-Make sure you have the dependancies listed in `Roomba980-Python/requirements.txt` installed. You can do this by running:
+Make sure you have the dependancies listed in `Roomba980-Python/requirements.txt` installed. You can do this by running the following command in the project directory:
 ```bash
-pip3 install -r ../requirements.txt
+pip3 install -r requirements.txt
 ```
 **Note:** This may be `pip3` depending on your configuration.
 
