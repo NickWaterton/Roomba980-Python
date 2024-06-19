@@ -35,9 +35,10 @@ Nick Waterton 17th May 2021 V2.0.0i: mission state machine rework due to bogus s
 Nick Waterton 14th January 2022 V2.0.0j: Added ability to send json commands via mqtt for testing.
 Nick Waterton 17th June 2022 V2.0.0k: Added error 216 "Charging base bag full"
 Nick Waterton 12th jan 2023 V 2.0.1: Python 3.10 compatibility
+Nick Waterton 19th Jun 2024 V 2.0.2: Python 3.10 compatibility fixes and TLS fixes
 '''
 
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 
 import asyncio
 from ast import literal_eval
@@ -526,7 +527,9 @@ class Roomba(object):
             self.log.info("Setting TLS")
             try:
                 #self.client._ssl_context = None
-                context = ssl.SSLContext()
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
                 # Either of the following context settings works - choose one
                 # Needed for 980 and earlier robots as their security level is 1.
                 # context.set_ciphers('HIGH:!DH:!aNULL')
@@ -609,7 +612,7 @@ class Roomba(object):
     async def _disconnect(self):
         #if self.ws:
         #    await self.ws.cancel()
-        tasks = [t for t in asyncio.Task.all_tasks() if t is not asyncio.Task.current_task()]
+        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
         [task.cancel() for task in tasks]
         self.log.info("Cancelling {} outstanding tasks".format(len(tasks)))
         await asyncio.gather(*tasks, return_exceptions=True)
