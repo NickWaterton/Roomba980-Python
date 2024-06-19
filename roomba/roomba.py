@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Python 3.6 Program to connect to Roomba vacuum cleaners, dcode json, and forward to mqtt
+Python 3.7 Program to connect to Roomba vacuum cleaners, dcode json, and forward to mqtt
 server
 
 Nick Waterton 24th April 2017: V 1.0: Initial Release
@@ -35,7 +35,7 @@ Nick Waterton 17th May 2021 V2.0.0i: mission state machine rework due to bogus s
 Nick Waterton 14th January 2022 V2.0.0j: Added ability to send json commands via mqtt for testing.
 Nick Waterton 17th June 2022 V2.0.0k: Added error 216 "Charging base bag full"
 Nick Waterton 12th jan 2023 V 2.0.1: Python 3.10 compatibility
-Nick Waterton 19th Jun 2024 V 2.0.2: Python 3.10 compatibility fixes and TLS fixes
+Nick Waterton 19th Jun 2024 V 2.0.2: Python 3.10 compatibility fixes and TLS fixes. Drop support for Python 3.6 and earlier
 '''
 
 __version__ = "2.0.2"

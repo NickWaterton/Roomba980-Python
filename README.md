@@ -8,13 +8,13 @@ Thanks to Matthew Garrett <mjg59@srcf.ucam.org> for figuring out how to get pass
 
 **NEW V2.0c 16/3/2021** All new re-write.  
 **NEW 9/12/2021** Updated password.py can now get passwords for robots from the cloud
-**NOTE: This is an BETA Release - it may have bugs in it - please report them to me**
+**NOTE: Support for Python 3.6 and earlier is now dropped**
 
 **NOTE: With the latest release of firmware (3.20.7) Robots are no longer reporting tracking information, therefore realtime maps will not work**
 
 ## New Features
 * Now re-written as asyncio application
-* Only Python 3.6 and above are supported
+* Only Python 3.7 and above are supported
 * supports 600, 900, i, and s series Roombas (all WiFi connected roombas)
 * Supports M6 Mop
 * new support for all configurations in config file (*config.ini* default)
@@ -31,8 +31,8 @@ Only local connections are supported. The project was written to allow Openhab2 
 
 As only **one connection at at time is** allowed to the Roomba local mqtt server, when the library is connected to your Roomba, the app will connect via the cloud.
 
-Tested with Python 3.6/Ubuntu 18.04
-* Python 3.6 or above is required
+Tested with Python 3.10/Ubuntu 22.04
+* Python 3.7 or above is required
 * Python 2.x is not supported, please use the old version of Roomba980 for Python 2.7 compatibility
 * I have not tested on Windows, or anything othe than Ubuntu 18.04. use at your own risk on any other platform/OS
 * PyPi install is not supported (yet) The version on PyPi is the 1.x version!
