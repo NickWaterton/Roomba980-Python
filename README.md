@@ -7,8 +7,8 @@ Thanks to https://github.com/koalazak/dorita980 where much of the inner workings
 Thanks to Matthew Garrett <mjg59@srcf.ucam.org> for figuring out how to get passwords from iRobots aws cloud.
 
 **NEW V2.0c 16/3/2021** All new re-write.  
-**NEW 9/12/2021** Updated password.py can now get passwords for robots from the cloud
-**NOTE: Support for Python 3.6 and earlier is now dropped**
+**NEW 9/12/2021** Updated password.py can now get passwords for robots from the cloud  
+**NEW 19/6/2024: Support for Python 3.6 and earlier is now dropped**
 
 **NOTE: With the latest release of firmware (3.20.7) Robots are no longer reporting tracking information, therefore realtime maps will not work**
 
