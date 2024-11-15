@@ -192,6 +192,8 @@ class Password(object):
         
         #context = ssl.SSLContext(ssl.PROTOCOL_TLS)
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
         #context.set_ciphers('DEFAULT@SECLEVEL=1:HIGH:!DH:!aNULL')
         wrappedSocket = context.wrap_socket(sock)
         
